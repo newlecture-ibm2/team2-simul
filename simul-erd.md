@@ -1,7 +1,7 @@
 # Simul ERD (Entity-Relationship Diagram)
 
-> **기준 문서**: `simul-functional-spec.md`, `simul-api-spec.md`  
-> **기능 변경 반영 목록**: 가상 시착용 베이스 사람 이미지(`base_images`) 영구 보관 및 AI 시착 결과를 베이스 이미지로 재사용하는 순환 로직 추가.
+> **기준 문서**: `simul-functional-spec.md`, `simul-api-spec.md`, `simul-backend-architecture.md`  
+> **기능 변경 반영 목록**: 가상 시착용 베이스 사람 이미지(`base_images`) 영구 보관 및 AI 시착 결과를 베이스 이미지로 재사용하는 순환 로직 추가. 소셜 로그인 중복 방지, 팔로우 중복 방지, 수동 게시물 지원을 위한 제약 조건 보완.
 
 ## 시각화 다이어그램 (Mermaid)
 이 다이어그램은 Github Markdown이나 최신 Markdown 뷰어에서 자동으로 다이어그램 맵으로 변환되어 출력됩니다.
@@ -11,7 +11,8 @@ erDiagram
     users {
         UUID user_id PK
         ENUM provider "kakao, naver, google, email"
-        VARCHAR provider_id 
+        VARCHAR provider_id
+        UNIQUE provider_provider_id "(provider, provider_id)"
         VARCHAR nickname
         VARCHAR bio
         TEXT profile_image_url
@@ -52,7 +53,7 @@ erDiagram
     posts {
         UUID post_id PK "시착 잡의 job_id 공유"
         UUID user_id FK
-        UUID base_image_id FK "시착에 사용한 내 몸 베이스 사진"
+        UUID base_image_id FK "nullable (시착에 사용한 내 몸 베이스 사진, 수동 게시물은 null)"
         UUID item_id FK "nullable (시착 원본 옷 출처)"
         TEXT image_url "nullable (처리 전 null)"
         ENUM status "processing, completed, failed"
@@ -89,6 +90,7 @@ erDiagram
         UUID follower_id FK "references users"
         UUID following_id FK "references users"
         TIMESTAMP created_at
+        UNIQUE follower_following "(follower_id, following_id)"
     }
 
     likes {
