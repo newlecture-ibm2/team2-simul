@@ -125,7 +125,7 @@ Accept-Language: ko
   "total": 15
 }
 ```
-*Note: `{user_id}`가 나 자신(me)일 경우 `is_public=false`인 비공개 시착 이력도 모두 포함되어 반환됩니다.*
+*Note: `{user_id}`가 나 자신(me)일 경우 `is_public=false`인 비공개 시착 이력도 모두 포함되어 반환됩니다. 타인 프로필 조회 시에는 `is_public=true`인 공개 게시물만 반환됩니다.*
 
 ### [POST] `/follows/{user_id}` - 팔로우
 **Response `201 Created`**
@@ -386,9 +386,10 @@ data: {"job_id": "post_uuid", "status": "completed", "result_image_url": "https:
 {
   "remaining": 3,
   "total_daily": 5,
-  "reset_at": "ISO8601"
+  "reset_at": "2025-01-02T00:00:00+09:00"
 }
 ```
+*Note: `reset_at`은 KST(Asia/Seoul) 기준 자정으로 설정됩니다.*
 
 ---
 
@@ -414,7 +415,11 @@ data: {"job_id": "post_uuid", "status": "completed", "result_image_url": "https:
 
 ### [PATCH] `/admin/posts/{post_id}/blind` - 게시물 강제 블라인드 (신고 조치)
 **Request**: `(Headers Only)`
-**Response `200`** (성공 시 해당 게시물을 강제로 `is_public=false` 전환 및 소프트 딜리트 처리)
+**Response `200`** (성공 시 해당 게시물 `is_blinded=true` 전환)
+
+### [PATCH] `/admin/posts/{post_id}/unblind` - 블라인드 해제 (복구)
+**Request**: `(Headers Only)`
+**Response `200`** (성공 시 해당 게시물 `is_blinded=false` 전환하여 피드 노출 복구)
 
 ### [PATCH] `/admin/users/{user_id}/suspend` - 악성 유저 정지 / 징계
 **Request**
@@ -465,3 +470,4 @@ data: {"job_id": "post_uuid", "status": "completed", "result_image_url": "https:
 | `ERR-301-C`| `500` | DB 게시물 연결 실패 | 업로드에 실패했어요. 다시 시도해주세요. |
 | `ERR-304-B`| `500` | 좋아요 API 타임아웃/실패 | (낙관적 UI 롤백 후 표출) 잠시 후 다시 시도해주세요. |
 | `ERR-305-B`| `422` | 댓글 제한(200자) 초과 | (입력 차단 및 카운터 경고 UI) |
+| `ERR-401-A`| `422` | 동일 게시물 중복 신고 | 이미 신고한 게시물이에요. |

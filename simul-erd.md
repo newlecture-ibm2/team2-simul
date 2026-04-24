@@ -58,6 +58,8 @@ erDiagram
         ENUM status "processing, completed, failed"
         VARCHAR caption "nullable"
         BOOLEAN is_public "DEFAULT false (비공개 우선)"
+        BOOLEAN is_blinded "DEFAULT false (신고 누적 자동 블라인드)"
+        INT report_count "DEFAULT 0"
         INT like_count
         INT view_count
         TIMESTAMP created_at
@@ -103,6 +105,7 @@ erDiagram
         UUID reporter_id FK "references users"
         VARCHAR reason
         TIMESTAMP created_at
+        UNIQUE post_id_reporter_id "(post_id, reporter_id)"
     }
 
     %% Relationships

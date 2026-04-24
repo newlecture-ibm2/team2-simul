@@ -767,6 +767,8 @@ posts
 ├── status           ENUM (processing, completed, failed)
 ├── caption          VARCHAR(300), nullable
 ├── is_public        BOOLEAN, DEFAULT false (기본 비공개)
+├── is_blinded       BOOLEAN, DEFAULT false (신고 누적 자동 블라인드)
+├── report_count     INT, DEFAULT 0
 ├── like_count       INT, DEFAULT 0
 ├── view_count       INT, DEFAULT 0
 ├── created_at       TIMESTAMP
@@ -845,7 +847,8 @@ reports
 ├── post_id          UUID, FK → posts
 ├── reporter_id      UUID, FK → users
 ├── reason           VARCHAR(200)
-└── created_at       TIMESTAMP
+├── created_at       TIMESTAMP
+└── UNIQUE (post_id, reporter_id)
 ```
 
 ---
@@ -888,6 +891,7 @@ reports
 | GET | `/tryon/credits` | 크레딧 잔여 조회 | 필요 |
 | GET | `/admin/reports` | 접수된 신고 목록 조회 | Admin |
 | PATCH | `/admin/posts/{post_id}/blind` | 문제 게시글 강제 블라인드 | Admin |
+| PATCH | `/admin/posts/{post_id}/unblind` | 블라인드 해제 (복구) | Admin |
 | PATCH | `/admin/users/{user_id}/suspend` | 악성 유저 정지 처리 | Admin |
 | POST | `/admin/users/{user_id}/credits` | 크레딧 수동 지급 | Admin |
 
@@ -934,6 +938,7 @@ Accept-Language: ko
 | `ERR-304-B` | 500 | 좋아요 네트워크 오류 | UI 롤백 + "잠시 후 다시 시도해주세요" |
 | `ERR-305-A` | 401 | 비로그인 댓글 시도 | 로그인 유도 바텀시트 |
 | `ERR-305-B` | 422 | 댓글 200자 초과 | 입력 차단 + 카운터 빨간색 표시 |
+| `ERR-401-A` | 422 | 동일 게시물 중복 신고 | "이미 신고한 게시물이에요" |
 
 ### 공통 예외 처리 원칙
 
