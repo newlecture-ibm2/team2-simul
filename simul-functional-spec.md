@@ -1,7 +1,7 @@
-# FitCheck 기능 명세서
+# Simul 기능 명세서
 
 > 대상 독자: 프론트엔드 / 백엔드 개발자  
-> 기준 문서: FitCheck MVP 요구사항 기능서 v1.0  
+> 기준 문서: Simul MVP 요구사항 기능서 v1.0  
 > 플랫폼: iOS / Android Native
 
 ---
@@ -10,10 +10,9 @@
 
 1. [문서 규칙](#1-문서-규칙)
 2. [화면 ID / 기능 ID 체계](#2-화면-id--기능-id-체계)
-3. [AI 가상시착 (P1)](#3-ai-가상시착-p1)
-4. [개인 옷장 (P2)](#4-개인-옷장-p2)
-5. [커뮤니티 피드 (P3)](#5-커뮤니티-피드-p3)
-6. [제품 태그 & 쇼핑 연결 (P4)](#6-제품-태그--쇼핑-연결-p4)
+3. [AI 가상시착](#3-ai-가상시착)
+4. [개인 옷장](#4-개인-옷장)
+5. [커뮤니티 피드](#5-커뮤니티-피드)
 7. [계정 & 프로필](#7-계정--프로필)
 8. [공통 데이터 모델](#8-공통-데이터-모델)
 9. [API 엔드포인트 정의](#9-api-엔드포인트-정의)
@@ -23,12 +22,13 @@
 
 ## 1. 문서 규칙
 
-### 우선순위 레이블
+### 우선순위 레이블 (MoSCoW)
 | 레이블 | 의미 |
 |--------|------|
-| `[필수]` | MVP 출시 전 반드시 구현 |
-| `[선택]` | MVP 이후 추가 가능 |
-| `[MVP제외]` | 명시적으로 이번 범위 외 |
+| `[Must]` | (Must-Have) MVP 출시 전 반드시 구현 |
+| `[Should]` | (Should-Have) 중요하지만 필수 아님, 여력 시 포함 |
+| `[Could]` | (Could-Have) MVP 이후 추가 가능 |
+| `[Won't]` | (Won't-Have) 명시적으로 이번 범위 외 |
 
 ### 상태 코드 규칙
 - 성공: `200 OK` / `201 Created`
@@ -60,12 +60,10 @@
 | SCR-030 | 개인 옷장 | 프로필 → 옷장 버튼 |
 | SCR-031 | 옷장 아이템 상세 | SCR-030 → 아이템 탭 |
 | SCR-032 | 아이템 추가 | SCR-030 → '+' 버튼 |
-| SCR-040 | 제품 태그 추가 | SCR-012 → 태그 추가 |
-| SCR-041 | 태그 이미지 검색 | SCR-040 → 이미지 검색 |
 | SCR-050 | 프로필 | 하단 탭 '프로필' |
 | SCR-051 | 프로필 편집 | SCR-050 → 편집 |
 | SCR-052 | 설정 | SCR-050 → 설정 |
-| SCR-060 | 인앱 브라우저 | 구매하기 버튼 탭 |
+| SCR-060 | 인앱 브라우저 | 외부 웹사이트 링크 탭 |
 
 ### 기능 ID (FN)
 
@@ -84,48 +82,46 @@
 | FN-304 | 좋아요 | SCR-011 |
 | FN-305 | 댓글 | SCR-011 |
 | FN-306 | 팔로우/언팔로우 | SCR-050 |
-| FN-401 | 태그 이미지 검색 | SCR-041 |
-| FN-402 | 태그 생성 | SCR-040 |
-| FN-403 | 태그 삭제 | SCR-040 |
-| FN-404 | 쇼핑 연결 | SCR-060 |
 | FN-501 | 소셜 로그인 | SCR-003 |
 | FN-502 | 프로필 편집 | SCR-051 |
 | FN-503 | 알림 설정 | SCR-052 |
+| FN-901 | 콘텐츠 모더레이션 (게시물/댓글 블라인드) | API 전용 |
+| FN-902 | 유저 정지 및 크레딧 수동 제어 | API 전용 |
 
 ---
 
-## 3. AI 가상시착 `P1`
+## 3. AI 가상시착
 
 ### 3-1. 화면별 UI 컴포넌트
 
-#### SCR-020 AI 시착 홈
+#### SCR-020 AI 시착 홈 [Must]
 | 컴포넌트 | 타입 | 설명 |
 |----------|------|------|
 | HeaderBar | View | 타이틀 "가상시착", 크레딧 잔여 표시 |
 | CreditBadge | Badge | 오늘 남은 무료 시착 횟수 (예: 3/5) |
-| StartButton | Button | `[필수]` "시착 시작하기" CTA |
+| StartButton | Button | `[Must]` "시착 시작하기" CTA |
 | RecentResultList | HorizontalScrollView | 최근 시착 결과 썸네일 최대 10개 |
 | EmptyState | View | 시착 이력 없을 때 안내 문구 + 일러스트 |
 
-#### SCR-021 시착 사진 선택
+#### SCR-021 시착 사람 이미지(베이스) 선택 [Must]
 | 컴포넌트 | 타입 | 설명 |
 |----------|------|------|
-| GalleryPicker | ImagePicker | 갤러리 접근, 단일 선택 |
-| CameraButton | Button | 카메라 직접 촬영 진입 |
-| GuideOverlay | View | 권장 포즈 가이드 반투명 오버레이 |
+| BaseImageList | GridView | 이전에 등록/사용한 내 베이스 사람 이미지 목록 |
+| UploadButton | Button | 새 베이스 이미지 기기 업로드 및 DB 등록 |
+| TryonResultBtn | Button | 과거 시착 결과를 새 사람 이미지로 불러와 복제등록 |
 | ConfirmButton | Button | 사진 선택 완료 → SCR-022 이동 |
 
-#### SCR-022 시착 옷 선택
+#### SCR-022 시착 옷 선택 [Must]
 | 컴포넌트 | 타입 | 설명 |
 |----------|------|------|
-| TabBar | SegmentedControl | 피드 상품 / 내 옷장 / URL 입력 3탭 |
-| FeedProductGrid | GridView | 피드에서 태그된 상품 목록 |
+| TabBar | SegmentedControl | 내 옷장 / 새 이미지 업로드 / 피드 상품 3탭 |
 | ClosetItemGrid | GridView | 내 옷장 아이템 목록 |
-| URLInputField | TextInput | 외부 URL 붙여넣기 입력창 |
+| ImageUploadField | TouchableArea | 기기에서 새 옷 이미지 직접 업로드 (시착 완료 시 옷장에 자동 저장) |
+| FeedProductGrid | GridView | 피드에서 태그된 상품 목록 |
 | SelectedItemPreview | ImageView | 선택된 옷 이미지 미리보기 |
 | TryOnButton | Button | "시착하기" → FN-103 실행 |
 
-#### SCR-023 시착 생성 중
+#### SCR-023 시착 생성 중 [Must]
 | 컴포넌트 | 타입 | 설명 |
 |----------|------|------|
 | ProgressAnimation | LottieView | 로딩 애니메이션 |
@@ -133,33 +129,32 @@
 | BrowseButton | Button | "다른 상품 보는 동안 기다리기" → 피드로 이동 |
 | CancelButton | Button | 시착 취소 (크레딧 미차감) |
 
-#### SCR-024 시착 결과
+#### SCR-024 시착 결과 [Must]
 | 컴포넌트 | 타입 | 설명 |
 |----------|------|------|
 | CompareSlider | SwipeView | 원본 ↔ 결과 비교 슬라이더 |
 | SaveButton | Button | 디바이스 저장 |
-| AddToClosetButton | Button | 옷장에 아이템 추가 (원클릭) |
-| ShareButton | Button | 피드 공유 → SCR-012 이동 |
+| PublishButton | Button | 공개 피드에 자랑하기 (비공개 게시물을 공개로 전환 및 짧은 캡션 입력 바텀시트) |
 | RetryButton | Button | 다른 옷으로 다시 시착 |
 
 ---
 
 ### 3-2. 기능 명세
 
-#### FN-101 사진 입력
+#### FN-101 사람 이미지(베이스) 선택 및 등록 [Must]
 
-**설명:** 사용자의 본인 사진을 선택하거나 촬영하여 시착에 사용할 베이스 이미지를 확보한다.
+**설명:** 사용자의 본인 사진, 혹은 이전에 잘 나온 AI 시착결과물을 시착에 사용할 베이스 모델로 등록/선택한다.
 
 **입력 조건**
 - 이미지 포맷: JPG, PNG, HEIC
-- 최소 해상도: 512 × 512px
+- 최소 해상도: 256 × 256px
 - 최대 파일 크기: 20MB
 
 **처리 흐름**
-1. 사용자가 갤러리 또는 카메라로 사진 선택
-2. 클라이언트에서 이미지 리사이즈 (최대 1080px 기준)
-3. 서버 업로드 → 임시 스토리지 저장
-4. 업로드 완료 후 임시 URL 반환 → SCR-022로 이동
+1. 저장된 나의 বে이스 이미지 목록 조회 후 선택
+2. 신규 사진 업로드 시 스토리지 저장 및 `base_images` 테이블에 등록됨
+3. 기존 AI 시착물을 베이스로 사용할 시, 해당 게시물의 데이터를 기반으로 `base_images` 테이블에 복제 등록됨
+4. 최종 선택된 `base_image_id` 확보 후 SCR-022로 이동
 
 **에러 케이스**
 | 케이스 | 처리 |
@@ -170,26 +165,27 @@
 
 ---
 
-#### FN-103 AI 이미지 생성
+#### FN-103 AI 이미지 생성 [Must]
 
 **설명:** 사용자 사진과 선택한 의류 이미지를 AI 모델에 전달하여 합성 이미지를 생성한다.
 
 **입력값**
-- `user_image_url`: 임시 저장된 사용자 사진 URL
+- `user_image_url`: 저장된 사용자 사진 URL
 - `clothing_image_url`: 선택한 의류 이미지 URL
 
 **처리 흐름**
 1. 크레딧 잔여 확인 (0이면 `ERR-103-A` 반환)
-2. AI 생성 API 비동기 호출
-3. 폴링 방식으로 생성 상태 확인 (5초 간격)
-4. 완료 시 결과 이미지 URL 반환 → SCR-024 이동
+2. AI 생성 API 비동기 호출 (job_id 반환)
+3. SSE(Server-Sent Events) 스트림을 연결하여 실시간 상태 확인
+4. 완료 수신 시 결과 이미지를 내 프로필의 "비공개 게시물(is_public=false)"로 자동 생성 후 SCR-024 이동
 5. 크레딧 1 차감 (생성 성공 시에만)
-6. 사용자 원본 사진 서버에서 즉시 삭제
+6. 생성된 시착 게시글에 사용된 의류 출처(item_id)를 연결
+7. 사용자 원본 사진은 삭제하지 않고 유지하여 다음 시착 시 재사용
 
 **제약**
 - 처리 시간 목표: 30초 이내 (95th percentile)
 - 자동 재시도: 1회 (타임아웃 시)
-- 결과물 보관: 30일 (미저장 시 자동 삭제)
+- 결과물 보관: 비공개 게시물 형태로 영구 보관 (본인이 삭제하기 전까지 내 프로필에 유지)
 
 **에러 케이스**
 | 케이스 | 에러 코드 | 처리 |
@@ -203,7 +199,7 @@
 
 ### 3-3. API 엔드포인트 (AI 시착)
 
-#### POST `/v1/tryon/upload`
+#### POST `/tryon/upload`
 사용자 사진 업로드
 
 **Request**
@@ -218,21 +214,20 @@ Content-Type: multipart/form-data
 **Response `201`**
 ```json
 {
-  "temp_image_url": "https://cdn.fitcheck.io/temp/abc123.jpg",
-  "expires_at": "2025-01-01T00:30:00Z"
+  "image_url": "https://cdn.simul.io/users/photo_abc123.jpg"
 }
 ```
 
 ---
 
-#### POST `/v1/tryon/generate`
+#### POST `/tryon/generate`
 AI 시착 생성 요청
 
 **Request**
 ```json
 {
-  "user_image_url": "https://cdn.fitcheck.io/temp/abc123.jpg",
-  "clothing_image_url": "https://cdn.fitcheck.io/items/xyz789.jpg"
+  "user_image_url": "https://cdn.simul.io/temp/abc123.jpg",
+  "clothing_image_url": "https://cdn.simul.io/items/xyz789.jpg"
 }
 ```
 
@@ -247,22 +242,26 @@ AI 시착 생성 요청
 
 ---
 
-#### GET `/v1/tryon/status/{job_id}`
-생성 상태 폴링
+#### GET `/tryon/status/{job_id}`
+생성 상태 실시간 조회 (SSE 스트림)
 
-**Response `200`**
-```json
-{
-  "job_id": "job_abc123",
-  "status": "completed",  // processing | completed | failed
-  "result_image_url": "https://cdn.fitcheck.io/results/result123.jpg",
-  "credit_deducted": true
-}
+**Headers**
+```
+Accept: text/event-stream
+```
+
+**Response (Event Stream)**
+```text
+event: processing
+data: {"status": "processing", "estimated_seconds_left": 15}
+
+event: completed
+data: {"job_id": "job_abc123", "status": "completed", "result_image_url": "https://cdn.simul.io/results/result123.jpg", "credit_deducted": true}
 ```
 
 ---
 
-#### GET `/v1/tryon/credits`
+#### GET `/tryon/credits`
 오늘 남은 크레딧 조회
 
 **Response `200`**
@@ -276,63 +275,61 @@ AI 시착 생성 요청
 
 ---
 
-## 4. 개인 옷장 `P2`
+## 4. 개인 옷장
 
 ### 4-1. 화면별 UI 컴포넌트
 
-#### SCR-030 개인 옷장
+#### SCR-030 개인 옷장 [Must]
 | 컴포넌트 | 타입 | 설명 |
 |----------|------|------|
 | CategoryTabBar | SegmentedControl | 전체 / 상의 / 하의 / 아우터 / 신발 / 액세서리 |
-| ColorFilterBar | HorizontalScrollView | 색상 팔레트 칩 필터 |
 | SortDropdown | Dropdown | 최근 추가순 / 자주 시착순 |
 | ViewToggle | IconButton | 그리드 뷰 ↔ 리스트 뷰 전환 |
-| ItemGrid | GridView | 저장된 아이템 카드 (이미지 + 브랜드명) |
+| ItemGrid | GridView | 저장된 아이템 카드 (의류 이미지 위주) |
 | AddButton | FAB | 우하단 '+' 아이템 추가 버튼 |
 | ItemCountBadge | Text | "총 N개" 아이템 수 표시 |
 | EmptyState | View | 아이템 없을 때 안내 |
 
-#### SCR-031 아이템 상세
+#### SCR-031 아이템 상세 [Must]
 | 컴포넌트 | 타입 | 설명 |
 |----------|------|------|
 | ItemImage | ImageView | 아이템 이미지 (풀뷰) |
-| MetaInfo | View | 카테고리, 색상, 브랜드명, 메모 |
-| TryOnButton | Button | "이 옷으로 시착하기" |
-| ShopLinkButton | Button | 외부 쇼핑몰 링크 (URL 있을 때만 노출) |
-| EditButton | IconButton | 아이템 편집 |
-| DeleteButton | IconButton | 아이템 삭제 (확인 다이얼로그) |
+| MetaInfo | View | 카테고리, 메모 (상세 메타정보는 조회 시에만 노출) |
+| VisionSearchButton | Button | Google Vision API를 이용하여 유사 이미지 및 출처 링크 반환 (일회성 노출) |
+| TryOnButton | Button | "이 옷으로 바로 가상 시착하기" |
+| AddToMyClosetButton | Button | (타인 옷장일 시) "내 옷장으로 복사/저장하기" |
+| ShopLinkButton | Button | 외부 쇼핑몰 링크 (검색 결과로 파싱되었을 때만 임시 노출) |
+| EditButton | IconButton | 아이템 편집 (내 옷장 소유일 때만) |
+| DeleteButton | IconButton | 아이템 삭제 (내 옷장 소유일 때만 확인 다이얼로그) |
 
-#### SCR-032 아이템 추가
+#### SCR-032 아이템 추가 [Must]
 | 컴포넌트 | 타입 | 설명 |
 |----------|------|------|
-| ImageUploadArea | TouchableArea | 이미지 업로드 또는 URL 입력 선택 |
+| ImageUploadArea | TouchableArea | 캡처한 옷 이미지 등 기기에서 단순 업로드 |
 | CategoryPicker | Picker | 카테고리 선택 |
-| ColorTagInput | TagInput | 색상 자동 추출 + 수동 편집 |
-| BrandNameInput | TextInput | 브랜드명 (선택) |
-| ShopURLInput | TextInput | 외부 쇼핑몰 URL (선택) |
 | MemoInput | TextInput | 개인 메모 최대 100자 (선택) |
-| SaveButton | Button | 저장 → FN-201 실행 |
+| SaveButton | Button | 저장 (내 옷장에 추가) → FN-201 실행 |
 
 ---
 
 ### 4-2. 기능 명세
 
-#### FN-201 아이템 추가
+#### FN-201 아이템 추가 [Must]
 
 **설명:** 패션 아이템을 옷장에 저장하고 메타데이터를 등록한다.
 
-**3가지 추가 경로**
+**4가지 추가 경로 (옷장이 중앙 허브 역할)**
 
 | 경로 | 트리거 | 처리 |
 |------|--------|------|
-| 시착 결과에서 추가 | SCR-024 "옷장에 추가" 버튼 | 시착에 사용한 의류 이미지 자동 세팅 |
-| 피드 태그에서 저장 | SCR-011 상품 태그 "저장" | 태그 이미지 + 쇼핑 URL 자동 세팅 |
-| 직접 추가 | SCR-032 | 이미지 업로드 또는 URL 직접 입력 |
+| 직접 추가 | SCR-032 | 사용자가 직접 캡처본/이미지를 업로드하여 단순 저장 (지연 없는 1차 관문) |
+| 타 유저 옷장에서 복사 | SCR-031 (타인 옷장 상세) | 타인의 옷을 보다가 '내 옷장에 추가' 버튼 탭 |
+| 시착 시 기본 저장 | FN-103 | 시착 로직 완료되면 무조건 내 옷장에도 보관 |
+| 피드 태그에서 저장 | SCR-011 상품 태그 "저장" | 피드에 태그된 옷의 이미지만 내 옷장에 복사 저장 |
 
 **저장 조건**
-- 이미지 필수 (URL 크롤링 또는 직접 업로드)
-- 카테고리 필수
-- 색상: 자동 추출 후 사용자 확인 (변경 가능)
+- 단일 의류 이미지 필수 저장 (업로드 시 무거운 크롤링을 즉시 하지 않고 이미지 앨범 형태로 먼저 저장)
+- 카테고리 기입 (선택사항, 미기입 시 미분류 등으로 자동 처리)
 - 저장 상한: 계정당 200개 (초과 시 `ERR-201-A`)
 
 **에러 케이스**
@@ -340,11 +337,10 @@ AI 시착 생성 요청
 |--------|-----------|------|
 | 저장 상한 초과 | `ERR-201-A` | "옷장이 가득 찼어요" 안내, 삭제 유도 |
 | 이미지 크기 초과 | `ERR-201-B` | 클라이언트 단 차단 (max 10MB) |
-| URL 크롤링 실패 | `ERR-201-C` | 직접 이미지 업로드로 fallback 안내 |
 
 ---
 
-#### FN-203 아이템 삭제
+#### FN-203 아이템 삭제 [Must]
 
 **설명:** 옷장에서 아이템을 삭제한다.
 
@@ -352,22 +348,37 @@ AI 시착 생성 요청
 1. 삭제 버튼 탭 → 확인 다이얼로그 ("정말 삭제할까요?")
 2. 확인 시 소프트 딜리트 처리 (DB `deleted_at` 세팅)
 3. 연결된 시착 결과 이력은 유지 (아이템만 옷장에서 제거)
+4. 내가 올린 옷을 다른 유저가 복사해 간 경우, 타 유저의 옷장에 보관된 사본에는 아무런 영향을 주지 않음 (독립 객체 취급)
+
+---
+
+#### FN-204 유사 이미지 및 출처 검색 [Should]
+
+**설명:** 옷장 상세 화면(SCR-031)에서 이미지를 Google Vision API로 검색하여, 유사한 이미지가 포함된 여러 웹사이트 출처 결과를 구글 렌즈(Google Lens) 검색처럼 그대로 UI에 일회성 노출한다.
+
+**처리 흐름**
+1. 아이템 상세 화면에서 "유사 기능 검색" 버튼 탭
+2. 옷 이미지를 Google Vision API로 전송하여 웹 결과 탐색
+3. 반환된 웹사이트 출처 리스트(해당 출처 이미지, 페이지 제목, URL)를 백엔드 필터링 없이 그대로 구성
+4. 검색 결과를 리스트 형태로 UI에 즉시 표출 (DB 접근 안 함)
+
+**에러 케이스**
+| 케이스 | 에러 코드 | 처리 |
+|--------|-----------|------|
+| 비슷한 옷 검색 실패 | `ERR-204-A` | "비슷한 제품 출처를 찾지 못했어요" 안내 토스트 |
 
 ---
 
 ### 4-3. API 엔드포인트 (옷장)
 
-#### POST `/v1/closet/items`
+#### POST `/closet/items`
 아이템 추가
 
 **Request**
 ```json
 {
-  "image_url": "https://cdn.fitcheck.io/items/abc.jpg",
-  "category": "top",           // top | bottom | outer | shoes | accessory
-  "color_tags": ["white", "black"],
-  "brand_name": "무신사 스탠다드",  // optional
-  "shop_url": "https://...",   // optional
+  "image_url": "https://cdn.simul.io/items/abc.jpg",
+  "category": "top",           // optional (추후 옷장에서 수동 분류 기능)
   "memo": "여름용"              // optional, max 100자
 }
 ```
@@ -382,13 +393,12 @@ AI 시착 생성 요청
 
 ---
 
-#### GET `/v1/closet/items`
+#### GET `/closet/items`
 아이템 목록 조회
 
 **Query Parameters**
 ```
 category=top          // optional
-color=white           // optional
 sort=recent           // recent | most_tried
 page=1
 per_page=20
@@ -402,8 +412,7 @@ per_page=20
       "item_id": "item_abc123",
       "image_url": "https://...",
       "category": "top",
-      "color_tags": ["white"],
-      "brand_name": "무신사 스탠다드",
+      "memo": "여름용",
       "try_count": 3,
       "created_at": "2025-01-01T00:00:00Z"
     }
@@ -416,7 +425,7 @@ per_page=20
 
 ---
 
-#### DELETE `/v1/closet/items/{item_id}`
+#### DELETE `/closet/items/{item_id}`
 아이템 삭제
 
 **Response `200`**
@@ -429,74 +438,68 @@ per_page=20
 
 ---
 
-## 5. 커뮤니티 피드 `P3`
+## 5. 커뮤니티 피드
 
 ### 5-1. 화면별 UI 컴포넌트
 
-#### SCR-010 홈 피드
+#### SCR-010 홈 피드 [Must]
 | 컴포넌트 | 타입 | 설명 |
 |----------|------|------|
 | TopTabBar | SegmentedControl | 전체 / 팔로잉 탭 |
 | SortToggle | SegmentedControl | 최신순 / 인기순 (24h 조회수 기준) |
 | FeedGrid | GridView | 2열 이미지 그리드, 무한 스크롤 |
-| PostCard | View | 썸네일 이미지 + 쇼핑백 아이콘 (태그 있을 때) |
+| PostCard | View | 시착 결과 썸네일 이미지 |
 | FloatingPostButton | FAB | 우하단 게시물 작성 버튼 |
 
-#### SCR-011 게시물 상세
+#### SCR-011 게시물 상세 [Must]
 | 컴포넌트 | 타입 | 설명 |
 |----------|------|------|
-| ImageCarousel | SwipeView | 이미지 최대 5장 스와이프 |
-| TagPinLayer | OverlayView | 이미지 탭 시 태그 핀 표시/숨김 토글 |
-| ProductListSection | View | 태그된 상품 리스트 (브랜드 + 제품명 + 구매하기) |
-| TryOnBanner | Button | "이 옷으로 AI 시착 해보기" |
+| PostImage | ImageView | 시착 결과 이미지 (오직 1장) |
+| TryOnBanner | Button | "이 게시물의 옷 구경하기 (작성자의 옷장으로 이동)" |
 | AuthorRow | View | 프로필 이미지 + 닉네임 + 팔로우 버튼 |
 | CaptionText | Text | 캡션 (300자, 더보기 접힘) |
 | LikeButton | IconButton | 하트 아이콘 + 좋아요 수 |
 | CommentSection | View | 댓글 목록 + 입력창 |
 | ReportButton | IconButton | 신고 |
 
-#### SCR-012 게시물 작성
+#### SCR-012 게시물 작성 [Must]
 | 컴포넌트 | 타입 | 설명 |
 |----------|------|------|
-| ImagePickerRow | HorizontalScrollView | 이미지 추가 (최대 5장) |
+| ImageUploadArea | TouchableArea | 시착 결과 이미지 첨부 (오직 1장 필수) |
 | CaptionInput | TextArea | 캡션 입력, 300자 카운터 |
-| TagAddButton | Button | `[필수]` 제품 태그 추가 → SCR-040 |
-| TagList | View | 추가된 태그 목록 (삭제 가능) |
 | VisibilityToggle | Toggle | 공개 / 비공개 |
-| UploadButton | Button | 업로드 (태그 없으면 비활성화) |
+| UploadButton | Button | 업로드 (이미지 미첨부 시 비활성화) |
 
 ---
 
 ### 5-2. 기능 명세
 
-#### FN-301 게시물 작성
+#### FN-301 게시물 작성 [Must]
 
 **입력 조건**
 | 필드 | 필수 여부 | 제약 |
 |------|-----------|------|
-| 이미지 | 필수 | 1–5장, 장당 최대 20MB, JPG/PNG/HEIC |
-| 제품 태그 | 필수 | 1개 이상 없으면 업로드 버튼 비활성화 |
+| 이미지 | 필수 | 오직 1장, 최대 20MB, JPG/PNG/HEIC |
 | 캡션 | 선택 | 최대 300자 |
 | 공개 여부 | 필수 | 기본값: 공개 |
 
 **처리 흐름**
-1. 이미지 최대 5장 선택
-2. 제품 태그 추가 (FN-402)
-3. 캡션 입력 (선택)
-4. 업로드 버튼 탭
-5. 이미지 병렬 업로드 → 게시물 생성 API 호출
-6. 완료 후 피드로 이동
+1. 업로드할 시착 결과 이미지 1장 선택
+2. 캡션 입력 (선택)
+3. 업로드 버튼 탭
+4. 이미지 업로드 → 게시물 생성 API 호출
+5. 완료 후 피드로 이동
 
 **에러 케이스**
 | 케이스 | 에러 코드 | 처리 |
 |--------|-----------|------|
-| 태그 없이 업로드 시도 | `ERR-301-A` | 업로드 버튼 비활성화 + 안내 문구 |
-| 이미지 장당 용량 초과 | `ERR-301-B` | 해당 이미지 선택 차단, 안내 토스트 |
+| 이미지 미첨부 | `ERR-301-A` | 업로드 버튼 비활성화 |
+| 이미지 용량 초과 | `ERR-301-B` | 해당 이미지 선택 차단, 안내 토스트 |
 | 업로드 실패 | `ERR-301-C` | 재시도 버튼 노출 |
 
 ---
 
-#### FN-304 좋아요
+#### FN-304 좋아요 [Should]
 
 **처리 흐름**
 1. 하트 버튼 탭
@@ -511,7 +514,7 @@ per_page=20
 
 ---
 
-#### FN-305 댓글
+#### FN-305 댓글 [Could]
 
 **제약**
 - 텍스트 최대 200자
@@ -528,17 +531,14 @@ per_page=20
 
 ### 5-3. API 엔드포인트 (피드)
 
-#### POST `/v1/posts`
+#### POST `/posts`
 게시물 생성
 
 **Request**
 ```json
 {
-  "image_urls": [
-    "https://cdn.fitcheck.io/posts/img1.jpg"
-  ],
+  "image_url": "https://cdn.simul.io/posts/img1.jpg",
   "caption": "오늘 코디",          // optional, max 300자
-  "tag_ids": ["tag_abc", "tag_xyz"], // 1개 이상 필수
   "is_public": true
 }
 ```
@@ -553,7 +553,7 @@ per_page=20
 
 ---
 
-#### GET `/v1/posts`
+#### GET `/posts`
 피드 목록 조회
 
 **Query Parameters**
@@ -570,8 +570,7 @@ per_page=20
   "posts": [
     {
       "post_id": "post_abc123",
-      "thumbnail_url": "https://...",
-      "has_tags": true,
+      "image_url": "https://...",
       "like_count": 42,
       "author": {
         "user_id": "user_xyz",
@@ -589,7 +588,7 @@ per_page=20
 
 ---
 
-#### POST `/v1/posts/{post_id}/likes`
+#### POST `/posts/{post_id}/likes`
 좋아요 토글
 
 **Response `200`**
@@ -602,7 +601,7 @@ per_page=20
 
 ---
 
-#### GET `/v1/posts/{post_id}/comments`
+#### GET `/posts/{post_id}/comments`
 댓글 목록 조회
 
 **Response `200`**
@@ -632,7 +631,7 @@ per_page=20
 
 ---
 
-#### POST `/v1/posts/{post_id}/comments`
+#### POST `/posts/{post_id}/comments`
 댓글 작성
 
 **Request**
@@ -645,195 +644,11 @@ per_page=20
 
 ---
 
-## 6. 제품 태그 & 쇼핑 연결 `P4`
-
-### 6-1. 화면별 UI 컴포넌트
-
-#### SCR-040 제품 태그 추가
-| 컴포넌트 | 타입 | 설명 |
-|----------|------|------|
-| ImagePreview | ImageView | 태그 추가할 게시물 이미지 |
-| TagPinLayer | OverlayView | 이미지 위 핀 위치 지정 (탭으로 핀 추가) |
-| TagFormBottomSheet | BottomSheet | 상품 정보 입력 폼 |
-| ImageSearchButton | Button | 이미지로 검색 → SCR-041 |
-| ManualInputFields | View | 브랜드명 + URL 직접 입력 (fallback) |
-| TagCountBadge | Badge | "N/5" 현재 태그 수 |
-
-#### SCR-041 태그 이미지 검색
-| 컴포넌트 | 타입 | 설명 |
-|----------|------|------|
-| ImageUploadArea | TouchableArea | 캡처 이미지 업로드 |
-| SearchButton | Button | `[필수]` 명시적 탭 시에만 API 호출 |
-| LoadingState | View | 검색 중 로딩 표시 |
-| ResultList | ListView | 유사 상품 결과 리스트 (이미지 + 상품명 + 출처) |
-| SelectButton | Button | 상품 선택 → 태그 자동 완성 |
-| FallbackLink | TextButton | "직접 입력하기" fallback |
-
----
-
-### 6-2. 기능 명세
-
-#### FN-401 태그 이미지 검색
-
-**설명:** 사용자가 업로드한 캡처 이미지를 Google Vision API Web Detection으로 분석하여 유사 상품 페이지 목록을 반환한다.
-
-**처리 흐름**
-1. 사용자가 이미지 업로드
-2. **"검색" 버튼 명시적 탭 시에만** 서버로 이미지 전송 (자동 호출 금지)
-3. 서버가 Google Vision API Web Detection 호출
-4. 동일 이미지 해시 캐시 확인 → 캐시 히트 시 API 미호출
-5. 결과 상품 리스트 반환 (최대 10개)
-6. 사용자가 상품 선택 → 태그 폼 자동 완성
-
-**API 비용 최적화**
-- 이미지 MD5 해시 기반 캐싱 (TTL: 24시간)
-- '검색' 버튼 탭 시에만 호출 (이미지 업로드 자동 호출 금지)
-- Google Vision API Web Detection: 월 1,000건 무료 / 초과 시 1,000건당 $3.50
-
-**에러 케이스**
-| 케이스 | 에러 코드 | 처리 |
-|--------|-----------|------|
-| 인식 결과 없음 | `ERR-401-A` | "유사 상품을 찾지 못했어요" + 직접 입력 유도 |
-| API 호출 실패 | `ERR-401-B` | "검색에 실패했어요. 다시 시도해주세요" + 직접 입력 유도 |
-| 이미지 크기 초과 | `ERR-401-C` | 클라이언트 단 차단 (max 10MB) |
-
----
-
-#### FN-402 태그 생성
-
-**설명:** 이미지 위 특정 좌표에 상품 정보를 연결하는 태그 핀을 생성한다.
-
-**입력값**
-| 필드 | 필수 | 설명 |
-|------|------|------|
-| position_x | 필수 | 이미지 내 X 좌표 (0.0 ~ 1.0 비율) |
-| position_y | 필수 | 이미지 내 Y 좌표 (0.0 ~ 1.0 비율) |
-| brand_name | 선택 | 브랜드명 |
-| product_name | 선택 | 상품명 |
-| shop_url | 필수 | 외부 쇼핑몰 URL (http/https 필수) |
-| image_index | 필수 | 게시물 내 이미지 순서 (0-based) |
-
-**제약**
-- 이미지당 최대 5개 태그
-- shop_url: URL 형식 유효성 검사 + 블랙리스트 필터
-
-**에러 케이스**
-| 케이스 | 에러 코드 | 처리 |
-|--------|-----------|------|
-| 태그 5개 초과 | `ERR-402-A` | "이미지당 태그는 최대 5개예요" 토스트 |
-| 잘못된 URL 형식 | `ERR-402-B` | 인라인 에러 메시지 |
-| 블랙리스트 URL | `ERR-402-C` | "연결할 수 없는 링크예요" 안내 |
-
----
-
-#### FN-403 태그 삭제
-
-**설명:** 태그 삭제는 기본적으로 불가하며, 조건 충족 시에만 등록자가 삭제할 수 있다.
-
-**삭제 가능 조건 (AND 조건)**
-1. 삭제 요청자 = 태그 등록자
-2. 해당 태그가 등록된 게시물 수 ≤ 1
-
-**처리 흐름**
-1. 태그 삭제 요청 수신
-2. 요청자 = 등록자 검증 → 불일치 시 `ERR-403-A`
-3. 해당 태그가 연결된 게시물 수 조회
-4. 게시물 수 > 1 이면 `ERR-403-B` 반환
-5. 조건 충족 시 소프트 딜리트 처리
-
-**에러 케이스**
-| 케이스 | 에러 코드 | 처리 |
-|--------|-----------|------|
-| 등록자 아닌 사용자 요청 | `ERR-403-A` | `403 Forbidden` |
-| 게시물 2개 이상 연결 | `ERR-403-B` | "이 태그는 다른 게시물에서도 사용 중이라 삭제할 수 없어요" |
-
----
-
-### 6-3. API 엔드포인트 (태그)
-
-#### POST `/v1/tags/search`
-이미지로 유사 상품 검색
-
-**Request**
-```
-Content-Type: multipart/form-data
-
-{
-  "image": File,         // max 10MB
-  "image_hash": "md5_hash_string"  // 캐시 확인용
-}
-```
-
-**Response `200`**
-```json
-{
-  "cached": false,
-  "results": [
-    {
-      "product_name": "오버핏 셔츠",
-      "brand_name": "무신사 스탠다드",
-      "shop_url": "https://www.musinsa.com/...",
-      "thumbnail_url": "https://...",
-      "source": "musinsa.com"
-    }
-  ]
-}
-```
-
----
-
-#### POST `/v1/tags`
-태그 생성
-
-**Request**
-```json
-{
-  "post_id": "post_abc123",
-  "image_index": 0,
-  "position_x": 0.45,
-  "position_y": 0.32,
-  "brand_name": "무신사 스탠다드",
-  "product_name": "오버핏 셔츠",
-  "shop_url": "https://www.musinsa.com/..."
-}
-```
-
-**Response `201`**
-```json
-{
-  "tag_id": "tag_abc123",
-  "created_at": "2025-01-01T00:00:00Z"
-}
-```
-
----
-
-#### DELETE `/v1/tags/{tag_id}`
-태그 삭제 (조건부)
-
-**Response `200`**
-```json
-{
-  "tag_id": "tag_abc123",
-  "deleted_at": "2025-01-01T00:00:00Z"
-}
-```
-
-**Response `403` — 조건 미충족**
-```json
-{
-  "error_code": "ERR-403-B",
-  "message": "이 태그는 다른 게시물에서도 사용 중이라 삭제할 수 없어요"
-}
-```
-
----
-
 ## 7. 계정 & 프로필
 
 ### 7-1. 화면별 UI 컴포넌트
 
-#### SCR-003 로그인
+#### SCR-003 로그인 [Must]
 | 컴포넌트 | 타입 | 설명 |
 |----------|------|------|
 | KakaoLoginButton | Button | 카카오 소셜 로그인 |
@@ -842,21 +657,21 @@ Content-Type: multipart/form-data
 | EmailLoginLink | TextButton | 이메일 로그인 (선택) |
 | PrivacyPolicyLink | TextButton | 개인정보처리방침 동의 안내 |
 
-#### SCR-050 프로필
+#### SCR-050 프로필 [Must]
 | 컴포넌트 | 타입 | 설명 |
 |----------|------|------|
 | ProfileHeader | View | 프로필 이미지 + 닉네임 + 한줄 소개 |
 | StatsRow | View | 팔로워 / 팔로잉 / 게시물 수 |
-| ClosetButton | Button | 내 옷장 바로가기 |
-| PostGrid | GridView | 내 게시물 그리드 |
-| EditButton | Button | 프로필 편집 → SCR-051 |
-| SettingButton | IconButton | 설정 → SCR-052 |
+| ClosetGridArea | View | 해당 유저의 '옷장' 열람 진입 구역 (피드-옷장 조회 UX) |
+| PostGrid | GridView | 해당 유저가 올린 가상 시착 게시물 그리드 |
+| ProfileActionBtn | Button | 본인이면 "프로필 편집", 타인이면 "팔로우 기능을 겸하는 액션" |
+| SettingButton | IconButton | 설정 (내 프로필 화면일 때만 노출) |
 
 ---
 
 ### 7-2. API 엔드포인트 (계정)
 
-#### POST `/v1/auth/social`
+#### POST `/auth/social`
 소셜 로그인
 
 **Request**
@@ -883,7 +698,7 @@ Content-Type: multipart/form-data
 
 ---
 
-#### PATCH `/v1/users/me`
+#### PATCH `/users/me`
 프로필 수정
 
 **Request**
@@ -897,7 +712,7 @@ Content-Type: multipart/form-data
 
 ---
 
-#### GET `/v1/users/{user_id}/posts`
+#### GET `/users/{user_id}/posts`
 사용자 게시물 목록
 
 **Response `200`**
@@ -922,82 +737,62 @@ users
 ├── bio              VARCHAR(50)
 ├── profile_image_url TEXT
 ├── is_public        BOOLEAN, DEFAULT true
+├── role             ENUM (user, admin), DEFAULT user
+├── is_active        BOOLEAN, DEFAULT true (정지 여부)
 ├── created_at       TIMESTAMP
 └── deleted_at       TIMESTAMP, nullable (탈퇴)
 ```
 
-### Posts
+### Base Images (사람 이미지 베이스 보관소)
+```
+base_images
+├── base_image_id    UUID, PK
+├── user_id          UUID, FK → users
+├── image_url        TEXT, NOT NULL
+├── source_post_id   UUID, FK → posts, nullable (시착물을 베이스로 재사용한 경우 출처)
+├── created_at       TIMESTAMP
+└── deleted_at       TIMESTAMP, nullable
+```
+
+### Posts (시착 결과 통합 보관소)
 ```
 posts
 ├── post_id          UUID, PK
 ├── user_id          UUID, FK → users
-├── caption          VARCHAR(300)
-├── is_public        BOOLEAN, DEFAULT true
+├── base_image_id    UUID, FK → base_images (시착에 사용한 사람 사진 출처)
+├── item_id          UUID, FK → closet_items, nullable (시착 옷 출처)
+├── image_url        TEXT, nullable (시착 완료 전 null)
+├── status           ENUM (processing, completed, failed)
+├── caption          VARCHAR(300), nullable
+├── is_public        BOOLEAN, DEFAULT false (기본 비공개)
 ├── like_count       INT, DEFAULT 0
 ├── view_count       INT, DEFAULT 0
 ├── created_at       TIMESTAMP
 └── deleted_at       TIMESTAMP, nullable
 ```
 
-### Post Images
+
+
+### Clothing Images (원본 옷 이미지)
 ```
-post_images
+clothing_images
 ├── image_id         UUID, PK
-├── post_id          UUID, FK → posts
 ├── image_url        TEXT, NOT NULL
-├── image_index      INT (0-based 순서)
+├── uploader_id      UUID, FK → users (최초 업로더)
 └── created_at       TIMESTAMP
 ```
 
-### Tags
-```
-tags
-├── tag_id           UUID, PK
-├── created_by       UUID, FK → users (등록자)
-├── brand_name       VARCHAR(100)
-├── product_name     VARCHAR(200)
-├── shop_url         TEXT, NOT NULL
-├── created_at       TIMESTAMP
-└── deleted_at       TIMESTAMP, nullable
-```
-
-### Post Tags (태그 ↔ 게시물 연결)
-```
-post_tags
-├── post_tag_id      UUID, PK
-├── post_id          UUID, FK → posts
-├── tag_id           UUID, FK → tags
-├── image_index      INT
-├── position_x       FLOAT (0.0 ~ 1.0)
-└── position_y       FLOAT (0.0 ~ 1.0)
-```
-
-### Closet Items
+### Closet Items (사용자 옷장 매핑)
 ```
 closet_items
 ├── item_id          UUID, PK
 ├── user_id          UUID, FK → users
-├── image_url        TEXT, NOT NULL
-├── category         ENUM (top, bottom, outer, shoes, accessory)
-├── color_tags       VARCHAR[] (배열)
-├── brand_name       VARCHAR(100)
-├── shop_url         TEXT
+├── image_id         UUID, FK → clothing_images
+├── category         ENUM (top, bottom, outer, shoes, accessory), nullable
 ├── memo             VARCHAR(100)
 ├── try_count        INT, DEFAULT 0
 ├── created_at       TIMESTAMP
 └── deleted_at       TIMESTAMP, nullable
-```
-
-### Tryon Results
-```
-tryon_results
-├── result_id        UUID, PK
-├── user_id          UUID, FK → users
-├── clothing_image_url TEXT
-├── result_image_url   TEXT
-├── status           ENUM (processing, completed, failed)
-├── created_at       TIMESTAMP
-└── expires_at       TIMESTAMP (30일 후 자동 삭제)
 ```
 
 ### Tryon Credits
@@ -1006,7 +801,7 @@ tryon_credits
 ├── credit_id        UUID, PK
 ├── user_id          UUID, FK → users
 ├── used_at          TIMESTAMP
-└── job_id           UUID, FK → tryon_results
+└── job_id           UUID, FK → posts
 ```
 
 ### Comments
@@ -1039,38 +834,38 @@ follows
 
 | Method | Path | 기능 | 인증 |
 |--------|------|------|------|
-| POST | `/v1/auth/social` | 소셜 로그인 | 불필요 |
-| POST | `/v1/auth/refresh` | 토큰 갱신 | 불필요 |
-| DELETE | `/v1/auth/logout` | 로그아웃 | 필요 |
-| GET | `/v1/users/me` | 내 정보 조회 | 필요 |
-| PATCH | `/v1/users/me` | 프로필 수정 | 필요 |
-| DELETE | `/v1/users/me` | 회원 탈퇴 | 필요 |
-| GET | `/v1/users/{user_id}` | 사용자 프로필 조회 | 불필요 |
-| GET | `/v1/users/{user_id}/posts` | 사용자 게시물 목록 | 불필요 |
-| POST | `/v1/follows/{user_id}` | 팔로우 | 필요 |
-| DELETE | `/v1/follows/{user_id}` | 언팔로우 | 필요 |
-| GET | `/v1/posts` | 피드 목록 | 불필요 (비회원 열람) |
-| POST | `/v1/posts` | 게시물 작성 | 필요 |
-| GET | `/v1/posts/{post_id}` | 게시물 상세 | 불필요 |
-| DELETE | `/v1/posts/{post_id}` | 게시물 삭제 | 필요 |
-| POST | `/v1/posts/{post_id}/likes` | 좋아요 토글 | 필요 |
-| GET | `/v1/posts/{post_id}/comments` | 댓글 목록 | 불필요 |
-| POST | `/v1/posts/{post_id}/comments` | 댓글 작성 | 필요 |
-| DELETE | `/v1/comments/{comment_id}` | 댓글 삭제 | 필요 |
-| POST | `/v1/posts/{post_id}/report` | 게시물 신고 | 필요 |
-| POST | `/v1/tags/search` | 이미지로 상품 검색 | 필요 |
-| POST | `/v1/tags` | 태그 생성 | 필요 |
-| DELETE | `/v1/tags/{tag_id}` | 태그 삭제 (조건부) | 필요 |
-| GET | `/v1/closet/items` | 옷장 아이템 목록 | 필요 |
-| POST | `/v1/closet/items` | 아이템 추가 | 필요 |
-| GET | `/v1/closet/items/{item_id}` | 아이템 상세 | 필요 |
-| PATCH | `/v1/closet/items/{item_id}` | 아이템 수정 | 필요 |
-| DELETE | `/v1/closet/items/{item_id}` | 아이템 삭제 | 필요 |
-| POST | `/v1/tryon/upload` | 시착 사진 업로드 | 필요 |
-| POST | `/v1/tryon/generate` | 시착 생성 요청 | 필요 |
-| GET | `/v1/tryon/status/{job_id}` | 생성 상태 폴링 | 필요 |
-| GET | `/v1/tryon/results` | 시착 결과 목록 | 필요 |
-| GET | `/v1/tryon/credits` | 크레딧 잔여 조회 | 필요 |
+| POST | `/auth/social` | 소셜 로그인 | 불필요 |
+| POST | `/auth/refresh` | 토큰 갱신 | 불필요 |
+| DELETE | `/auth/logout` | 로그아웃 | 필요 |
+| GET | `/users/me` | 내 정보 조회 | 필요 |
+| PATCH | `/users/me` | 프로필 수정 | 필요 |
+| DELETE | `/users/me` | 회원 탈퇴 | 필요 |
+| GET | `/users/{user_id}` | 사용자 프로필 조회 | 불필요 |
+| GET | `/users/{user_id}/posts` | 사용자 게시물 목록 | 불필요 |
+| POST | `/follows/{user_id}` | 팔로우 | 필요 |
+| DELETE | `/follows/{user_id}` | 언팔로우 | 필요 |
+| GET | `/posts` | 피드 목록 | 불필요 (비회원 열람) |
+| POST | `/posts` | 게시물 작성 | 필요 |
+| GET | `/posts/{post_id}` | 게시물 상세 | 불필요 |
+| DELETE | `/posts/{post_id}` | 게시물 삭제 | 필요 |
+| POST | `/posts/{post_id}/likes` | 좋아요 토글 | 필요 |
+| GET | `/posts/{post_id}/comments` | 댓글 목록 | 불필요 |
+| POST | `/posts/{post_id}/comments` | 댓글 작성 | 필요 |
+| DELETE | `/comments/{comment_id}` | 댓글 삭제 | 필요 |
+| POST | `/posts/{post_id}/report` | 게시물 신고 | 필요 |
+| GET | `/closet/items` | 옷장 아이템 목록 | 필요 |
+| POST | `/closet/items` | 아이템 추가 | 필요 |
+| GET | `/closet/items/{item_id}` | 아이템 상세 | 필요 |
+| PATCH | `/closet/items/{item_id}` | 아이템 수정 | 필요 |
+| DELETE | `/closet/items/{item_id}` | 아이템 삭제 | 필요 |
+| POST | `/tryon/upload` | 시착 사진 업로드 | 필요 |
+| POST | `/tryon/generate` | 시착 생성 요청 | 필요 |
+| GET | `/tryon/status/{job_id}` | 생성 상태 조회 (SSE) | 필요 |
+| GET | `/tryon/credits` | 크레딧 잔여 조회 | 필요 |
+| GET | `/admin/reports` | 접수된 신고 목록 조회 | Admin |
+| PATCH | `/admin/posts/{post_id}/blind` | 문제 게시글 강제 블라인드 | Admin |
+| PATCH | `/admin/users/{user_id}/suspend` | 악성 유저 정지 처리 | Admin |
+| POST | `/admin/users/{user_id}/credits` | 크레딧 수동 지급 | Admin |
 
 ### 공통 Request Header
 ```
@@ -1107,22 +902,14 @@ Accept-Language: ko
 | `ERR-103-D` | 422 | 부적절한 이미지 | "사용할 수 없는 이미지예요" |
 | `ERR-201-A` | 422 | 옷장 저장 상한 초과 | "옷장이 가득 찼어요 (최대 200개)" |
 | `ERR-201-B` | 422 | 아이템 이미지 크기 초과 | "이미지는 10MB 이하만 가능해요" |
-| `ERR-201-C` | 422 | URL 크롤링 실패 | "링크에서 이미지를 가져오지 못했어요. 직접 업로드해주세요" |
-| `ERR-301-A` | 422 | 태그 없이 게시물 업로드 | 업로드 버튼 비활성화 + "제품 태그를 1개 이상 추가해주세요" |
+| `ERR-204-A` | 200 | 유사 이미지 출처 없음 | "비슷한 제품 출처를 찾지 못했어요" |
+| `ERR-301-A` | 422 | 이미지 미첨부 업로드 시도 | 업로드 버튼 비활성화 |
 | `ERR-301-B` | 422 | 게시물 이미지 크기 초과 | "이미지는 20MB 이하만 가능해요" |
 | `ERR-301-C` | 500 | 게시물 업로드 실패 | "업로드에 실패했어요. 다시 시도해주세요" |
 | `ERR-304-A` | 401 | 비로그인 좋아요 시도 | 로그인 유도 바텀시트 |
 | `ERR-304-B` | 500 | 좋아요 네트워크 오류 | UI 롤백 + "잠시 후 다시 시도해주세요" |
 | `ERR-305-A` | 401 | 비로그인 댓글 시도 | 로그인 유도 바텀시트 |
 | `ERR-305-B` | 422 | 댓글 200자 초과 | 입력 차단 + 카운터 빨간색 표시 |
-| `ERR-401-A` | 200 | Vision API 결과 없음 | "유사 상품을 찾지 못했어요. 직접 입력해주세요" |
-| `ERR-401-B` | 500 | Vision API 호출 실패 | "검색에 실패했어요. 직접 입력해주세요" |
-| `ERR-401-C` | 422 | 검색 이미지 크기 초과 | "이미지는 10MB 이하만 가능해요" |
-| `ERR-402-A` | 422 | 태그 5개 초과 | "이미지당 태그는 최대 5개예요" |
-| `ERR-402-B` | 422 | 잘못된 URL 형식 | "올바른 URL을 입력해주세요 (http:// 또는 https://)" |
-| `ERR-402-C` | 422 | 블랙리스트 URL | "연결할 수 없는 링크예요" |
-| `ERR-403-A` | 403 | 타인 태그 삭제 시도 | `403 Forbidden` |
-| `ERR-403-B` | 422 | 게시물 2개 이상 연결 태그 삭제 시도 | "이 태그는 다른 게시물에서도 사용 중이라 삭제할 수 없어요" |
 
 ### 공통 예외 처리 원칙
 
