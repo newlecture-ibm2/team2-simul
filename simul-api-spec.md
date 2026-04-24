@@ -1,6 +1,6 @@
 # Simul API 명세서 (API Specification) v1.0
 
-> **문서 목적**: Simul 모바일 클라이언트와 백엔드 서버 간의 통신 규격을 정의합니다.  
+> **문서 목적**: Simul 클라이언트와 백엔드 서버 간의 통신 규격을 정의합니다.  
 > **기준 사항**: `simul-functional-spec.md` (기능 명세서)
 
 ---
