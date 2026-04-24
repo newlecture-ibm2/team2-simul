@@ -13,6 +13,7 @@
 3. [AI 가상시착](#3-ai-가상시착)
 4. [개인 옷장](#4-개인-옷장)
 5. [커뮤니티 피드](#5-커뮤니티-피드)
+6. [관리자 (Admin)](#6-관리자-admin)
 7. [계정 & 프로필](#7-계정--프로필)
 8. [공통 데이터 모델](#8-공통-데이터-모델)
 9. [API 엔드포인트 정의](#9-api-엔드포인트-정의)
@@ -199,8 +200,8 @@
 
 ### 3-3. API 엔드포인트 (AI 시착)
 
-#### POST `/tryon/upload`
-사용자 사진 업로드
+#### POST `/tryon/base-images`
+사용자 사진(베이스 이미지) 업로드 및 등록
 
 **Request**
 ```
@@ -214,6 +215,7 @@ Content-Type: multipart/form-data
 **Response `201`**
 ```json
 {
+  "base_image_id": "uuid",
   "image_url": "https://cdn.simul.io/users/photo_abc123.jpg"
 }
 ```
@@ -226,15 +228,15 @@ AI 시착 생성 요청
 **Request**
 ```json
 {
-  "user_image_url": "https://cdn.simul.io/temp/abc123.jpg",
-  "clothing_image_url": "https://cdn.simul.io/items/xyz789.jpg"
+  "base_image_id": "uuid",      // 선택/등록된 내 사람 이미지 ID
+  "item_id": "item_uuid"        // 입어볼 옷장 속 아이템 ID
 }
 ```
 
 **Response `201`**
 ```json
 {
-  "job_id": "job_abc123",
+  "job_id": "post_uuid",
   "status": "processing",
   "estimated_seconds": 20
 }
@@ -826,6 +828,26 @@ follows
 └── created_at       TIMESTAMP
 ```
 
+### Likes
+```
+likes
+├── like_id          UUID, PK
+├── post_id          UUID, FK → posts
+├── user_id          UUID, FK → users
+├── created_at       TIMESTAMP
+└── UNIQUE (post_id, user_id)
+```
+
+### Reports
+```
+reports
+├── report_id        UUID, PK
+├── post_id          UUID, FK → posts
+├── reporter_id      UUID, FK → users
+├── reason           VARCHAR(200)
+└── created_at       TIMESTAMP
+```
+
 ---
 
 ## 9. API 엔드포인트 정의
@@ -858,7 +880,9 @@ follows
 | GET | `/closet/items/{item_id}` | 아이템 상세 | 필요 |
 | PATCH | `/closet/items/{item_id}` | 아이템 수정 | 필요 |
 | DELETE | `/closet/items/{item_id}` | 아이템 삭제 | 필요 |
-| POST | `/tryon/upload` | 시착 사진 업로드 | 필요 |
+| POST | `/tryon/base-images` | 새 베이스 이미지 업로드 등록 | 필요 |
+| POST | `/tryon/base-images/from-post` | 시착 결과를 베이스로 복제 등록 | 필요 |
+| GET | `/users/me/base-images` | 내 베이스 이미지 목록 조회 | 필요 |
 | POST | `/tryon/generate` | 시착 생성 요청 | 필요 |
 | GET | `/tryon/status/{job_id}` | 생성 상태 조회 (SSE) | 필요 |
 | GET | `/tryon/credits` | 크레딧 잔여 조회 | 필요 |

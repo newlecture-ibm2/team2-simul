@@ -89,6 +89,14 @@ erDiagram
         TIMESTAMP created_at
     }
 
+    likes {
+        UUID like_id PK
+        UUID post_id FK
+        UUID user_id FK
+        TIMESTAMP created_at
+        UNIQUE post_id_user_id "(post_id, user_id)"
+    }
+
     reports {
         UUID report_id PK
         UUID post_id FK
@@ -114,6 +122,9 @@ erDiagram
     users ||--o{ comments : "writes"
     posts ||--o{ comments : "has"
     comments |o--o{ comments : "replies_to (대댓글 구조)"
+
+    users ||--o{ likes : "likes (좋아요 누른 유저)"
+    posts ||--o{ likes : "has_likes (좋아요 받은 게시물)"
     
     users ||--o{ follows : "follower (팔로우 거는 쪽)"
     users ||--o{ follows : "following (팔로우 받는 쪽)"
