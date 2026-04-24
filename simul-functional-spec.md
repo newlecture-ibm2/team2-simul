@@ -125,9 +125,11 @@
 #### SCR-023 시착 생성 중 [Must]
 | 컴포넌트 | 타입 | 설명 |
 |----------|------|------|
-| ProgressAnimation | LottieView | 로딩 애니메이션 |
-| StatusText | Text | 처리 단계 안내 텍스트 |
-| BrowseButton | Button | "다른 상품 보는 동안 기다리기" → 피드로 이동 |
+| ProgressBar | View | 상단 진행률 표시 + 처리 단계 안내 텍스트 |
+| RandomFeedSwiper | SwipeView | 랜덤 인기 피드 세로 풀스크린 스와이프 (숛폼 형태) |
+| FeedLikeButton | IconButton | 현재 보고 있는 피드에 좋아요 (기존 좋아요 API 재사용) |
+| FeedAuthorInfo | View | 작성자 프로필 미니 표시 (닉네임 + 프로필 사진) |
+| CompletionBanner | OverlayView | 생성 완료 시 "시착 완료! 결과 보기" 오버레이 배너 자동 등장 |
 | CancelButton | Button | 시착 취소 (크레딧 미차감) |
 
 #### SCR-024 시착 결과 [Must]
@@ -178,10 +180,11 @@
 1. 크레딧 잔여 확인 (0이면 `ERR-103-A` 반환)
 2. AI 생성 API 비동기 호출 (job_id 반환)
 3. SSE(Server-Sent Events) 스트림을 연결하여 실시간 상태 확인
-4. 완료 수신 시 결과 이미지를 내 프로필의 "비공개 게시물(is_public=false)"로 자동 생성 후 SCR-024 이동
-5. 크레딧 1 차감 (생성 성공 시에만)
-6. 생성된 시착 게시글에 사용된 의류 출처(item_id)를 연결
-7. 사용자 원본 사진은 삭제하지 않고 유지하여 다음 시착 시 재사용
+4. 대기 화면(SCR-023)에서 랜덤 인기 피드를 숛폼 스와이프로 노출하여 사용자 대기 이탈 방지 (기존 `GET /posts?sort=popular` 재사용)
+5. 완료 수신 시 결과 이미지를 내 프로필의 "비공개 게시물(is_public=false)"로 자동 생성 후 SCR-024 이동
+6. 크레딧 1 차감 (생성 성공 시에만)
+7. 생성된 시착 게시글에 사용된 의류 출처(item_id)를 연결
+8. 사용자 원본 사진은 삭제하지 않고 유지하여 다음 시착 시 재사용
 
 **제약**
 - 처리 시간 목표: 30초 이내 (95th percentile)
