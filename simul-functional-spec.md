@@ -126,7 +126,7 @@
 | 컴포넌트 | 타입 | 설명 |
 |----------|------|------|
 | ProgressBar | View | 상단 진행률 표시 + 처리 단계 안내 텍스트 |
-| RandomFeedSwiper | SwipeView | 랜덤 인기 피드 세로 풀스크린 스와이프 (숛폼 형태) |
+| RandomFeedSwiper | SwipeView | 랜덤 인기 피드 세로 풀스크린 스와이프 (숏폼 형태) |
 | FeedLikeButton | IconButton | 현재 보고 있는 피드에 좋아요 (기존 좋아요 API 재사용) |
 | FeedAuthorInfo | View | 작성자 프로필 미니 표시 (닉네임 + 프로필 사진) |
 | CompletionBanner | OverlayView | 생성 완료 시 "시착 완료! 결과 보기" 오버레이 배너 자동 등장 |
