@@ -231,7 +231,7 @@ src/main/java/com/simul/
     ├── config/                      # SecurityConfig, JpaConfig, CorsConfig, WebConfig
     ├── exception/                   # GlobalExceptionHandler, BusinessException, ErrorCode enum
     ├── security/                    # JwtTokenProvider, JwtAuthenticationFilter
-    ├── storage/                     # FileStorageService (S3/GCS 업로드 추상화)
+    ├── storage/                     # FileStorageService (로컬 파일 저장, 향후 S3 전환 가능하도록 추상화)
     ├── image/                       # ImageValidator (포맷/용량/해상도 검증 유틸리티)
     └── dto/                         # PageRequest, PageResponse (공통 페이지네이션)
 ```

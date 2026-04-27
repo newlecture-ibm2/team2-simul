@@ -18,7 +18,7 @@ QA/통합,Epic,,QA/통합,,,,"전원",,통합 테스트 / E2E 테스트 / 전체
 [INFRA-008] 공통 에러 코드 체계 및 Exception Handler 구현,Task,Highest,,공통 인프라,공통 모듈,Must,"담당자A",8h,ERR-000 ~ 전체 에러 코드 정의 및 글로벌 예외 처리
 [INFRA-009] 공통 에러 Response DTO 구현,Task,Highest,,공통 인프라,공통 모듈,Must,"담당자A",4h,error_code / message / detail 구조 DTO
 [INFRA-010] 공통 페이지네이션 모듈 구현,Task,Highest,,공통 인프라,공통 모듈,Must,"담당자A",4h,page/per_page 공통 Request/Response 처리
-[INFRA-011] 이미지 업로드 서비스 구현,Task,Highest,,공통 인프라,공통 모듈,Must,"담당자A",12h,S3/Cloud Storage + CDN 연동 이미지 업로드 서비스
+[INFRA-011] 이미지 업로드 서비스 구현,Task,Highest,,공통 인프라,공통 모듈,Must,"담당자A",12h,서버 로컬 파일 시스템 기반 이미지 업로드 서비스 (향후 S3 전환 가능하도록 추상화)
 [INFRA-012] 이미지 유효성 검증 유틸리티 구현,Task,Highest,,공통 인프라,공통 모듈,Must,"담당자A",8h,이미지 리사이징/포맷/용량/해상도 검증
 [INFRA-013] HTTPS 강제 및 CORS 설정,Task,Highest,,공통 인프라,공통 모듈,Must,"담당자A",4h,보안 기본 설정
 [INFRA-014] 반응형 레이아웃 및 모바일 퍼스트 디자인 시스템 구축,Task,Highest,,공통 인프라,공통 FE,Must,"담당자A",8h,모바일 최적화 CSS/레이아웃 시스템 + 뷰포트/미디어쿼리 기본 설정

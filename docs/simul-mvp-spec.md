@@ -42,7 +42,7 @@
 | **Validation** | Jakarta Bean Validation | — | DTO 입력 유효성 검증 |
 | **API 문서** | SpringDoc OpenAPI (Swagger UI) | 2.x | API 명세 자동 생성 및 테스트 UI |
 | **SSE** | Spring MVC SseEmitter | — | AI 시착 실시간 상태 전송 (Server-Sent Events) |
-| **Image Storage** | AWS S3 (또는 GCP Cloud Storage) | — | CDN 연계 이미지 업로드, 대용량 파일 처리 |
+| **Image Storage** | 서버 로컬 파일 시스템 | — | MVP 단계 자체 서버 저장 (`/uploads/images/`), 트래픽 증가 시 S3 전환 가능 |
 | **Build** | Gradle (Kotlin DSL) | 8+ | 멀티모듈 빌드, 의존성 관리 |
 | **Test** | JUnit 5 + Mockito + AssertJ | — | 단위/통합 테스트 |
 
@@ -66,8 +66,8 @@
 
 | 영역 | 기술 | 선정 이유 |
 |------|------|----------|
-| **Cloud** | AWS (또는 GCP) | S3 + CloudFront CDN, RDS PostgreSQL, EC2/ECS |
-| **CDN** | AWS CloudFront (또는 GCP CDN) | 이미지 중심 서비스 — 글로벌 캐싱으로 로딩 2초 내 달성 |
+| **Cloud** | 자체 서버 (또는 AWS EC2) | MVP 단계 로컬 서버 운영, 향후 클라우드 전환 가능 |
+| **Image Storage** | 서버 로컬 디스크 | MVP 비용 절감 — S3 + CDN은 트래픽 증가 시 도입 |
 | **CI/CD** | GitHub Actions | 코드 리뷰 → 자동 빌드 → 배포 파이프라인 |
 | **Container** | Docker + Docker Compose | 개발/스테이징 환경 일관성 |
 | **Monitoring** | Spring Actuator + Micrometer | 헬스체크, 메트릭 수집 |
@@ -103,7 +103,7 @@ graph LR
     end
 
     subgraph INFRA["인프라"]
-        S3["S3 + CDN"]
+        LOCAL["로컬 파일 저장"]
         GHA["GitHub Actions"]
     end
 
@@ -114,14 +114,14 @@ graph LR
     NEXT --> TW
     RQ --> SB
     SSE_C --> SSE_S
-    SB --> S3
+    SB --> LOCAL
     GHA --> SB
     GHA --> NEXT
 ```
 
 > **선정 원칙:**
 > 1. **헥사고날 아키텍처 호환** — Spring Boot의 DI/IoC가 Port-Adapter 패턴과 자연스럽게 결합
-> 2. **이미지 중심 서비스** — S3 + CDN + next/image로 대용량 이미지 최적화 파이프라인 구축
+> 2. **이미지 중심 서비스** — 서버 로컬 저장 + next/image 최적화 (향후 S3 + CDN 전환 가능하도록 추상화)
 > 3. **실시간 통신** — SSE 기반 AI 생성 상태 스트림 (WebSocket 대비 서버 구현 단순)
 > 4. **모바일 퍼스트** — Next.js SSR + Tailwind 반응형으로 모바일 웹 성능 극대화
 > 5. **MVP 속도** — React Query 낙관적 업데이트, Zustand 경량 상태 관리로 개발 생산성 확보
