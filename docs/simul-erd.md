@@ -1,7 +1,7 @@
 # Simul ERD (Entity-Relationship Diagram)
 
 > **기준 문서**: `simul-functional-spec.md`, `simul-api-spec.md`, `simul-backend-architecture.md`  
-> **기능 변경 반영 목록**: 가상 시착용 베이스 사람 이미지(`base_images`) 영구 보관 및 AI 시착 결과를 베이스 이미지로 재사용하는 순환 로직 추가. 소셜 로그인 중복 방지, 팔로우 중복 방지, 수동 게시물 지원을 위한 제약 조건 보완.
+> **기능 변경 반영 목록**: 가상 시착용 베이스 사람 이미지(`base_images`) 영구 보관 및 AI 시착 결과를 베이스 이미지로 재사용하는 순환 로직 추가. 소셜 로그인 중복 방지, 팔로우 중복 방지, 수동 게시물 지원을 위한 제약 조건 보완. **다중 이미지 게시물(`post_images`) 지원, Google Vision API 기반 자동 태그(`tags`, `post_tags`) 시스템, 통합 검색 기능 추가.**
 
 ## 시각화 다이어그램 (Mermaid)
 이 다이어그램은 Github Markdown이나 최신 Markdown 뷰어에서 자동으로 다이어그램 맵으로 변환되어 출력됩니다.
@@ -55,7 +55,7 @@ erDiagram
         UUID user_id FK
         UUID base_image_id FK "nullable (시착에 사용한 내 몸 베이스 사진, 수동 게시물은 null)"
         UUID item_id FK "nullable (시착 원본 옷 출처)"
-        TEXT image_url "nullable (처리 전 null)"
+        TEXT image_url "nullable (대표 이미지, 처리 전 null)"
         ENUM status "processing, completed, failed"
         VARCHAR caption "nullable"
         BOOLEAN is_public "DEFAULT false (비공개 우선)"
@@ -65,6 +65,30 @@ erDiagram
         INT view_count
         TIMESTAMP created_at
         TIMESTAMP deleted_at
+    }
+
+    post_images {
+        UUID post_image_id PK
+        UUID post_id FK "게시물 참조"
+        TEXT image_url "이미지 URL"
+        INT sort_order "정렬 순서 (0부터)"
+        TIMESTAMP created_at
+    }
+
+    tags {
+        UUID tag_id PK
+        VARCHAR name "UNIQUE, 태그명 (예: 데님, 니트, 캐주얼)"
+        VARCHAR category "nullable (상의, 하의, 아우터, 스타일 등)"
+        INT usage_count "DEFAULT 0 (사용 빈도, 검색 자동완성용)"
+        TIMESTAMP created_at
+    }
+
+    post_tags {
+        UUID post_tag_id PK
+        UUID post_id FK "게시물 참조"
+        UUID tag_id FK "태그 참조"
+        UNIQUE post_id_tag_id "(post_id, tag_id)"
+        TIMESTAMP created_at
     }
 
     tryon_credits {
@@ -121,6 +145,10 @@ erDiagram
     posts |o--o{ base_images : "converted_to_model (AI 결과를 다시 모델로 사용)"
     closet_items |o--o{ posts : "used_in_tryon (입어본 옷 출처 연결)"
     
+    posts ||--o{ post_images : "has_images (다중 이미지)"
+    posts ||--o{ post_tags : "has_tags (게시물 태그)"
+    tags ||--o{ post_tags : "applied_to (태그 적용)"
+
     users ||--o{ tryon_credits : "spends (크레딧 사용 내역)"
     posts ||--o| tryon_credits : "consumes (시착 작업 job_id 결합)"
     
@@ -141,3 +169,9 @@ erDiagram
 ## 신규 도입된 설계 포인트 (베이스 이미지 순환 구조)
 1. **`base_images` 테이블 분리 확장**: 사용자가 AI 가상시착에 사용하는 "내 몸 모델(Base Image)" 사진들을 DB에 온전히 기록하여 관리합니다.
 2. **시착 결과를 다시 내 모델로 사용(`source_post_id`)**: 단순히 갤러리에서 새로 올리는 것뿐만 아니라, 과거에 너무 만족스럽게 합성된 '시착 완료 사진(`posts`)' 자체를 다음 시착의 내 몸 모델 사진으로 그대로 승계등록할 수 있도록 FK 자기 참조 흐름 구조를 확립했습니다.
+
+## 신규 도입된 설계 포인트 (다중 이미지 · 태그 · 검색)
+
+3. **`post_images` 테이블 추가**: 게시물당 여러 장의 이미지를 지원합니다. `sort_order` 필드로 이미지 순서를 관리하며, `posts.image_url`은 대표 이미지(첫 번째 이미지)로 유지됩니다.
+4. **`tags` + `post_tags` 태그 시스템**: Google Vision API로 이미지에서 옷 관련 키워드를 자동 추출하여 태그를 생성합니다. `tags` 테이블은 태그 마스터(이름, 카테고리, 사용 빈도)를 관리하고, `post_tags`는 게시물–태그 N:M 매핑을 담당합니다. 태그는 게시물당 최대 10개로 제한됩니다.
+5. **검색 지원**: `tags.name`에 인덱스를 추가하여 `#` 태그 기반 통합 검색과 자동완성을 지원합니다. `tags.usage_count`로 인기 태그 우선 노출이 가능합니다.

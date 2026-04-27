@@ -65,6 +65,7 @@
 | SCR-051 | 프로필 편집 | SCR-050 → 편집 |
 | SCR-052 | 설정 | SCR-050 → 설정 |
 | SCR-060 | 인앱 브라우저 | 외부 웹사이트 링크 탭 |
+| SCR-070 | 통합 검색 | 홈 피드 상단 검색바 |
 
 ### 기능 ID (FN)
 
@@ -83,6 +84,8 @@
 | FN-304 | 좋아요 | SCR-011 |
 | FN-305 | 댓글 | SCR-011 |
 | FN-306 | 팔로우/언팔로우 | SCR-050 |
+| FN-307 | 자동 태그 (Google Vision) | SCR-012, SCR-024 |
+| FN-308 | 통합 검색 | SCR-070 |
 | FN-501 | 소셜 로그인 | SCR-003 |
 | FN-502 | 프로필 편집 | SCR-051 |
 | FN-503 | 알림 설정 | SCR-052 |
@@ -137,8 +140,10 @@
 |----------|------|------|
 | CompareSlider | SwipeView | 원본 ↔ 결과 비교 슬라이더 |
 | SaveButton | Button | 디바이스 저장 |
-| PublishButton | Button | 공개 피드에 자랑하기 (비공개 게시물을 공개로 전환 및 짧은 캡션 입력 바텀시트) |
+| CreatePostButton | Button | `[Must]` "게시물 만들기" — SCR-012 게시물 생성 화면으로 이동, 시착 결과 이미지가 첫 번째 이미지로 자동 완성됨 |
 | RetryButton | Button | 다른 옷으로 다시 시착 |
+
+*Note: 시착한 모든 이미지는 DB에 자동 저장됩니다. 게시물 생성 화면(SCR-012)에서 서버에 저장된 시착 결과를 추가로 선택할 수 있습니다.*
 
 ---
 
@@ -450,16 +455,18 @@ per_page=20
 #### SCR-010 홈 피드 [Must]
 | 컴포넌트 | 타입 | 설명 |
 |----------|------|------|
+| SearchBar | TextInput | `[Must]` 통합 검색바 — # 입력 시 태그 자동완성 드롭다운 노출 (SCR-070 진입) |
 | TopTabBar | SegmentedControl | 전체 / 팔로잉 탭 |
 | SortToggle | SegmentedControl | 최신순 / 인기순 (24h 조회수 기준) |
 | FeedGrid | GridView | 2열 이미지 그리드, 무한 스크롤 |
-| PostCard | View | 시착 결과 썸네일 이미지 |
+| PostCard | View | 시착 결과 썸네일 이미지 + 태그 칩 (최대 3개 노출) |
 | FloatingPostButton | FAB | 우하단 게시물 작성 버튼 |
 
 #### SCR-011 게시물 상세 [Must]
 | 컴포넌트 | 타입 | 설명 |
 |----------|------|------|
-| PostImage | ImageView | 시착 결과 이미지 (오직 1장) |
+| PostImageCarousel | SwipeView | 게시물 이미지 (다중 이미지 지원, 좌우 스와이프) |
+| TagChipList | ChipGroup | 게시물에 부착된 태그 칩 목록 (탭 시 해당 태그 검색 결과로 이동) |
 | TryOnBanner | Button | "이 게시물의 옷 구경하기 (작성자의 옷장으로 이동)" |
 | AuthorRow | View | 프로필 이미지 + 닉네임 + 팔로우 버튼 |
 | CaptionText | Text | 캡션 (300자, 더보기 접힘) |
@@ -470,10 +477,25 @@ per_page=20
 #### SCR-012 게시물 작성 [Must]
 | 컴포넌트 | 타입 | 설명 |
 |----------|------|------|
-| ImageUploadArea | TouchableArea | 시착 결과 이미지 첨부 (오직 1장 필수) |
+| ImageUploadArea | TouchableArea | 이미지 첨부 (최소 1장 필수, 최대 5장 다중 선택 가능 — **로컬 앨범** 또는 **서버에 저장된 시착 결과**에서 선택) |
+| AutoFilledImage | ImageView | 시착 직후 진입 시 시착 결과 이미지가 첫 번째로 자동 완성됨 (추가 이미지 선택 가능) |
+| ImageOrderControl | DragList | 업로드된 이미지 순서 변경 (드래그 앤 드롭) |
+| TagAutoComplete | TextInput + ChipGroup | `[Must]` Google Vision API 자동 태그 추천 → 자동완성 목록 → 사용자가 +/- 편집 (최대 10개) |
 | CaptionInput | TextArea | 캡션 입력, 300자 카운터 |
 | VisibilityToggle | Toggle | 공개 / 비공개 |
 | UploadButton | Button | 업로드 (이미지 미첨부 시 비활성화) |
+
+*Note: 시착 직후 SCR-024 → SCR-012 진입 시, 시착 결과 이미지가 첫 번째 슬롯에 자동 완성됩니다. 사용자는 추가로 로컬 앨범이나 서버에 저장된 다른 시착 결과를 이미지로 추가할 수 있습니다.*
+
+#### SCR-070 통합 검색 [Must]
+| 컴포넌트 | 타입 | 설명 |
+|----------|------|------|
+| SearchInput | TextInput | 검색어 입력 — # 입력 시 태그 모드 전환 |
+| TagSuggestionDropdown | ListView | # 입력 후 태그 자동완성 드롭다운 (카테고리별 그룹핑: 스타일, 상의, 하의, 아우터 등) |
+| SearchResultGrid | GridView | 검색 결과 게시물 그리드 (태그 매칭 + 캡션 매칭) |
+| PopularTagSection | ChipGroup | 인기 태그 칩 목록 (검색어 미입력 시 기본 노출) |
+| RecentSearchList | ListView | 최근 검색어 목록 |
+| NoResultState | View | 검색 결과 없을 때 안내 |
 
 ---
 
@@ -484,23 +506,97 @@ per_page=20
 **입력 조건**
 | 필드 | 필수 여부 | 제약 |
 |------|-----------|------|
-| 이미지 | 필수 | 오직 1장, 최대 20MB, JPG/PNG/HEIC |
+| 이미지 | 필수 | 최소 1장, **최대 5장** (다중 선택 가능), 각 이미지 최대 20MB, JPG/PNG/HEIC |
+| 태그 | 선택 | 최대 10개 (Google Vision API 자동 추출 후 사용자 편집) |
 | 캡션 | 선택 | 최대 300자 |
 | 공개 여부 | 필수 | 기본값: 공개 |
 
+**게시물 작성 경로 (2가지)**
+
+| 경로 | 트리거 | 처리 |
+|------|--------|------|
+| 시착 직후 게시물 생성 | SCR-024 CreatePostButton | 시착 결과 이미지가 **첫 번째 이미지로 자동 완성**된 게시물 생성 화면(SCR-012)으로 이동. 추가 이미지 선택 가능 |
+| 일반 게시물 작성 | SCR-012 직접 진입 | **로컬 앨범** 또는 **서버에 저장된 시착 결과** 이미지에서 여러 장을 선택하여 게시 |
+
+*Note: 시착 시 생성되는 모든 이미지는 DB에 영구 저장됩니다 (Redis 캐시를 사용하지 않습니다).*
+
 **처리 흐름**
-1. 업로드할 시착 결과 이미지 1장 선택
-2. 캡션 입력 (선택)
-3. 업로드 버튼 탭
-4. 이미지 업로드 → 게시물 생성 API 호출
-5. 완료 후 피드로 이동
+1. 시착 직후: SCR-024에서 "게시물 만들기" 버튼 탭 → SCR-012로 이동 (시착 결과 이미지가 첫 번째 슬롯에 자동 완성)
+2. 일반 진입: SCR-012에서 이미지 선택 (로컬 앨범 또는 서버에 저장된 시착 결과에서 다중 선택, 최대 5장)
+3. 이미지 업로드 완료 후 Google Vision API로 첫 번째 이미지를 분석하여 옷 관련 키워드 자동 추출 → 자동완성 태그 추천
+4. 사용자가 추천된 태그에서 +/- 편집 (최대 10개)
+5. 캡션 입력 (선택)
+6. 업로드 버튼 탭
+7. 이미지 업로드 → 게시물 생성 API 호출 (다중 이미지 + 태그 포함)
+8. 완료 후 피드로 이동
 
 **에러 케이스**
 | 케이스 | 에러 코드 | 처리 |
 |--------|-----------|------|
 | 이미지 미첨부 | `ERR-301-A` | 업로드 버튼 비활성화 |
 | 이미지 용량 초과 | `ERR-301-B` | 해당 이미지 선택 차단, 안내 토스트 |
+| 이미지 5장 초과 | `ERR-301-D` | "이미지는 최대 5장까지 첨부할 수 있어요" 안내 토스트 |
 | 업로드 실패 | `ERR-301-C` | 재시도 버튼 노출 |
+| 태그 10개 초과 | `ERR-307-A` | 추가 차단, "태그는 최대 10개까지 가능해요" 안내 |
+
+---
+
+#### FN-307 자동 태그 (Google Vision API) [Must]
+
+**설명:** 이미지 업로드 시 Google Vision API를 활용하여 옷 관련 키워드(예: 데님, 니트, 자켓 등)를 자동 추출하고, 태그로 추천한다. 사용자 부담을 최소화하기 위해 자동 완성 형태로 제공된다.
+
+**태그 가시성 흐름:**
+1. 가상 시착 완료 후 (SCR-024) 또는 로컬 앨범에서 이미지 선택 및 업로드 (SCR-012)
+2. Google Vision API를 이용해 이미지 분석 → 옷 관련 라벨/키워드 추출
+3. 추출된 키워드를 자동완성 태그로 추천 표시
+4. 사용자가 취향에 따라 태그를 추가(+) 또는 제거(-) (최대 10개)
+5. 확정된 태그는 게시물에 부착되어 피드에서 노출됨
+
+**태그 카테고리 분류:**
+| 카테고리 | 태그 예시 |
+|----------|----------|
+| 스타일 | 캐주얼, 포멀, 스트릿, 미니멀 |
+| 상의 | 티셔츠, 니트, 블라우스, 셔츠 |
+| 하의 | 데님, 슬랙스, 스커트, 쇼츠 |
+| 아우터 | 자켓, 코트, 가디건, 패딩 |
+| 소재/패턴 | 체크, 스트라이프, 레더, 플로럴 |
+
+**제약**
+- 게시물당 태그 최대 10개
+- 태그명 최대 20자
+- 태그는 게시물 상세 및 피드 카드에 항상 노출
+
+**에러 케이스**
+| 케이스 | 에러 코드 | 처리 |
+|--------|-----------|------|
+| Vision API 분석 실패 | `ERR-307-B` | 자동 태그 없이 수동 입력만 허용, 안내 토스트 |
+| 태그 10개 초과 | `ERR-307-A` | 추가 버튼 비활성화 |
+
+---
+
+#### FN-308 통합 검색 [Must]
+
+**설명:** 피드 상단 검색바를 통해 게시물을 통합 검색한다. `#`을 입력하면 태그 검색 모드로 전환되어 카테고리별 태그 미리보기를 표시한다.
+
+**처리 흐름**
+1. 홈 피드 상단 검색바 탭 → SCR-070 통합 검색 진입
+2. 검색어 미입력 시: 인기 태그 칩 목록 + 최근 검색어 표시
+3. 일반 텍스트 입력 시: 캡션 + 닉네임 통합 검색 (디바운스 300ms)
+4. `#` 입력 시: 태그 검색 모드 전환
+   - 입력 중인 텍스트로 태그 자동완성 드롭다운 노출
+   - 카테고리별 그룹핑 (스타일/상의/하의/아우터/소재 등)
+   - 예: `#데님` 입력 → "데님" 태그 포함 게시물 미리보기 하단 표시
+5. 태그 선택 시: 해당 태그가 부착된 게시물 그리드 표시
+
+**제약**
+- 검색어 최소 1자 이상
+- 태그 자동완성은 usage_count 기준 인기순 정렬
+- 검색 결과 페이지네이션 지원 (page/per_page)
+
+**에러 케이스**
+| 케이스 | 에러 코드 | 처리 |
+|--------|-----------|------|
+| 검색 결과 없음 | — | "검색 결과가 없어요" 안내 + 인기 태그 추천 |
 
 ---
 
@@ -537,21 +633,27 @@ per_page=20
 ### 5-3. API 엔드포인트 (피드)
 
 #### POST `/posts`
-게시물 생성
+게시물 생성 (다중 이미지 + 태그 지원)
 
 **Request**
 ```json
 {
-  "image_url": "https://cdn.simul.io/posts/img1.jpg",
-  "caption": "오늘 코디",          // optional, max 300자
+  "image_urls": [
+    "https://cdn.simul.io/posts/img1.jpg",
+    "https://cdn.simul.io/posts/img2.jpg"
+  ],
+  "tags": ["데님", "캐주얼", "스트릿"],  // optional, max 10개
+  "caption": "오늘 코디",                  // optional, max 300자
   "is_public": true
 }
 ```
+*Note: `image_urls`는 최소 1개, 최대 5개. 첫 번째 이미지가 대표 이미지(`posts.image_url`)로 저장됩니다.*
 
 **Response `201`**
 ```json
 {
   "post_id": "post_abc123",
+  "tags": ["데님", "캐주얼", "스트릿"],
   "created_at": "2025-01-01T00:00:00Z"
 }
 ```
@@ -565,6 +667,7 @@ per_page=20
 ```
 tab=all             // all | following
 sort=recent         // recent | popular
+tag=데님            // optional, 태그 필터
 page=1
 per_page=20
 ```
@@ -576,6 +679,8 @@ per_page=20
     {
       "post_id": "post_abc123",
       "image_url": "https://...",
+      "image_count": 3,
+      "tags": ["데님", "캐주얼"],
       "like_count": 42,
       "author": {
         "user_id": "user_xyz",
@@ -586,6 +691,83 @@ per_page=20
     }
   ],
   "total": 200,
+  "page": 1,
+  "per_page": 20
+}
+```
+
+---
+
+#### POST `/tags/analyze`
+Google Vision API 이미지 분석 → 태그 자동 추출
+
+**Request**
+```json
+{
+  "image_url": "https://cdn.simul.io/posts/img1.jpg"
+}
+```
+
+**Response `200`**
+```json
+{
+  "suggested_tags": [
+    { "name": "데님", "category": "하의", "confidence": 0.95 },
+    { "name": "캐주얼", "category": "스타일", "confidence": 0.88 },
+    { "name": "스트라이프", "category": "소재/패턴", "confidence": 0.72 }
+  ]
+}
+```
+
+---
+
+#### GET `/tags/search`
+태그 자동완성 검색 (# 입력 시)
+
+**Query Parameters**
+```
+q=데님              // 검색 키워드
+limit=10            // 최대 반환 수
+```
+
+**Response `200`**
+```json
+{
+  "tags": [
+    { "tag_id": "uuid", "name": "데님", "category": "하의", "usage_count": 1520 },
+    { "tag_id": "uuid", "name": "데님자켓", "category": "아우터", "usage_count": 340 }
+  ]
+}
+```
+
+---
+
+#### GET `/search`
+통합 검색
+
+**Query Parameters**
+```
+q=데님              // 검색 키워드
+type=tag            // tag | caption | all (기본값: all)
+page=1
+per_page=20
+```
+
+**Response `200`**
+```json
+{
+  "posts": [
+    {
+      "post_id": "post_abc123",
+      "image_url": "https://...",
+      "tags": ["데님", "캐주얼"],
+      "like_count": 42,
+      "author": { "user_id": "user_xyz", "nickname": "패션러버" },
+      "created_at": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "related_tags": ["데님자켓", "데님셔츠"],
+  "total": 50,
   "page": 1,
   "per_page": 20
 }
@@ -766,7 +948,7 @@ posts
 ├── user_id          UUID, FK → users
 ├── base_image_id    UUID, FK → base_images (시착에 사용한 사람 사진 출처)
 ├── item_id          UUID, FK → closet_items, nullable (시착 옷 출처)
-├── image_url        TEXT, nullable (시착 완료 전 null)
+├── image_url        TEXT, nullable (대표 이미지, 첫 번째 이미지)
 ├── status           ENUM (processing, completed, failed)
 ├── caption          VARCHAR(300), nullable
 ├── is_public        BOOLEAN, DEFAULT false (기본 비공개)
@@ -776,6 +958,36 @@ posts
 ├── view_count       INT, DEFAULT 0
 ├── created_at       TIMESTAMP
 └── deleted_at       TIMESTAMP, nullable
+```
+
+### Post Images (게시물 다중 이미지)
+```
+post_images
+├── post_image_id    UUID, PK
+├── post_id          UUID, FK → posts
+├── image_url        TEXT, NOT NULL
+├── sort_order       INT, DEFAULT 0 (정렬 순서)
+└── created_at       TIMESTAMP
+```
+
+### Tags (태그 마스터)
+```
+tags
+├── tag_id           UUID, PK
+├── name             VARCHAR(20), UNIQUE, NOT NULL (태그명)
+├── category         VARCHAR(20), nullable (스타일/상의/하의/아우터/소재 등)
+├── usage_count      INT, DEFAULT 0 (사용 빈도, 검색 자동완성 정렬용)
+└── created_at       TIMESTAMP
+```
+
+### Post Tags (게시물-태그 매핑)
+```
+post_tags
+├── post_tag_id      UUID, PK
+├── post_id          UUID, FK → posts
+├── tag_id           UUID, FK → tags
+├── created_at       TIMESTAMP
+└── UNIQUE (post_id, tag_id)
 ```
 
 
@@ -886,6 +1098,9 @@ reports
 | GET | `/closet/items/{item_id}` | 아이템 상세 | 필요 |
 | PATCH | `/closet/items/{item_id}` | 아이템 수정 | 필요 |
 | DELETE | `/closet/items/{item_id}` | 아이템 삭제 | 필요 |
+| POST | `/tags/analyze` | 이미지 태그 자동 추출 (Vision API) | 필요 |
+| GET | `/tags/search` | 태그 자동완성 검색 | 불필요 |
+| GET | `/search` | 통합 검색 | 불필요 |
 | POST | `/tryon/base-images` | 새 베이스 이미지 업로드 등록 | 필요 |
 | POST | `/tryon/base-images/from-post` | 시착 결과를 베이스로 복제 등록 | 필요 |
 | GET | `/users/me/base-images` | 내 베이스 이미지 목록 조회 | 필요 |
@@ -937,10 +1152,13 @@ Accept-Language: ko
 | `ERR-301-A` | 422 | 이미지 미첨부 업로드 시도 | 업로드 버튼 비활성화 |
 | `ERR-301-B` | 422 | 게시물 이미지 크기 초과 | "이미지는 20MB 이하만 가능해요" |
 | `ERR-301-C` | 500 | 게시물 업로드 실패 | "업로드에 실패했어요. 다시 시도해주세요" |
+| `ERR-301-D` | 422 | 게시물 이미지 5장 초과 | "이미지는 최대 5장까지 첨부할 수 있어요" |
 | `ERR-304-A` | 401 | 비로그인 좋아요 시도 | 로그인 유도 바텀시트 |
 | `ERR-304-B` | 500 | 좋아요 네트워크 오류 | UI 롤백 + "잠시 후 다시 시도해주세요" |
 | `ERR-305-A` | 401 | 비로그인 댓글 시도 | 로그인 유도 바텀시트 |
 | `ERR-305-B` | 422 | 댓글 200자 초과 | 입력 차단 + 카운터 빨간색 표시 |
+| `ERR-307-A` | 422 | 태그 10개 초과 | 추가 버튼 비활성화 + "태그는 최대 10개까지 가능해요" |
+| `ERR-307-B` | 500 | Vision API 태그 분석 실패 | "자동 태그 추출에 실패했어요. 수동으로 입력해주세요" |
 | `ERR-401-A` | 422 | 동일 게시물 중복 신고 | "이미 신고한 게시물이에요" |
 
 ### 공통 예외 처리 원칙

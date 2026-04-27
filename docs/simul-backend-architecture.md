@@ -45,7 +45,7 @@
 
 ## 2. 도메인 분리
 
-Simul의 비즈니스를 **5개 핵심 도메인 + 1개 관리 도메인 + 1개 공통 모듈**로 분리한다.
+Simul의 비즈니스를 **6개 핵심 도메인 + 1개 관리 도메인 + 1개 공통 모듈**로 분리한다.
 
 > **Note:** Auth와 User는 WBS상 동일 Epic(인증/사용자, 담당자B)에 속하지만, "인증 기술"과 "사용자 비즈니스"는 변경 이유가 다르므로 패키지를 분리한다. 같은 담당자가 두 패키지를 모두 개발한다.
 
@@ -57,6 +57,7 @@ graph TD
         CLOSET["👕 Closet (개인 옷장)<br/>옷장 CRUD, 카테고리"]
         TRYON["🤖 TryOn (AI 가상시착)<br/>AI 시착, 크레딧, SSE"]
         FEED["📸 Feed (커뮤니티 피드)<br/>게시물, 좋아요, 댓글, 신고"]
+        TAG["🏷️ Tag (태그 및 검색)<br/>Vision API 태그, 통합 검색"]
     end
 
     subgraph Support["지원 도메인"]
@@ -68,6 +69,9 @@ graph TD
     TRYON -->|비공개 게시물 자동 생성| FEED
     FEED -->|팔로잉 목록 조회| USER
     CLOSET -->|사용자 소유 검증| USER
+    TAG -->|게시물 태그 매핑| FEED
+    TAG -->|태그 기반 게시물 검색| FEED
+    FEED -->|게시물 생성 시 태그 분석 요청| TAG
     ADMIN -->|게시물 블라인드| FEED
     ADMIN -->|유저 정지| USER
     ADMIN -->|크레딧 수동 지급| TRYON
@@ -81,7 +85,8 @@ graph TD
 | **User (사용자)** | 인증/사용자 (`AUTH-012~024`) | 담당자B | `users`, `follows` | 프로필 CRUD, 팔로우/언팔로우, 사용자 게시물 목록, 소프트 딜리트(탈퇴) |
 | **Closet (개인 옷장)** | 개인 옷장 (`CLOSET-`) | 담당자D | `closet_items`, `clothing_images` | 아이템 CRUD, 200개 상한 검증, Deep Copy, 소프트 딜리트, 카테고리 필터 |
 | **TryOn (AI 가상시착)** | AI 가상시착 (`TRYON-`) | 담당자C | `base_images`, `tryon_credits` | 크레딧 일일 5회 제한, AI 비동기 생성, SSE 상태 스트림, 베이스 이미지 순환 등록 |
-| **Feed (커뮤니티 피드)** | 커뮤니티 피드 (`FEED-`) | 담당자E | `posts`, `comments`, `likes`, `reports` | 게시물 공개/비공개, 좋아요 토글, 2-depth 댓글, 신고 5회 자동 블라인드 |
+| **Feed (커뮤니티 피드)** | 커뮤니티 피드 (`FEED-`) | 담당자E | `posts`, `post_images`, `comments`, `likes`, `reports` | 게시물 공개/비공개, 다중 이미지, 좋아요 토글, 2-depth 댓글, 신고 5회 자동 블라인드 |
+| **Tag (태그 및 검색)** | 태그/검색 (`TAG-`) | 담당자E | `tags`, `post_tags` | Vision API 태그 자동 추출, 태그 검색 자동완성, 통합 검색 |
 | **Admin (관리자)** | 관리자 (`ADMIN-`) | 담당자A | (자체 테이블 없음) | 게시물 강제 블라인드, 유저 정지, 크레딧 수동 지급 |
 | **common (공통 인프라)** | 공통 인프라 (`INFRA-`) | 담당자A | — | 에러 코드, 보안, 이미지 업로드, 페이지네이션 |
 
@@ -156,14 +161,15 @@ src/main/java/com/simul/
 │           └── ai/                 # AiServiceAdapter (외부 AI API 구현체)
 │
 ├── feed/                            # 📸 커뮤니티 피드 도메인 (담당자E)
-│   ├── domain/model/                # Post, Comment, Like, Report
+│   ├── domain/model/                # Post, PostImage, Comment, Like, Report
 │   ├── application/
 │   │   ├── port/in/                 # CreatePostUseCase, GetFeedUseCase, GetPostUseCase,
 │   │   │                            # DeletePostUseCase, UpdatePostStatusUseCase,
 │   │   │                            # ToggleLikeUseCase,
 │   │   │                            # AddCommentUseCase, GetCommentsUseCase, DeleteCommentUseCase,
 │   │   │                            # ReportPostUseCase, BlindPostUseCase
-│   │   ├── port/out/               # SavePostPort, LoadPostPort, SaveLikePort,
+│   │   ├── port/out/               # SavePostPort, LoadPostPort, SavePostImagePort,
+│   │   │                            # SaveLikePort,
 │   │   │                            # SaveCommentPort, LoadCommentPort,
 │   │   │                            # SaveReportPort, LoadReportPort
 │   │   ├── service/                # PostService, LikeService,
@@ -172,8 +178,25 @@ src/main/java/com/simul/
 │   └── adapter/
 │       ├── in/web/                 # PostController, CommentController
 │       │   └── dto/                # PostRequest, PostResponse, CommentRequest
-│       └── out/persistence/        # PostPersistenceAdapter, LikePersistenceAdapter,
+│       └── out/persistence/        # PostPersistenceAdapter, PostImagePersistenceAdapter,
+│                                    # LikePersistenceAdapter,
 │                                    # CommentPersistenceAdapter, ReportPersistenceAdapter
+│
+├── tag/                             # 🏷️ 태그 및 검색 도메인 (담당자E)
+│   ├── domain/model/                # Tag, PostTag
+│   ├── application/
+│   │   ├── port/in/                 # AnalyzeImageTagsUseCase, SearchTagsUseCase,
+│   │   │                            # SearchPostsUseCase, AttachTagsToPostUseCase
+│   │   ├── port/out/               # SaveTagPort, LoadTagPort, SavePostTagPort,
+│   │   │                            # LoadPostTagPort, VisionApiPort (⭐ Google Vision 추상화)
+│   │   ├── service/                # TagAnalysisService, TagSearchService
+│   │   └── dto/                    # AnalyzeTagsCommand, TagSuggestion, SearchQuery
+│   └── adapter/
+│       ├── in/web/                 # TagController, SearchController
+│       │   └── dto/                # TagAnalyzeRequest, TagSearchResponse, SearchRequest
+│       └── out/
+│           ├── persistence/        # TagPersistenceAdapter, PostTagPersistenceAdapter
+│           └── vision/             # GoogleVisionTagAdapter (Vision API 태그 추출 구현체)
 │
 ├── admin/                           # 🛡️ 관리자 도메인 (담당자A)
 │   ├── application/
@@ -270,9 +293,33 @@ AiServiceAdapter (구현체, Outside)
 
 ### 4-4. Feed 도메인 (커뮤니티 피드)
 
+**게시물 다중 이미지 지원:**
+- 게시물 생성 시 최소 1장, 최대 5장의 이미지를 `post_images` 테이블에 저장
+- 첫 번째 이미지는 `posts.image_url`에 대표 이미지로 저장
+- 시착 시 생성되는 모든 이미지는 DB에 영구 저장 (Redis 미사용)
+- 이미지 소스: **로컬 앨범 업로드** 또는 **서버에 저장된 시착 결과 이미지** URL을 혼합 사용 가능
+
+**시착 직후 게시물 생성 흐름:**
+
+```text
+[SCR-024 시착 결과] → "게시물 만들기" 버튼(CreatePostButton) 클릭
+    │
+    ▼
+[SCR-012 게시물 작성 화면]
+    ├── 시착 결과 이미지가 첫 번째 슬롯에 자동 완성 (image_url 전달)
+    ├── 추가 이미지 선택 가능 (로컬 앨범 또는 서버 저장 시착 결과)
+    ├── Google Vision API → 자동 태그 추천
+    └── 캡션 입력 → 게시물 생성 API 호출
+```
+
+**서버 저장 이미지 조회:**
+- 게시물 작성 시 사용자의 기존 시착 결과(비공개 게시물)를 조회하여 이미지 소스로 활용
+- TryOn 도메인의 시착 결과는 비공개 게시물(`posts` 테이블, `is_public=false`)로 DB에 영구 저장되어 있으므로, Feed 도메인의 `LoadPostPort`를 통해 본인의 비공개 게시물 이미지 목록을 조회
+
 **피드 조회 (필터링 & 페이지네이션):**
 - `tab=all | following` — following 탭은 User 도메인의 `LoadFollowingIdsPort`를 통해 팔로잉 목록을 조회한 후 필터링
 - `sort=recent | popular` — popular는 `like_count` 내림차순
+- `tag` 필터 — Tag 도메인의 `LoadPostTagPort`를 통해 태그 기반 필터링
 - 블라인드 처리된 게시물(`is_blinded=true`)은 피드에서 제외
 - 비공개 게시물(`is_public=false`)은 본인 프로필에서만 노출
 
@@ -287,6 +334,62 @@ AiServiceAdapter (구현체, Outside)
     ├── SaveReportPort → 신고 저장
     ├── report_count 증가
     └── if (report_count >= 5) → is_blinded = true (자동 블라인드)
+```
+
+---
+
+### 4-4a. Tag 도메인 (태그 및 검색)
+
+Tag 도메인은 Google Vision API를 활용한 이미지 태그 자동 추출과 통합 검색 기능을 담당한다.
+
+**태그 자동 추출 흐름:**
+
+```text
+[TagController] POST /tags/analyze
+    │
+    ▼
+[TagAnalysisService] (implements AnalyzeImageTagsUseCase)
+    ├── VisionApiPort → GoogleVisionTagAdapter (Google Vision API 호출)
+    │   └── Label Detection 결과에서 옷 관련 키워드 필터링
+    └── 필터링된 키워드를 TagSuggestion DTO로 변환하여 반환
+```
+
+**게시물 태그 부착 흐름:**
+
+```text
+[PostService] POST /posts (게시물 생성 시)
+    │
+    ▼
+[TagAnalysisService] (implements AttachTagsToPostUseCase)
+    ├── tags 배열의 각 태그명으로 LoadTagPort → 기존 태그 조회
+    ├── 없으면 SaveTagPort → 신규 태그 생성 (upsert)
+    ├── SavePostTagPort → post_tags 매핑 생성
+    └── usage_count 증가
+```
+
+**통합 검색 흐름:**
+
+```text
+[SearchController] GET /search?q=데님&type=tag
+    │
+    ▼
+[TagSearchService] (implements SearchPostsUseCase)
+    ├── type=tag: LoadTagPort → 매칭 태그 조회 → LoadPostTagPort → 게시물 ID 목록
+    ├── type=caption: Feed 도메인의 LoadPostPort → 캡션 LIKE 검색
+    ├── type=all: 양쪽 결과 병합
+    └── related_tags 연관 태그 반환
+```
+
+**Google Vision API 추상화 — 헥사고날의 핵심 가치:**
+
+Vision API는 Output Port 인터페이스로 추상화하므로, 다른 이미지 분석 서비스로 교체해도 `GoogleVisionTagAdapter` 구현체만 변경하면 된다.
+
+```text
+VisionApiPort (인터페이스, Inside)
+    └── analyzeImage(imageUrl) → List<TagSuggestion>
+
+GoogleVisionTagAdapter (구현체, Outside)
+    └── 실제 Google Vision API 호출 로직 (Label Detection)
 ```
 
 ---
@@ -340,7 +443,10 @@ AdminService
 | `follows` | User | Feed | User의 `LoadFollowingIdsPort` 사용 |
 | `closet_items` | Closet | TryOn | Closet의 `LoadItemPort` / `IncrementTryCountUseCase` 사용 |
 | `clothing_images` | Closet | TryOn | Closet의 `LoadItemPort`를 통해 간접 접근 |
-| `posts` | Feed | TryOn, User | Feed의 `CreatePostUseCase` / `UpdatePostStatusUseCase` / `LoadPostPort` 사용 |
+| `posts` | Feed | TryOn, User, Tag | Feed의 `CreatePostUseCase` / `UpdatePostStatusUseCase` / `LoadPostPort` 사용 |
+| `post_images` | Feed | — | 단독 소유 (Feed 도메인 내부 관리) |
+| `tags` | Tag | Feed | Tag의 `LoadTagPort` / `AttachTagsToPostUseCase` 사용 |
+| `post_tags` | Tag | Feed | Tag의 `LoadPostTagPort` / `AttachTagsToPostUseCase` 사용 |
 | `base_images` | TryOn | — | 단독 소유 |
 | `tryon_credits` | TryOn | Admin | TryOn의 `GrantCreditUseCase` 사용 |
 | `comments` | Feed | — | 단독 소유 |
@@ -375,7 +481,10 @@ AdminService
 | `CLOSET_FULL` | `ERR-201-A` | 422 | 옷장이 가득 찼어요 (최대 200개). |
 | `ITEM_IMAGE_TOO_BIG` | `ERR-201-B` | 422 | 이미지는 10MB 이하만 가능해요. |
 | `POST_IMAGE_TOO_BIG` | `ERR-301-B` | 422 | 이미지는 20MB 이하만 가능해요. |
+| `POST_IMAGE_LIMIT` | `ERR-301-D` | 422 | 이미지는 최대 5장까지 첨부할 수 있어요. |
 | `DUPLICATE_REPORT` | `ERR-401-A` | 422 | 이미 신고한 게시물이에요. |
+| `TAG_LIMIT` | `ERR-307-A` | 422 | 태그는 최대 10개까지 가능해요. |
+| `VISION_API_FAIL` | `ERR-307-B` | 500 | 자동 태그 추출에 실패했어요. |
 
 ### 보안 설정
 
@@ -387,6 +496,8 @@ AdminService
   POST /auth/social, POST /auth/refresh
   GET  /posts (피드 열람), GET /posts/{post_id} (게시물 상세)
   GET  /users/{user_id} (프로필 열람)
+  GET  /tags/search (태그 자동완성)
+  GET  /search (통합 검색)
 
 Admin 전용 API:
   /admin/** → role=admin 검증
@@ -428,6 +539,9 @@ Admin 전용 API:
 | `POST /posts/{postId}/comments` | Feed | CommentController | AddCommentUseCase |
 | `DELETE /comments/{commentId}` | Feed | CommentController | DeleteCommentUseCase |
 | `POST /posts/{postId}/report` | Feed | PostController | ReportPostUseCase |
+| `POST /tags/analyze` | Tag | TagController | AnalyzeImageTagsUseCase |
+| `GET /tags/search` | Tag | TagController | SearchTagsUseCase |
+| `GET /search` | Tag | SearchController | SearchPostsUseCase |
 | `GET /admin/reports` | Admin | AdminController | GetReportsUseCase |
 | `PATCH /admin/posts/{postId}/blind` | Admin | AdminController | BlindPostUseCase |
 | `PATCH /admin/posts/{postId}/unblind` | Admin | AdminController | BlindPostUseCase |
@@ -452,4 +566,8 @@ Admin 전용 API:
 | Feed | `LoadPostPort` | User | 사용자 게시물 목록 조회 |
 | Feed | `BlindPostUseCase` | Admin | 게시물 강제 블라인드 |
 | Feed | `GetReportsUseCase` | Admin | 신고 목록 조회 |
+| Feed | `LoadPostPort` | Tag | 통합 검색 시 캡션 검색 |
+| Tag | `AttachTagsToPostUseCase` | Feed | 게시물 생성 시 태그 부착 |
+| Tag | `LoadPostTagPort` | Feed | 태그 기반 피드 필터링 |
+| Tag | `AnalyzeImageTagsUseCase` | Feed | 이미지 태그 자동 추출 |
 | TryOn | `GrantCreditUseCase` | Admin | 크레딧 수동 지급 |

@@ -205,21 +205,27 @@ Accept-Language: ko
 
 ## 3. 커뮤니티 피드 (Feed)
 
-### [POST] `/posts` - 게시물 작성 및 발행
+### [POST] `/posts` - 게시물 작성 및 발행 (다중 이미지 + 태그 지원)
 **Request**
 ```json
 {
-  "image_url": "https://cdn.simul.io/posts/img1.jpg", // 단일 이미지 필수
-  "caption": "오늘 코디",          // optional, max: 300
-  "is_public": true              // 기본값 true
+  "image_urls": [
+    "https://cdn.simul.io/posts/img1.jpg",
+    "https://cdn.simul.io/posts/img2.jpg"
+  ],
+  "tags": ["데님", "캐주얼", "스트릿"], // optional, 최대 10개
+  "caption": "오늘 코디",                 // optional, max: 300
+  "is_public": true                     // 기본값 true
 }
 ```
-*Note: 비공개 시착 결과를 완전 공개로 전환 시, 기존 `post_id` 정보를 바탕으로 PATCH 하거나 본 규격에 맞게 별도로 업로드합니다.*
+*Note: `image_urls`는 최소 1개, 최대 5개. 로컬 업로드 URL 또는 서버에 저장된 시착 결과 URL을 혼합하여 사용할 수 있습니다. 첫 번째 URL이 대표 이미지(`posts.image_url`)로 저장됩니다. 시착 직후 진입 시 시착 결과 이미지가 첫 번째로 자동 완성됩니다.*
+*Note: `tags` 배열의 각 태그는 `tags` 테이블에 upsert 후 `post_tags`로 매핑됩니다.*
 
 **Response `201`**
 ```json
 {
   "post_id": "post_uuid",
+  "tags": ["데님", "캐주얼", "스트릿"],
   "created_at": "ISO8601"
 }
 ```
@@ -228,6 +234,7 @@ Accept-Language: ko
 **Query Params**
 - `tab=all` (all | following)
 - `sort=recent` (recent | popular)
+- `tag` (optional, 태그 필터 — 예: `tag=데님`)
 - `page=1&per_page=20`
 
 **Response `200`**
@@ -237,6 +244,8 @@ Accept-Language: ko
     {
       "post_id": "post_uuid",
       "image_url": "https://...",
+      "image_count": 3,
+      "tags": ["데님", "캐주얼"],
       "like_count": 42,
       "author": {
         "user_id": "user_uuid",
@@ -253,7 +262,30 @@ Accept-Language: ko
 ```
 
 ### [GET] `/posts/{post_id}` - 단일 게시물 상세
-**Response `200`**: `GET /posts`의 배열 객체와 동일한 단건 데이터와 함께 `is_liked` 등 커스텀 필드 포함.
+**Response `200`**
+```json
+{
+  "post_id": "post_uuid",
+  "images": [
+    { "image_url": "https://...", "sort_order": 0 },
+    { "image_url": "https://...", "sort_order": 1 }
+  ],
+  "tags": [
+    { "tag_id": "uuid", "name": "데님", "category": "하의" },
+    { "tag_id": "uuid", "name": "캐주얼", "category": "스타일" }
+  ],
+  "like_count": 42,
+  "is_liked": true,
+  "author": {
+    "user_id": "user_uuid",
+    "nickname": "패션러버",
+    "profile_image_url": "https://..."
+  },
+  "caption": "오늘 코디",
+  "is_public": true,
+  "created_at": "ISO8601"
+}
+```
 
 ### [DELETE] `/posts/{post_id}` - 게시물 삭제
 **Response `200 OK`**
@@ -306,6 +338,75 @@ Accept-Language: ko
 }
 ```
 **Response `201 Created`**
+
+---
+
+## 3-1. 태그 및 검색 (Tags & Search)
+
+### [POST] `/tags/analyze` - 이미지 태그 자동 추출 (Google Vision API)
+**Request**
+```json
+{
+  "image_url": "https://cdn.simul.io/posts/img1.jpg"
+}
+```
+**Response `200`**
+```json
+{
+  "suggested_tags": [
+    { "name": "데님", "category": "하의", "confidence": 0.95 },
+    { "name": "캐주얼", "category": "스타일", "confidence": 0.88 },
+    { "name": "스트라이프", "category": "소재/패턴", "confidence": 0.72 }
+  ]
+}
+```
+*Note: Google Vision API의 라벨 감지 결과를 옷 관련 키워드로 필터링하여 반환합니다. `confidence`는 Vision API의 신뢰도 점수입니다.*
+
+### [GET] `/tags/search` - 태그 자동완성 검색
+**Query Params**
+- `q` (검색 키워드, 필수)
+- `limit=10` (최대 반환 수)
+
+**Response `200`**
+```json
+{
+  "tags": [
+    { "tag_id": "uuid", "name": "데님", "category": "하의", "usage_count": 1520 },
+    { "tag_id": "uuid", "name": "데님자켓", "category": "아우터", "usage_count": 340 }
+  ]
+}
+```
+*Note: `usage_count` 내림차순으로 정렬되어 반환됩니다. 인증 불필요 API입니다.*
+
+### [GET] `/search` - 통합 검색
+**Query Params**
+- `q` (검색 키워드, 필수)
+- `type=all` (all | tag | caption)
+- `page=1&per_page=20`
+
+**Response `200`**
+```json
+{
+  "posts": [
+    {
+      "post_id": "post_uuid",
+      "image_url": "https://...",
+      "tags": ["데님", "캐주얼"],
+      "like_count": 42,
+      "author": {
+        "user_id": "user_uuid",
+        "nickname": "패션러버"
+      },
+      "created_at": "ISO8601"
+    }
+  ],
+  "related_tags": ["데님자켓", "데님셔츠"],
+  "total": 50,
+  "page": 1,
+  "per_page": 20
+}
+```
+*Note: `related_tags`는 검색 키워드와 연관된 태그를 추가로 반환합니다. 인증 불필요 API입니다.*
 
 ---
 
@@ -468,6 +569,9 @@ data: {"job_id": "post_uuid", "status": "completed", "result_image_url": "https:
 | `ERR-301-A`| `422` | 이미지 누락 업로드 시도 | (업로드 버튼 비활성화) |
 | `ERR-301-B`| `422` | 일반 피드 이미지 20MB 초과 | 이미지는 20MB 이하만 가능해요. |
 | `ERR-301-C`| `500` | DB 게시물 연결 실패 | 업로드에 실패했어요. 다시 시도해주세요. |
+| `ERR-301-D`| `422` | 게시물 이미지 5장 초과 | 이미지는 최대 5장까지 첨부할 수 있어요. |
 | `ERR-304-B`| `500` | 좋아요 API 타임아웃/실패 | (낙관적 UI 롤백 후 표출) 잠시 후 다시 시도해주세요. |
 | `ERR-305-B`| `422` | 댓글 제한(200자) 초과 | (입력 차단 및 카운터 경고 UI) |
+| `ERR-307-A`| `422` | 태그 10개 초과 | 태그는 최대 10개까지 가능해요. |
+| `ERR-307-B`| `500` | Vision API 태그 분석 실패 | 자동 태그 추출에 실패했어요. 수동으로 입력해주세요. |
 | `ERR-401-A`| `422` | 동일 게시물 중복 신고 | 이미 신고한 게시물이에요. |
