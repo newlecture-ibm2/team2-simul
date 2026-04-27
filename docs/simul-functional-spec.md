@@ -66,6 +66,7 @@
 | SCR-052 | 설정 | SCR-050 → 설정 |
 | SCR-060 | 인앱 브라우저 | 외부 웹사이트 링크 탭 |
 | SCR-070 | 통합 검색 | 홈 피드 상단 검색바 |
+| SCR-080 | 알림 | 헤더 알림 버튼 |
 
 ### 기능 ID (FN)
 
@@ -89,6 +90,7 @@
 | FN-501 | 소셜 로그인 | SCR-003 |
 | FN-502 | 프로필 편집 | SCR-051 |
 | FN-503 | 알림 설정 | SCR-052 |
+| FN-601 | 알림 | SCR-080 |
 | FN-901 | 콘텐츠 모더레이션 (게시물/댓글 블라인드) | API 전용 |
 | FN-902 | 유저 정지 및 크레딧 수동 제어 | API 전용 |
 
@@ -856,6 +858,116 @@ per_page=20
 
 ---
 
+## 7a. 알림 (Notifications)
+
+### 7a-1. 화면별 UI 컴포넌트
+
+#### SCR-080 알림 [Must]
+| 컴포넌트 | 타입 | 설명 |
+|----------|------|------|
+| NotificationList | ListView | 알림 목록 (시간순 정렬) |
+| NotificationItem | View | 알림 카드 — 알림 유형 아이콘 + 메시지 + 시간 + 미읽음 인디케이터 |
+| NotificationBadge | Badge | 헤더 알림 버튼에 미읽음 수 표시 |
+| EmptyState | View | 알림 없을 때 안내 문구 |
+| ReadAllButton | Button | 전체 읽음 처리 |
+
+### 7a-2. 기능 명세
+
+#### FN-601 알림 [Must]
+
+**알림 유형 (4가지)**
+
+| 알림 유형 | 트리거 | 수신자 | 메시지 예시 | 탭 시 이동 |
+|-----------|--------|---------|------------|----------|
+| `TRYON_COMPLETE` | AI 시착 생성 완료 | 시착 요청자 | "시착이 완료되었어요! 결과를 확인해보세요" | SCR-024 시착 결과 |
+| `LIKE` | 내 게시물에 좋아요 | 게시물 작성자 | "{nickname}님이 게시물을 좋아해요" | SCR-011 게시물 상세 |
+| `COMMENT` | 내 게시물에 댓글 | 게시물 작성자 | "{nickname}님이 댓글을 남겼어요: {content}" | SCR-011 게시물 상세 |
+| `FOLLOW_POST` | 팔로우한 사람이 새 게시물 공개 | 팔로워 | "{nickname}님이 새 게시물을 올렸어요" | SCR-011 게시물 상세 |
+
+**알림 생성 흐름**
+1. **TRYON_COMPLETE**: AI 시착 생성 완료(status=completed) 시, TryOn 도메인이 알림 생성 요청
+2. **LIKE**: 좋아요 토글 시, Feed 도메인이 게시물 작성자에게 알림 생성 (본인 좋아요는 제외)
+3. **COMMENT**: 댓글 작성 시, Feed 도메인이 게시물 작성자에게 알림 생성 (본인 댓글은 제외)
+4. **FOLLOW_POST**: 게시물이 공개(`is_public=true`)로 전환될 때, Feed 도메인이 작성자의 팔로워 전체에게 알림 생성
+
+**알림 조회 및 읽음 처리:**
+1. 헤더 알림 버튼에 미읽음 알림 수 배지 표시
+2. 알림 페이지(SCR-080) 진입 시 목록 조회 (unread 우선 정렬)
+3. 개별 알림 탭 시: 해당 알림 읽음 처리 + 관련 화면으로 이동
+4. "전체 읽음" 버튼으로 일괄 읽음 처리 가능
+
+**제약**
+- 알림 대상: 로그인된 사용자만
+- 본인 활동(좋아요/댓글)에 대한 알림은 생성하지 않음
+- 알림 보관 기간: 30일 (이후 자동 삭제)
+- 알림 목록 페이지네이션 지원 (page/per_page)
+
+---
+
+### 7a-3. API 엔드포인트 (알림)
+
+#### GET `/notifications`
+알림 목록 조회
+
+**Query Parameters**
+```
+page=1
+per_page=20
+```
+
+**Response `200`**
+```json
+{
+  "notifications": [
+    {
+      "notification_id": "uuid",
+      "type": "LIKE",
+      "actor": {
+        "user_id": "uuid",
+        "nickname": "패션러버",
+        "profile_image_url": "https://..."
+      },
+      "reference_id": "post_uuid",
+      "message": "패션러버님이 게시물을 좋아해요",
+      "is_read": false,
+      "created_at": "ISO8601"
+    }
+  ],
+  "unread_count": 5,
+  "total": 42,
+  "page": 1,
+  "per_page": 20
+}
+```
+
+---
+
+#### GET `/notifications/unread-count`
+미읽음 알림 수 조회 (헤더 배지 용)
+
+**Response `200`**
+```json
+{
+  "unread_count": 5
+}
+```
+
+---
+
+#### PATCH `/notifications/{notification_id}/read`
+개별 알림 읽음 처리
+
+**Response `200 OK`**
+
+---
+
+#### PATCH `/notifications/read-all`
+전체 알림 일괄 읽음 처리
+
+**Response `200 OK`**
+
+---
+
 ### 7-2. API 엔드포인트 (계정)
 
 #### POST `/auth/social`
@@ -990,6 +1102,19 @@ post_tags
 └── UNIQUE (post_id, tag_id)
 ```
 
+### Notifications (알림)
+```
+notifications
+├── notification_id  UUID, PK
+├── recipient_id     UUID, FK → users (알림 수신자)
+├── actor_id         UUID, FK → users, nullable (알림 발생자)
+├── type             ENUM (TRYON_COMPLETE, LIKE, COMMENT, FOLLOW_POST)
+├── reference_id     UUID, nullable (관련 리소스 ID — post_id 등)
+├── message          VARCHAR(200)
+├── is_read          BOOLEAN, DEFAULT false
+└── created_at       TIMESTAMP
+```
+
 
 
 ### Clothing Images (원본 옷 이미지)
@@ -1112,6 +1237,10 @@ reports
 | PATCH | `/admin/posts/{post_id}/unblind` | 블라인드 해제 (복구) | Admin |
 | PATCH | `/admin/users/{user_id}/suspend` | 악성 유저 정지 처리 | Admin |
 | POST | `/admin/users/{user_id}/credits` | 크레딧 수동 지급 | Admin |
+| GET | `/notifications` | 알림 목록 조회 | 필요 |
+| GET | `/notifications/unread-count` | 미읽음 알림 수 조회 | 필요 |
+| PATCH | `/notifications/{notification_id}/read` | 개별 알림 읽음 처리 | 필요 |
+| PATCH | `/notifications/read-all` | 전체 알림 일괄 읽음 처리 | 필요 |
 
 ### 공통 Request Header
 ```

@@ -134,6 +134,17 @@ erDiagram
         UNIQUE post_id_reporter_id "(post_id, reporter_id)"
     }
 
+    notifications {
+        UUID notification_id PK
+        UUID recipient_id FK "알림 수신자 (references users)"
+        UUID actor_id FK "nullable, 알림 발생자 (references users)"
+        ENUM type "TRYON_COMPLETE, LIKE, COMMENT, FOLLOW_POST"
+        UUID reference_id "nullable, 관련 리소스 ID (post_id 등)"
+        VARCHAR message "알림 메시지 (최대 200자)"
+        BOOLEAN is_read "DEFAULT false"
+        TIMESTAMP created_at
+    }
+
     %% Relationships
     users ||--o{ base_images : "registers (모델 샷 등록)"
     users ||--o{ clothing_images : "uploads (최초 등록)"
@@ -164,6 +175,9 @@ erDiagram
     
     users ||--o{ reports : "reports (신고 제출)"
     posts ||--o{ reports : "is_reported (신고당한 게시물)"
+
+    users ||--o{ notifications : "receives (알림 수신)"
+    users ||--o{ notifications : "triggers (알림 발생)"
 ```
 
 ## 신규 도입된 설계 포인트 (베이스 이미지 순환 구조)
@@ -175,3 +189,7 @@ erDiagram
 3. **`post_images` 테이블 추가**: 게시물당 여러 장의 이미지를 지원합니다. `sort_order` 필드로 이미지 순서를 관리하며, `posts.image_url`은 대표 이미지(첫 번째 이미지)로 유지됩니다.
 4. **`tags` + `post_tags` 태그 시스템**: Google Vision API로 이미지에서 옷 관련 키워드를 자동 추출하여 태그를 생성합니다. `tags` 테이블은 태그 마스터(이름, 카테고리, 사용 빈도)를 관리하고, `post_tags`는 게시물–태그 N:M 매핑을 담당합니다. 태그는 게시물당 최대 10개로 제한됩니다.
 5. **검색 지원**: `tags.name`에 인덱스를 추가하여 `#` 태그 기반 통합 검색과 자동완성을 지원합니다. `tags.usage_count`로 인기 태그 우선 노출이 가능합니다.
+
+## 신규 도입된 설계 포인트 (알림 시스템)
+
+6. **`notifications` 테이블 추가**: 사용자에게 발생하는 주요 이벤트(시착 완료, 좋아요, 댓글, 팔로우한 사용자의 새 게시물)를 알림으로 기록합니다. `type` ENUM으로 알림 유형을 분류하고, `reference_id`로 관련 리소스(게시물 등)에 대한 딥링크를 지원합니다. `is_read`로 읽음/미읽음 상태를 관리합니다.

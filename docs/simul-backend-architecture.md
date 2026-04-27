@@ -45,7 +45,7 @@
 
 ## 2. 도메인 분리
 
-Simul의 비즈니스를 **6개 핵심 도메인 + 1개 관리 도메인 + 1개 공통 모듈**로 분리한다.
+Simul의 비즈니스를 **7개 핵심 도메인 + 1개 관리 도메인 + 1개 공통 모듈**로 분리한다.
 
 > **Note:** Auth와 User는 WBS상 동일 Epic(인증/사용자, 담당자B)에 속하지만, "인증 기술"과 "사용자 비즈니스"는 변경 이유가 다르므로 패키지를 분리한다. 같은 담당자가 두 패키지를 모두 개발한다.
 
@@ -58,6 +58,7 @@ graph TD
         TRYON["🤖 TryOn (AI 가상시착)<br/>AI 시착, 크레딧, SSE"]
         FEED["📸 Feed (커뮤니티 피드)<br/>게시물, 좋아요, 댓글, 신고"]
         TAG["🏷️ Tag (태그 및 검색)<br/>Vision API 태그, 통합 검색"]
+        NOTI["🔔 Notification (알림)<br/>시착 완료, 좋아요/댓글, 팔로우 게시"]
     end
 
     subgraph Support["지원 도메인"]
@@ -72,6 +73,9 @@ graph TD
     TAG -->|게시물 태그 매핑| FEED
     TAG -->|태그 기반 게시물 검색| FEED
     FEED -->|게시물 생성 시 태그 분석 요청| TAG
+    TRYON -->|시착 완료 알림| NOTI
+    FEED -->|좋아요/댓글/팔로우 게시 알림| NOTI
+    NOTI -->|수신자 조회| USER
     ADMIN -->|게시물 블라인드| FEED
     ADMIN -->|유저 정지| USER
     ADMIN -->|크레딧 수동 지급| TRYON
@@ -87,6 +91,7 @@ graph TD
 | **TryOn (AI 가상시착)** | AI 가상시착 (`TRYON-`) | 담당자C | `base_images`, `tryon_credits` | 크레딧 일일 5회 제한, AI 비동기 생성, SSE 상태 스트림, 베이스 이미지 순환 등록 |
 | **Feed (커뮤니티 피드)** | 커뮤니티 피드 (`FEED-`) | 담당자E | `posts`, `post_images`, `comments`, `likes`, `reports` | 게시물 공개/비공개, 다중 이미지, 좋아요 토글, 2-depth 댓글, 신고 5회 자동 블라인드 |
 | **Tag (태그 및 검색)** | 태그/검색 (`TAG-`) | 담당자E | `tags`, `post_tags` | Vision API 태그 자동 추출, 태그 검색 자동완성, 통합 검색 |
+| **Notification (알림)** | 알림 (`NOTI-`) | 담당자B | `notifications` | 시착 완료 알림, 좋아요/댓글 알림, 팔로우 게시 알림, 알림 읽음 처리 |
 | **Admin (관리자)** | 관리자 (`ADMIN-`) | 담당자A | (자체 테이블 없음) | 게시물 강제 블라인드, 유저 정지, 크레딧 수동 지급 |
 | **common (공통 인프라)** | 공통 인프라 (`INFRA-`) | 담당자A | — | 에러 코드, 보안, 이미지 업로드, 페이지네이션 |
 
@@ -197,6 +202,20 @@ src/main/java/com/simul/
 │       └── out/
 │           ├── persistence/        # TagPersistenceAdapter, PostTagPersistenceAdapter
 │           └── vision/             # GoogleVisionTagAdapter (Vision API 태그 추출 구현체)
+│
+├── notification/                    # 🔔 알림 도메인 (담당자B)
+│   ├── domain/model/                # Notification
+│   ├── application/
+│   │   ├── port/in/                 # CreateNotificationUseCase, GetNotificationsUseCase,
+│   │   │                            # MarkReadUseCase, MarkAllReadUseCase,
+│   │   │                            # GetUnreadCountUseCase
+│   │   ├── port/out/               # SaveNotificationPort, LoadNotificationPort
+│   │   ├── service/                # NotificationService
+│   │   └── dto/                    # CreateNotificationCommand, NotificationResponse
+│   └── adapter/
+│       ├── in/web/                 # NotificationController
+│       │   └── dto/                # NotificationListResponse
+│       └── out/persistence/        # NotificationPersistenceAdapter
 │
 ├── admin/                           # 🛡️ 관리자 도메인 (담당자A)
 │   ├── application/
@@ -394,6 +413,45 @@ GoogleVisionTagAdapter (구현체, Outside)
 
 ---
 
+### 4-4b. Notification 도메인 (알림)
+
+Notification 도메인은 사용자에게 발생하는 주요 이벤트를 알림으로 저장하고 조회/읽음 처리를 담당한다.
+
+**알림 생성 흐름 (4가지 유형):**
+
+```text
+1. TRYON_COMPLETE: TryonService → 시착 완료 시 CreateNotificationUseCase 호출
+   └── 수신자: 시착 요청자, actor: null, reference_id: post_id
+
+2. LIKE: LikeService → 좋아요 토글 시 CreateNotificationUseCase 호출
+   └── 수신자: 게시물 작성자, actor: 좋아요 누른 사람, reference_id: post_id
+   └── 본인 좋아요는 제외 (actor_id == recipient_id)
+
+3. COMMENT: CommentService → 댓글 작성 시 CreateNotificationUseCase 호출
+   └── 수신자: 게시물 작성자, actor: 댓글 작성자, reference_id: post_id
+   └── 본인 댓글은 제외
+
+4. FOLLOW_POST: PostService → 게시물 공개(is_public=true) 전환 시
+   └── User 도메인의 LoadFollowingIdsPort → 팔로워 목록 조회
+   └── 각 팔로워에게 CreateNotificationUseCase 호출
+```
+
+**알림 조회/읽음:**
+
+```text
+[NotificationController]
+    ├─ GET  /notifications         → GetNotificationsUseCase (미읽음 우선 정렬, 페이지네이션)
+    ├─ GET  /notifications/unread-count → GetUnreadCountUseCase (헤더 배지 용)
+    ├─ PATCH /notifications/{id}/read  → MarkReadUseCase (개별 읽음)
+    └─ PATCH /notifications/read-all   → MarkAllReadUseCase (일괄 읽음)
+```
+
+**제약:**
+- 본인 활동(좋아요/댓글)에 대한 알림은 생성하지 않음
+- 알림 보관 기간: 30일 (이후 자동 삭제)
+
+---
+
 ### 4-5. Closet 도메인 (개인 옷장)
 
 ```text
@@ -452,6 +510,7 @@ AdminService
 | `comments` | Feed | — | 단독 소유 |
 | `likes` | Feed | — | 단독 소유 |
 | `reports` | Feed | Admin | Feed의 `GetReportsUseCase` 사용 |
+| `notifications` | Notification | TryOn, Feed | Notification의 `CreateNotificationUseCase` 사용 |
 
 ### 교차 도메인 접근 시 반드시 지킬 규칙
 
@@ -542,6 +601,10 @@ Admin 전용 API:
 | `POST /tags/analyze` | Tag | TagController | AnalyzeImageTagsUseCase |
 | `GET /tags/search` | Tag | TagController | SearchTagsUseCase |
 | `GET /search` | Tag | SearchController | SearchPostsUseCase |
+| `GET /notifications` | Notification | NotificationController | GetNotificationsUseCase |
+| `GET /notifications/unread-count` | Notification | NotificationController | GetUnreadCountUseCase |
+| `PATCH /notifications/{id}/read` | Notification | NotificationController | MarkReadUseCase |
+| `PATCH /notifications/read-all` | Notification | NotificationController | MarkAllReadUseCase |
 | `GET /admin/reports` | Admin | AdminController | GetReportsUseCase |
 | `PATCH /admin/posts/{postId}/blind` | Admin | AdminController | BlindPostUseCase |
 | `PATCH /admin/posts/{postId}/unblind` | Admin | AdminController | BlindPostUseCase |
@@ -570,4 +633,6 @@ Admin 전용 API:
 | Tag | `AttachTagsToPostUseCase` | Feed | 게시물 생성 시 태그 부착 |
 | Tag | `LoadPostTagPort` | Feed | 태그 기반 피드 필터링 |
 | Tag | `AnalyzeImageTagsUseCase` | Feed | 이미지 태그 자동 추출 |
+| Notification | `CreateNotificationUseCase` | TryOn | 시착 완료 알림 생성 |
+| Notification | `CreateNotificationUseCase` | Feed | 좋아요/댓글/팔로우 게시 알림 생성 |
 | TryOn | `GrantCreditUseCase` | Admin | 크레딧 수동 지급 |

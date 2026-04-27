@@ -490,7 +490,56 @@ data: {"job_id": "post_uuid", "status": "completed", "result_image_url": "https:
   "reset_at": "2025-01-02T00:00:00+09:00"
 }
 ```
-*Note: `reset_at`은 KST(Asia/Seoul) 기준 자정으로 설정됩니다.*
+*Note: 은 KST(Asia/Seoul) 기준 자정으로 설정됩니다.*
+
+---
+
+## 4a. 알림 (Notifications)
+
+### [GET]  - 알림 목록 조회
+**Query Params**
+- 
+
+**Response `200`**
+```json
+{
+  "notifications": [
+    {
+      "notification_id": "uuid",
+      "type": "LIKE",
+      "actor": {
+        "user_id": "uuid",
+        "nickname": "패션러버",
+        "profile_image_url": "https://..."
+      },
+      "reference_id": "post_uuid",
+      "message": "패션러버님이 게시물을 좋아해요",
+      "is_read": false,
+      "created_at": "ISO8601"
+    }
+  ],
+  "unread_count": 5,
+  "total": 42,
+  "page": 1,
+  "per_page": 20
+}
+```
+
+### [GET]  - 미읽음 알림 수 조회 (헤더 배지 용)
+**Response `200`**
+```json
+{
+  "unread_count": 5
+}
+```
+
+### [PATCH]  - 개별 알림 읽음 처리
+**Response `200 OK`**
+
+### [PATCH]  - 전체 알림 일괄 읽음 처리
+**Response `200 OK`**
+
+*Note: 알림은 30일간 보관 후 자동 삭제됩니다. 본인 활동(좋아요/댓글)에 대한 알림은 생성되지 않습니다.*
 
 ---
 
