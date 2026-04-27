@@ -1,0 +1,35 @@
+.feedGrid {
+  display: flex;
+  gap: 4px;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 var(--space-page-x);
+  align-items: flex-start;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.loader {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0 100px 0; /* extra padding at bottom for tab bar */
+  width: 100%;
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--color-surface-sand);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

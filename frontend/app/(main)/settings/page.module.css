@@ -1,0 +1,120 @@
+.settingsPage {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--space-page-y) var(--space-page-x);
+}
+
+.settingsPage h1 {
+  font-size: var(--font-heading);
+  font-weight: var(--weight-bold);
+  margin-bottom: 32px;
+}
+
+.section {
+  margin-bottom: 32px;
+}
+
+.sectionTitle {
+  font-size: var(--font-caption-bold);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.settingItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-surface-sand);
+}
+
+.settingLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settingName {
+  font-size: var(--font-body);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+}
+
+.settingDesc {
+  font-size: var(--font-caption);
+  color: var(--color-text-secondary);
+}
+
+.toggle {
+  width: 44px;
+  height: 24px;
+  border-radius: var(--radius-standard);
+  background: var(--color-surface-sand);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-circle);
+  background: var(--color-surface-white);
+  transition: transform var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.toggleActive {
+  background: var(--color-primary);
+}
+
+.toggleActive::after {
+  transform: translateX(20px);
+}
+
+.linkItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-surface-sand);
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--color-text-primary);
+  transition: background var(--transition-fast);
+}
+
+.linkItem:hover {
+  color: var(--color-primary);
+}
+
+.linkArrow {
+  color: var(--color-text-disabled);
+  font-size: 14px;
+}
+
+.dangerSection {
+  padding-top: 20px;
+}
+
+.dangerBtn {
+  background: none;
+  border: none;
+  font-size: var(--font-body);
+  color: var(--color-error);
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.dangerBtn:hover {
+  text-decoration: underline;
+}
