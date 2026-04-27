@@ -26,6 +26,108 @@
 
 ---
 
+## 기술 스택
+
+### 백엔드
+
+| 영역 | 기술 | 버전 | 선정 이유 |
+|------|------|------|----------|
+| **Language** | Java | 21 (LTS) | Virtual Threads, Record Pattern 등 최신 기능 활용, 장기 지원 |
+| **Framework** | Spring Boot | 3.3 | 헥사고날 아키텍처에 적합한 DI/IoC, Java 21 호환, 풍부한 레퍼런스 |
+| **ORM** | Spring Data JPA + Hibernate | — | 도메인 모델 중심 개발, 복잡한 관계 매핑 지원 |
+| **DB** | PostgreSQL | 15+ | UUID 네이티브 지원, JSON 타입, 태그 검색 인덱싱, ENUM 지원 |
+| **Migration** | Flyway | — | 버전 관리 기반 DB 스키마 마이그레이션 |
+| **Security** | Spring Security + OAuth2 Client | — | 카카오/네이버/구글 소셜 로그인, JWT 필터 체인 |
+| **JWT** | jjwt (io.jsonwebtoken) | 0.12+ | Access/Refresh Token 발급 및 검증 |
+| **Validation** | Jakarta Bean Validation | — | DTO 입력 유효성 검증 |
+| **API 문서** | SpringDoc OpenAPI (Swagger UI) | 2.x | API 명세 자동 생성 및 테스트 UI |
+| **SSE** | Spring MVC SseEmitter | — | AI 시착 실시간 상태 전송 (Server-Sent Events) |
+| **Image Storage** | AWS S3 (또는 GCP Cloud Storage) | — | CDN 연계 이미지 업로드, 대용량 파일 처리 |
+| **Build** | Gradle (Kotlin DSL) | 8+ | 멀티모듈 빌드, 의존성 관리 |
+| **Test** | JUnit 5 + Mockito + AssertJ | — | 단위/통합 테스트 |
+
+### 프론트엔드
+
+| 영역 | 기술 | 버전 | 선정 이유 |
+|------|------|------|----------|
+| **Language** | TypeScript | 5.5 | 타입 안전성, 추론형 타입 서술어, Next.js 15 호환 최적 |
+| **Framework** | Next.js (App Router) | 15 | SSR/SSG 하이브리드, 모바일 SEO 최적화, API Route (BFF 프록시), Turbopack 안정화 |
+| **UI Library** | React | 19 | Next.js 15 기본 번들, Server Components 개선, use() 훅 |
+| **Styling** | Tailwind CSS | 3.4 | 모바일 퍼스트 반응형 레이아웃, 풍부한 플러그인 생태계, 안정적 설정 체계 |
+| **State** | Zustand | 4.5 | 경량 전역 상태 관리 (인증, 알림 배지 등), React 19 호환 |
+| **Data Fetching** | TanStack Query (React Query) | 5 | 서버 상태 캐싱, 낙관적 업데이트 (좋아요), 무한 스크롤 |
+| **HTTP Client** | Axios | 1.7 | 인터셉터 기반 JWT 자동 갱신, 에러 핸들링 |
+| **Form** | React Hook Form + Zod | 7 + 3 | 폼 유효성 검증 (게시물 작성, 프로필 편집) |
+| **Image** | next/image | (Next.js 내장) | 자동 Lazy Load, 리사이징, WebP 변환 |
+| **SSE** | EventSource API | (브라우저 내장) | AI 시착 실시간 상태 수신 |
+| **Test** | Vitest + React Testing Library | 1 + 16 | 컴포넌트 단위/통합 테스트, Vite 기반 고속 실행 |
+
+### 인프라 & DevOps
+
+| 영역 | 기술 | 선정 이유 |
+|------|------|----------|
+| **Cloud** | AWS (또는 GCP) | S3 + CloudFront CDN, RDS PostgreSQL, EC2/ECS |
+| **CDN** | AWS CloudFront (또는 GCP CDN) | 이미지 중심 서비스 — 글로벌 캐싱으로 로딩 2초 내 달성 |
+| **CI/CD** | GitHub Actions | 코드 리뷰 → 자동 빌드 → 배포 파이프라인 |
+| **Container** | Docker + Docker Compose | 개발/스테이징 환경 일관성 |
+| **Monitoring** | Spring Actuator + Micrometer | 헬스체크, 메트릭 수집 |
+| **Log** | SLF4J + Logback | 구조화된 로그, 에러 추적 |
+| **HTTPS** | Let's Encrypt (또는 ACM) | SSL 인증서 자동 갱신 |
+
+### 외부 API 연동
+
+| 서비스 | 용도 | 연동 방식 |
+|--------|------|----------|
+| **AI 가상시착 API** | 사용자 사진 + 옷 이미지 → 합성 이미지 생성 | REST API 비동기 호출 + SSE 상태 스트림 |
+| **Google Vision API** | 옷장 유사 이미지 검색, 게시물 태그 자동 추출 | REST API (Label Detection, Web Detection) |
+| **카카오 OAuth2** | 소셜 로그인 | OAuth2 Authorization Code Flow |
+| **네이버 OAuth2** | 소셜 로그인 | OAuth2 Authorization Code Flow |
+| **구글 OAuth2** | 소셜 로그인 | OAuth2 Authorization Code Flow |
+
+### 기술 선정 핵심 근거
+
+```mermaid
+graph LR
+    subgraph BE["백엔드"]
+        SB["Spring Boot 3"]
+        JPA["JPA + PostgreSQL"]
+        SEC["Spring Security"]
+        SSE_S["SSE (SseEmitter)"]
+    end
+
+    subgraph FE["프론트엔드"]
+        NEXT["Next.js 15"]
+        RQ["React Query"]
+        TW["Tailwind CSS"]
+        SSE_C["EventSource"]
+    end
+
+    subgraph INFRA["인프라"]
+        S3["S3 + CDN"]
+        GHA["GitHub Actions"]
+    end
+
+    SB --> JPA
+    SB --> SEC
+    SB --> SSE_S
+    NEXT --> RQ
+    NEXT --> TW
+    RQ --> SB
+    SSE_C --> SSE_S
+    SB --> S3
+    GHA --> SB
+    GHA --> NEXT
+```
+
+> **선정 원칙:**
+> 1. **헥사고날 아키텍처 호환** — Spring Boot의 DI/IoC가 Port-Adapter 패턴과 자연스럽게 결합
+> 2. **이미지 중심 서비스** — S3 + CDN + next/image로 대용량 이미지 최적화 파이프라인 구축
+> 3. **실시간 통신** — SSE 기반 AI 생성 상태 스트림 (WebSocket 대비 서버 구현 단순)
+> 4. **모바일 퍼스트** — Next.js SSR + Tailwind 반응형으로 모바일 웹 성능 극대화
+> 5. **MVP 속도** — React Query 낙관적 업데이트, Zustand 경량 상태 관리로 개발 생산성 확보
+
+---
+
 ## 1. AI 가상시착 `P1`
 
 ### 목표
