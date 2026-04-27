@@ -1,0 +1,246 @@
+.studioPage {
+  max-width: 450px;
+  margin: 0 auto;
+  flex: 1;
+  position: relative;
+  background: var(--color-surface-dark); /* 남는 아랫부분을 채울 배경색 */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px var(--space-page-x);
+  z-index: 20; /* 이미지 위로 올라오도록 z-index 상향 */
+}
+
+.iconBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* Main Preview Area */
+.previewContainer {
+  position: relative;
+  width: 100%;
+  z-index: 0; /* 가장 아래 레이어 */
+  padding: 0; /* 패딩 없이 가득 채우기 */
+}
+
+.mainImageWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 6; /* 4:6 비율 */
+  display: block;
+  overflow: hidden;
+}
+
+.mainImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 꽉 채우고 남는 부분 자르기 */
+  object-position: top; /* 위에서부터 맞추고 아래를 자름 */
+  border-radius: 0; /* 가득 채우므로 둥근 모서리 제거 */
+}
+
+/* Floating Selected Clothes Badges */
+.floatingBadge {
+  position: absolute;
+  width: 80px; /* 기존 40px에서 2배 확대 */
+  height: 80px;
+  border-radius: var(--radius-standard);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.floatingContent {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px; /* 이미지가 너무 꽉 차지 않도록 여백 추가 */
+}
+
+.floatingImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.removeBadgeBtn {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-error);
+  color: white;
+  border: 1px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 21;
+}
+
+.removeIcon {
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+/* Bottom Overlay */
+.bottomOverlay {
+  position: relative;
+  width: 100%;
+  z-index: 10; /* 사진 위로 올라오도록 */
+  display: flex;
+  flex-direction: column;
+  margin-top: -180px; /* 이미지를 덮으며 위로 올라감 */
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--color-surface-dark) 180px,
+    var(--color-surface-dark) 100%
+  );
+  padding-top: 60px; /* 그라데이션 영역 내부에 컨트롤들이 위치하도록 패딩 설정 */
+}
+
+/* Controls Row */
+.controlsRow {
+  padding: 16px var(--space-page-x) 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+}
+
+
+/* Item Carousel */
+.carouselContainer {
+  padding: 16px 0 24px var(--space-page-x);
+  z-index: 10;
+}
+
+.carousel {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-right: var(--space-page-x);
+  -webkit-overflow-scrolling: touch;
+}
+
+.carousel::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for cleaner UI */
+}
+
+.itemCard {
+  flex-shrink: 0;
+  width: 150px; /* 기존 120px에서 150px로 가로 확대 */
+  height: 150px; 
+  border-radius: var(--radius-standard);
+  background: var(--color-surface-white);
+  position: relative;
+  cursor: pointer;
+  scroll-snap-align: start;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.itemCard.selectedCard {
+  border-color: var(--color-green);
+}
+
+.itemImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.clothContent {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  background: var(--color-surface-sand);
+}
+
+.uploadInner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-sand);
+}
+
+.plusIcon {
+  font-size: 24px;
+  color: var(--color-text-secondary);
+}
+
+.checkBadge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-green);
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  border: 1px solid white;
+}
+
+/* Bottom Action */
+.bottomAction {
+  padding: 0 var(--space-page-x) 50px; /* 하단 50px 여백 후 푸터와 연결 */
+  z-index: 10;
+}

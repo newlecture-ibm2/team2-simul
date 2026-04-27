@@ -1,0 +1,77 @@
+.editPage {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--space-page-y) var(--space-page-x);
+}
+
+.editPage h1 {
+  font-size: var(--font-heading);
+  font-weight: var(--weight-bold);
+  margin-bottom: 32px;
+}
+
+.avatarSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-circle);
+  background: var(--color-surface-sand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+}
+
+.changeAvatarBtn {
+  font-size: var(--font-caption);
+  color: var(--color-link);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: var(--weight-medium);
+}
+
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.formGroup label {
+  display: block;
+  font-size: var(--font-caption-bold);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+.input {
+  width: 100%;
+  padding: 11px 15px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-button);
+  font-size: var(--font-body);
+  color: var(--color-text-primary);
+  background: var(--color-surface-white);
+}
+
+.input::placeholder {
+  color: var(--color-text-disabled);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 2px rgba(67, 94, 229, 0.15);
+}
+
+.submitRow {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+}
