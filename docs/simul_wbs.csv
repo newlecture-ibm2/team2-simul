@@ -2,7 +2,7 @@ Summary,Issue Type,Priority,Epic Name,Epic Link,Component/s,Labels,Assignee,Orig
 공통 인프라,Epic,,공통 인프라,,,,"담당자A",,프로젝트 초기 설정 / DB 설계 / 공통 모듈 / 공통 FE 컴포넌트 (반응형 웹 / 모바일 최적화)
 인증/사용자,Epic,,인증/사용자,,,,"담당자B",,소셜 로그인 / JWT 인증 / 사용자 관리 / 팔로우 / 프로필 / 온보딩 (BE+FE 풀스택)
 AI 가상시착,Epic,,AI 가상시착,,,,"담당자C",,베이스 이미지 / 크레딧 시스템 / AI 시착 생성 / SSE / 시착 화면 (BE+FE 풀스택)
-개인 옷장,Epic,,개인 옷장,,,,"담당자D",,아이템 CRUD / 비즈니스 로직 / Vision 검색 / 옷장 화면 (BE+FE 풀스택)
+개인 옷장,Epic,,개인 옷장,,,,"담당자D",,아이템 CRUD / 컬렉션(폴더) 관리 / 비즈니스 로직 / 옷장 화면 (BE+FE 풀스택)
 커뮤니티 피드,Epic,,커뮤니티 피드,,,,"담당자E",,게시물(다중 이미지) / 좋아요 / 댓글 / 신고 / 피드 화면 (BE+FE 풀스택)
 태그/검색,Epic,,태그/검색,,,,"담당자E",,Google Vision API 태그 자동추출 / 태그 검색 자동완성 / 통합 검색 (BE+FE 풀스택)
 알림,Epic,,알림,,,,"담당자B",,시착 완료 / 좋아요·댓글 / 팔로우 게시 알림 (BE+FE 풀스택)
@@ -92,19 +92,24 @@ QA/통합,Epic,,QA/통합,,,,"전원",,통합 테스트 / E2E 테스트 / 전체
 [CLOSET-007] 계정당 200개 상한 검증 로직 구현,Task,Highest,,개인 옷장,비즈니스 로직,Must,"담당자D",4h,ERR-201-A 상한 검증
 [CLOSET-008] 타인 옷장에서 내 옷장으로 Deep Copy 로직,Task,Highest,,개인 옷장,비즈니스 로직,Must,"담당자D",4h,independent object 복사
 [CLOSET-009] AI 시착 완료 시 옷장 자동 저장 연동,Task,Highest,,개인 옷장,비즈니스 로직,Must,"담당자D",4h,TRYON-013 연동 자동 저장
-[CLOSET-010] Google Vision API 연동 서비스 구현,Task,High,,개인 옷장,유사 이미지 검색,Should,"담당자D",12h,일회성 검색 서비스
-[CLOSET-011] 유사 이미지 검색 결과 반환 API 구현,Story,High,,개인 옷장,유사 이미지 검색,Should,"담당자D",8h,DB 미저장 일회성 반환
-[CLOSET-012] 개인 옷장 페이지 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",12h,카테고리 탭 / 정렬 / 그리드↔리스트 전환 반응형 웹 페이지
-[CLOSET-013] 아이템 상세 페이지 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",8h,시착/복사 버튼 포함 상세 웹 페이지
-[CLOSET-014] 아이템 추가 페이지 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",8h,웹 파일 업로드 / 카테고리 / 메모 입력
-[CLOSET-015] 아이템 편집/삭제 UI 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",4h,편집/삭제 확인 모달
-[CLOSET-016] 옷장 CRUD API 클라이언트 연동,Task,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",8h,전체 API 클라이언트 연동 및 상태 관리
-[CLOSET-017] Vision API 검색 결과 일회성 UI 표출,Story,High,,개인 옷장,옷장 페이지,Should,"담당자D",8h,외부 링크 연동 검색 결과 UI
-[CLOSET-018] EmptyState UI 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",4h,아이템 없을 때 빈 상태 안내
-[CLOSET-019] 옷장 CRUD/비즈니스 로직 단위 테스트,Task,Highest,,개인 옷장,테스트,Must,"담당자D",4h,옷장 도메인 단위 테스트
-[CLOSET-020] 옷장 페이지 UI 테스트,Task,Highest,,개인 옷장,테스트,Must,"담당자D",4h,옷장 웹 페이지 UI 테스트
+[CLOSET-010] collections 테이블 Entity 및 Repository 구현,Task,Highest,,개인 옷장,컬렉션 관리,Must,"담당자D",4h,Collection Entity/Repository (1depth 폴더 구조)
+[CLOSET-011] 컬렉션 생성 API 구현,Story,Highest,,개인 옷장,컬렉션 관리,Must,"담당자D",4h,POST /closet/collections (이름+커버이미지)
+[CLOSET-012] 컬렉션 목록 조회 API 구현,Story,Highest,,개인 옷장,컬렉션 관리,Must,"담당자D",4h,GET /closet/collections (정렬/페이지네이션)
+[CLOSET-013] 컬렉션 수정/삭제 API 구현,Story,Highest,,개인 옷장,컬렉션 관리,Must,"담당자D",4h,PATCH/DELETE /closet/collections/{collectionId}
+[CLOSET-014] 아이템-컬렉션 이동/해제 API 구현,Story,Highest,,개인 옷장,컬렉션 관리,Must,"담당자D",8h,PATCH /closet/items/{itemId}/collection (컬렉션 배정/해제)
+[CLOSET-015] 컬렉션 상세 페이지 구현 (컬렉션 내 아이템 목록),Story,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",8h,컬렉션 상세 + 아이템 그리드 웹 페이지
+[CLOSET-016] 개인 옷장 페이지 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",12h,최상단 아이템 + 하단 컬렉션 목록 / 카테고리 탭 / 정렬 / 그리드↔리스트 전환
+[CLOSET-017] 아이템 상세 페이지 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",8h,시착/복사 버튼 포함 상세 웹 페이지
+[CLOSET-018] 아이템 추가 페이지 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",8h,웹 파일 업로드 / 카테고리 / 메모 입력
+[CLOSET-019] 아이템 편집/삭제 UI 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",4h,편집/삭제 확인 모달
+[CLOSET-020] 옷장 CRUD API 클라이언트 연동,Task,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",8h,전체 API 클라이언트 연동 및 상태 관리
+[CLOSET-021] EmptyState UI 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",4h,아이템/컬렉션 없을 때 빈 상태 안내
+[CLOSET-022] 옷장 CRUD/컬렉션/비즈니스 로직 단위 테스트,Task,Highest,,개인 옷장,테스트,Must,"담당자D",4h,옷장 도메인 단위 테스트
+[CLOSET-023] 옷장 페이지 UI 테스트,Task,Highest,,개인 옷장,테스트,Must,"담당자D",4h,옷장 웹 페이지 UI 테스트
 [FEED-001] posts + post_images 테이블 Entity 및 Repository 구현,Task,Highest,,커뮤니티 피드,게시물 관리,Must,"담당자E",8h,Post/PostImage Entity/Repository (다중 이미지 지원)
 [FEED-002] 게시물 작성 API 구현,Story,Highest,,커뮤니티 피드,게시물 관리,Must,"담당자E",12h,POST /posts (다중 이미지 최대 5장 + 태그 배열 + 로컬/서버 저장 이미지 URL 혼합 지원)
+[FEED-002a] 게시물 작성 시 Google Vision API 이미지 분석 연동,Task,High,,커뮤니티 피드,게시물 관리,Should,"담당자E",12h,이미지 업로드 시점에 Vision API Label Detection 호출 → 옷 관련 태그 자동 추천
+[FEED-002b] Vision API 분석 결과 태그 추천 UI 구현,Story,High,,커뮤니티 피드,피드 페이지,Should,"담당자E",8h,게시물 작성 화면에서 Vision API 태그 추천 ChipGroup 노출
 [FEED-003] 피드 목록 조회 API 구현,Story,Highest,,커뮤니티 피드,게시물 관리,Must,"담당자E",12h,GET /posts (전체/팔로잉 탭 + 최신/인기순)
 [FEED-004] 게시물 상세 조회 API 구현,Story,Highest,,커뮤니티 피드,게시물 관리,Must,"담당자E",4h,GET /posts/{post_id} (is_liked 포함)
 [FEED-005] 게시물 삭제 API 구현,Story,Highest,,커뮤니티 피드,게시물 관리,Must,"담당자E",4h,DELETE /posts/{post_id}

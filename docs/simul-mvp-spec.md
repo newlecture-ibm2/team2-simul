@@ -35,7 +35,7 @@
 | **Language** | Java | 21 (LTS) | Virtual Threads, Record Pattern 등 최신 기능 활용, 장기 지원 |
 | **Framework** | Spring Boot | 3.3 | 헥사고날 아키텍처에 적합한 DI/IoC, Java 21 호환, 풍부한 레퍼런스 |
 | **ORM** | Spring Data JPA + Hibernate | — | 도메인 모델 중심 개발, 복잡한 관계 매핑 지원 |
-| **DB** | PostgreSQL | 15+ | UUID 네이티브 지원, JSON 타입, 태그 검색 인덱싱, ENUM 지원 |
+| **DB** | PostgreSQL | 17+ | UUID 네이티브 지원, JSON 타입, 태그 검색 인덱싱, ENUM 지원, pgvector 확장 대비 |
 | **Migration** | Flyway | — | 버전 관리 기반 DB 스키마 마이그레이션 |
 | **Security** | Spring Security + OAuth2 Client | — | 카카오/네이버/구글 소셜 로그인, JWT 필터 체인 |
 | **JWT** | jjwt (io.jsonwebtoken) | 0.12+ | Access/Refresh Token 발급 및 검증 |
@@ -60,7 +60,6 @@
 | **Form** | React Hook Form + Zod | 7 + 3 | 폼 유효성 검증 (게시물 작성, 프로필 편집) |
 | **Image** | next/image | (Next.js 내장) | 자동 Lazy Load, 리사이징, WebP 변환 |
 | **SSE** | EventSource API | (브라우저 내장) | AI 시착 실시간 상태 수신 |
-| **Test** | Vitest + React Testing Library | 1 + 16 | 컴포넌트 단위/통합 테스트, Vite 기반 고속 실행 |
 
 ### 인프라 & DevOps
 

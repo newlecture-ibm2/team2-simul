@@ -43,9 +43,20 @@ erDiagram
         UUID item_id PK
         UUID user_id FK
         UUID image_id FK
+        UUID collection_id FK "nullable (미배정 시 최상단 노출)"
         ENUM category "top, bottom, outer, shoes, accessory"
         VARCHAR memo
         INT try_count
+        TIMESTAMP created_at
+        TIMESTAMP deleted_at
+    }
+
+    collections {
+        UUID collection_id PK
+        UUID user_id FK
+        VARCHAR name "컬렉션 이름 (max 50)"
+        TEXT cover_image_url "nullable (커버 이미지)"
+        INT sort_order "정렬 순서"
         TIMESTAMP created_at
         TIMESTAMP deleted_at
     }
@@ -149,7 +160,9 @@ erDiagram
     users ||--o{ base_images : "registers (모델 샷 등록)"
     users ||--o{ clothing_images : "uploads (최초 등록)"
     users ||--o{ closet_items : "owns (옷장 보관)"
+    users ||--o{ collections : "owns (컬렉션 보유)"
     clothing_images ||--o{ closet_items : "mapped_to (옷장 복사본 연결)"
+    collections ||--o{ closet_items : "contains (컬렉션 내 아이템)"
     
     users ||--o{ posts : "creates_or_tryon (시착 등록 및 피드)"
     base_images ||--o{ posts : "used_as_model (시착 모델로 사용)"
@@ -193,3 +206,7 @@ erDiagram
 ## 신규 도입된 설계 포인트 (알림 시스템)
 
 6. **`notifications` 테이블 추가**: 사용자에게 발생하는 주요 이벤트(시착 완료, 좋아요, 댓글, 팔로우한 사용자의 새 게시물)를 알림으로 기록합니다. `type` ENUM으로 알림 유형을 분류하고, `reference_id`로 관련 리소스(게시물 등)에 대한 딥링크를 지원합니다. `is_read`로 읽음/미읽음 상태를 관리합니다.
+
+## 신규 도입된 설계 포인트 (컬렉션 시스템)
+
+7. **`collections` 테이블 추가**: 옷장 아이템을 폴더처럼 그룹화하는 컬렉션 기능입니다. 1depth 구조로 중첩 폴더는 지원하지 않습니다. `closet_items.collection_id`가 NULL이면 최상단에 노출되고, 특정 컬렉션에 배정되면 해당 컬렉션 내에서만 표시됩니다. `sort_order`로 컬렉션 정렬 순서를 관리합니다.
