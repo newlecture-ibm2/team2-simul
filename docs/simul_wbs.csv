@@ -1,167 +1,167 @@
 Summary,Issue Type,Priority,Epic Name,Epic Link,Component/s,Labels,Assignee,Original Estimate,Description
-공통 인프라,Epic,,공통 인프라,,,,"담당자A",,프로젝트 초기 설정 / DB 설계 / 공통 모듈 / 공통 FE 컴포넌트 (반응형 웹 / 모바일 최적화)
-인증/사용자,Epic,,인증/사용자,,,,"담당자B",,소셜 로그인 / JWT 인증 / 사용자 관리 / 팔로우 / 프로필 / 온보딩 (BE+FE 풀스택)
-AI 가상시착,Epic,,AI 가상시착,,,,"담당자C",,베이스 이미지 / 크레딧 시스템 / AI 시착 생성 / SSE / 시착 화면 (BE+FE 풀스택)
-개인 옷장,Epic,,개인 옷장,,,,"담당자D",,아이템 CRUD / 컬렉션(폴더) 관리 / 비즈니스 로직 / 옷장 화면 (BE+FE 풀스택)
-커뮤니티 피드,Epic,,커뮤니티 피드,,,,"담당자E",,게시물(다중 이미지) / 좋아요 / 댓글 / 신고 / 피드 화면 (BE+FE 풀스택)
-태그/검색,Epic,,태그/검색,,,,"담당자E",,Google Vision API 태그 자동추출 / 태그 검색 자동완성 / 통합 검색 (BE+FE 풀스택)
-알림,Epic,,알림,,,,"담당자B",,시착 완료 / 좋아요·댓글 / 팔로우 게시 알림 (BE+FE 풀스택)
-관리자,Epic,,관리자,,,,"담당자A",,콘텐츠 모더레이션 / 유저 관리 / 크레딧 보상 (Admin API)
-QA/통합,Epic,,QA/통합,,,,"전원",,통합 테스트 / E2E 테스트 / 전체 QA
-[INFRA-001] Git 저장소 생성 및 브랜치 전략 수립,Task,Highest,,공통 인프라,프로젝트 초기 설정,Must,"전원",4h,팀 전체 협의
-[INFRA-002] 백엔드 프로젝트 스켈레톤 생성,Task,Highest,,공통 인프라,프로젝트 초기 설정,Must,"담당자A",4h,Spring Boot 등 백엔드 프레임워크 기반 프로젝트 구조 생성
-[INFRA-003] 웹 프론트엔드 프로젝트 스켈레톤 생성,Task,Highest,,공통 인프라,프로젝트 초기 설정,Must,"담당자A",4h,React/Next.js/Vite 등 웹 프레임워크 기반 모바일 퍼스트 프로젝트 구조 생성
-[INFRA-004] CI/CD 파이프라인 기본 구성,Task,Highest,,공통 인프라,프로젝트 초기 설정,Must,"담당자A",8h,빌드/배포 자동화 파이프라인 구성 (BE + FE 정적 호스팅)
-[INFRA-005] 전체 ERD 기반 DB 스키마 DDL 작성,Task,Highest,,공통 인프라,DB 설계,Must,"담당자A",8h,simul-erd.md 기준 전체 테이블 DDL 작성
-[INFRA-006] DB 마이그레이션 도구 설정,Task,Highest,,공통 인프라,DB 설계,Must,"담당자A",4h,Flyway/Liquibase 마이그레이션 도구 설정
-[INFRA-007] 개발/스테이징 DB 인스턴스 생성,Task,Highest,,공통 인프라,DB 설계,Must,"담당자A",4h,개발 및 스테이징 환경 DB 인스턴스 생성
-[INFRA-008] 공통 에러 코드 체계 및 Exception Handler 구현,Task,Highest,,공통 인프라,공통 모듈,Must,"담당자A",8h,ERR-000 ~ 전체 에러 코드 정의 및 글로벌 예외 처리
-[INFRA-009] 공통 에러 Response DTO 구현,Task,Highest,,공통 인프라,공통 모듈,Must,"담당자A",4h,error_code / message / detail 구조 DTO
-[INFRA-010] 공통 페이지네이션 모듈 구현,Task,Highest,,공통 인프라,공통 모듈,Must,"담당자A",4h,page/per_page 공통 Request/Response 처리
-[INFRA-011] 이미지 업로드 서비스 구현,Task,Highest,,공통 인프라,공통 모듈,Must,"담당자A",12h,서버 로컬 파일 시스템 기반 이미지 업로드 서비스 (향후 S3 전환 가능하도록 추상화)
-[INFRA-012] 이미지 유효성 검증 유틸리티 구현,Task,Highest,,공통 인프라,공통 모듈,Must,"담당자A",8h,이미지 리사이징/포맷/용량/해상도 검증
-[INFRA-013] HTTPS 강제 및 CORS 설정,Task,Highest,,공통 인프라,공통 모듈,Must,"담당자A",4h,보안 기본 설정
-[INFRA-014] 반응형 레이아웃 및 모바일 퍼스트 디자인 시스템 구축,Task,Highest,,공통 인프라,공통 FE,Must,"담당자A",8h,모바일 최적화 CSS/레이아웃 시스템 + 뷰포트/미디어쿼리 기본 설정
-[INFRA-015] 하단 네비게이션 바 웹 컴포넌트 구현,Story,Highest,,공통 인프라,공통 FE,Must,"담당자A",8h,홈/시착/프로필 하단 탭 바 (모바일 웹 고정 하단 내비게이션)
-[INFRA-016] SPA 라우팅 및 페이지 전환 구현,Task,Highest,,공통 인프라,공통 FE,Must,"담당자A",8h,React Router 등 SPA 라우팅 설정 + 페이지 전환 애니메이션
-[INFRA-017] 공통 네트워크 에러 핸들러 구현,Task,Highest,,공통 인프라,공통 FE,Must,"담당자A",8h,오프라인 배너 / 토큰 만료 자동 갱신 / Axios 인터셉터
-[INFRA-018] 공통 이미지 업로드 컴포넌트 구현,Story,Highest,,공통 인프라,공통 FE,Must,"담당자A",8h,웹 File Input 기반 이미지 선택 + 미리보기 + 포맷/용량 클라이언트 검증
-[INFRA-019] 공통 로딩/토스트 컴포넌트 구현,Story,Highest,,공통 인프라,공통 FE,Must,"담당자A",4h,로딩 인디케이터 및 토스트 메시지
-[INFRA-020] 공통 확인 다이얼로그 컴포넌트 구현,Story,Highest,,공통 인프라,공통 FE,Must,"담당자A",4h,확인/취소 다이얼로그 (모달)
-[INFRA-021] 공통 바텀시트 컴포넌트 구현,Story,Highest,,공통 인프라,공통 FE,Must,"담당자A",4h,모바일 웹 바텀시트 공통 컴포넌트
-[AUTH-001] 카카오 OAuth2 Provider 연동 구현,Story,Highest,,인증/사용자,소셜 로그인,Must,"담당자B",12h,POST /auth/social (provider=kakao)
-[AUTH-002] 네이버 OAuth2 Provider 연동 구현,Story,Highest,,인증/사용자,소셜 로그인,Must,"담당자B",12h,POST /auth/social (provider=naver)
-[AUTH-003] 구글 OAuth2 Provider 연동 구현,Story,Highest,,인증/사용자,소셜 로그인,Must,"담당자B",12h,POST /auth/social (provider=google)
-[AUTH-004] 소셜 로그인 공통 서비스 레이어 구현,Task,Highest,,인증/사용자,소셜 로그인,Must,"담당자B",8h,provider 분기 / 신규-기존 사용자 처리
-[AUTH-005] 로그인 페이지 UI 구현,Story,Highest,,인증/사용자,소셜 로그인,Must,"담당자B",8h,카카오/네이버/구글 소셜 로그인 버튼 웹 페이지
-[AUTH-006] OAuth2 소셜 로그인 웹 리다이렉트 연동,Task,Highest,,인증/사용자,소셜 로그인,Must,"담당자B",12h,OAuth2 웹 리다이렉트 플로우 (Callback URL 처리)
-[AUTH-007] JWT Access/Refresh Token 발급 로직 구현,Task,Highest,,인증/사용자,JWT 인증,Must,"담당자B",8h,JWT 토큰 발급 모듈
-[AUTH-008] 토큰 갱신 API 구현,Story,Highest,,인증/사용자,JWT 인증,Must,"담당자B",4h,POST /auth/refresh
-[AUTH-009] JWT 인터셉터/필터 구현,Task,Highest,,인증/사용자,JWT 인증,Must,"담당자B",8h,Spring Security Filter 인증 미들웨어
-[AUTH-010] 로그아웃 API 구현,Story,Highest,,인증/사용자,JWT 인증,Must,"담당자B",4h,DELETE /auth/logout 토큰 무효화
-[AUTH-011] JWT 토큰 저장/갱신/만료 웹 클라이언트 로직,Task,Highest,,인증/사용자,JWT 인증,Must,"담당자B",8h,localStorage/httpOnly Cookie 기반 토큰 관리 + Axios 인터셉터
-[AUTH-012] users 테이블 Entity 및 Repository 구현,Task,Highest,,인증/사용자,사용자 관리,Must,"담당자B",4h,User Entity/Repository
-[AUTH-013] 내 정보 조회 API 구현,Story,Highest,,인증/사용자,사용자 관리,Must,"담당자B",4h,GET /users/me
-[AUTH-014] 프로필 수정 API 구현,Story,Highest,,인증/사용자,사용자 관리,Must,"담당자B",4h,PATCH /users/me (닉네임/bio/프로필이미지)
-[AUTH-015] 회원 탈퇴 API 구현,Story,Highest,,인증/사용자,사용자 관리,Must,"담당자B",4h,DELETE /users/me 소프트 딜리트
-[AUTH-016] 타인 프로필 조회 API 구현,Story,Highest,,인증/사용자,사용자 관리,Must,"담당자B",4h,GET /users/{user_id} 팔로워/팔로잉 수 포함
-[AUTH-017] 사용자 게시물 목록 API 구현,Story,Highest,,인증/사용자,사용자 관리,Must,"담당자B",8h,GET /users/{user_id}/posts 공개/비공개 분기
-[AUTH-018] follows 테이블 Entity 및 Repository 구현,Task,Highest,,인증/사용자,팔로우,Must,"담당자B",4h,Follow Entity/Repository
-[AUTH-019] 팔로우 API 구현,Story,Highest,,인증/사용자,팔로우,Must,"담당자B",4h,POST /follows/{user_id}
-[AUTH-020] 언팔로우 API 구현,Story,Highest,,인증/사용자,팔로우,Must,"담당자B",4h,DELETE /follows/{user_id}
-[AUTH-021] 프로필 페이지 UI 구현,Story,Highest,,인증/사용자,프로필 페이지,Must,"담당자B",12h,헤더/통계/옷장/게시물 그리드 프로필 웹 페이지
-[AUTH-022] 프로필 편집 페이지 UI 및 API 연동,Story,Highest,,인증/사용자,프로필 페이지,Must,"담당자B",8h,프로필 편집 웹 페이지
-[AUTH-023] 설정 페이지 UI 구현,Story,Highest,,인증/사용자,프로필 페이지,Must,"담당자B",8h,알림/로그아웃/탈퇴 설정 웹 페이지
-[AUTH-024] 팔로우/언팔로우 버튼 UI 및 API 연동,Story,Highest,,인증/사용자,프로필 페이지,Must,"담당자B",4h,팔로우 기능 FE
-[AUTH-025] 스플래시 페이지 구현,Story,Highest,,인증/사용자,온보딩,Must,"담당자B",4h,웹 앱 최초 접속 스플래시
-[AUTH-026] 온보딩 가이드 페이지 구현,Story,Highest,,인증/사용자,온보딩,Must,"담당자B",8h,최초 로그인 전 온보딩 가이드 웹 페이지
-[AUTH-027] 소셜 로그인/JWT/사용자 관리 단위 테스트,Task,Highest,,인증/사용자,테스트,Must,"담당자B",8h,인증 도메인 단위 테스트
-[AUTH-028] 로그인/프로필/설정 페이지 UI 테스트,Task,Highest,,인증/사용자,테스트,Must,"담당자B",4h,인증 웹 페이지 UI 테스트
-[TRYON-001] base_images 테이블 Entity 및 Repository 구현,Task,Highest,,AI 가상시착,베이스 이미지,Must,"담당자C",4h,BaseImage Entity/Repository
-[TRYON-002] 내 베이스 이미지 목록 조회 API 구현,Story,Highest,,AI 가상시착,베이스 이미지,Must,"담당자C",4h,GET /users/me/base-images
-[TRYON-003] 새 베이스 이미지 업로드 API 구현,Story,Highest,,AI 가상시착,베이스 이미지,Must,"담당자C",8h,POST /tryon/base-images (multipart/form-data)
-[TRYON-004] 시착 결과를 베이스 이미지로 복제 등록 API,Story,Highest,,AI 가상시착,베이스 이미지,Must,"담당자C",8h,POST /tryon/base-images/from-post
-[TRYON-005] 베이스 이미지 포맷/해상도/용량 서버 검증,Task,Highest,,AI 가상시착,베이스 이미지,Must,"담당자C",4h,JPG/PNG/HEIC 256x256 20MB 검증
-[TRYON-006] tryon_credits 테이블 Entity 및 Repository 구현,Task,Highest,,AI 가상시착,크레딧 시스템,Must,"담당자C",4h,TryonCredit Entity/Repository
-[TRYON-007] 크레딧 잔여 조회 API 구현,Story,Highest,,AI 가상시착,크레딧 시스템,Must,"담당자C",4h,GET /tryon/credits
-[TRYON-008] 시착 성공 시 크레딧 차감 서비스 로직,Task,Highest,,AI 가상시착,크레딧 시스템,Must,"담당자C",4h,일일 5회 제한 차감 로직
-[TRYON-009] KST 자정 기준 크레딧 리셋 스케줄러 구현,Task,Highest,,AI 가상시착,크레딧 시스템,Must,"담당자C",4h,Asia/Seoul 기준 매일 리셋
-[TRYON-010] AI 시착 생성 요청 API 구현,Story,Highest,,AI 가상시착,AI 시착 생성,Must,"담당자C",12h,POST /tryon/generate
-[TRYON-011] 외부 AI 모델 서버 비동기 호출 클라이언트 구현,Task,Highest,,AI 가상시착,AI 시착 생성,Must,"담당자C",16h,비동기 큐 처리 AI 서버 연동 모듈
-[TRYON-012] SSE 스트림 서버 구현,Story,Highest,,AI 가상시착,AI 시착 생성,Must,"담당자C",12h,GET /tryon/status/{job_id} SSE 스트림
-[TRYON-013] 시착 완료 시 비공개 게시물 자동 생성 로직,Task,Highest,,AI 가상시착,AI 시착 생성,Must,"담당자C",8h,is_public=false Post 자동 생성
-[TRYON-014] 타임아웃/실패 시 자동 재시도 및 크레딧 보존,Task,Highest,,AI 가상시착,AI 시착 생성,Must,"담당자C",8h,ERR-103-B/C/D 에러 처리
-[TRYON-015] 부적절 이미지 감지 시 생성 거부 처리,Task,Highest,,AI 가상시착,AI 시착 생성,Must,"담당자C",4h,ERR-103-D 이미지 필터링
-[TRYON-016] AI 시착 홈 페이지 구현,Story,Highest,,AI 가상시착,시착 페이지,Must,"담당자C",12h,크레딧 배지 / 최근 결과 / CTA 버튼 웹 페이지
-[TRYON-017] 베이스 이미지 선택 페이지 구현,Story,Highest,,AI 가상시착,시착 페이지,Must,"담당자C",12h,목록 / 파일 업로드 / 시착물 재사용 선택 웹 페이지
-[TRYON-018] 시착 옷 선택 페이지 구현,Story,Highest,,AI 가상시착,시착 페이지,Must,"담당자C",12h,옷장 / 새 업로드 / 피드 3탭 웹 페이지
-[TRYON-019] 시착 생성 중 대기 페이지 구현,Story,Highest,,AI 가상시착,시착 페이지,Must,"담당자C",16h,프로그레스바 + 랜덤 인기 피드 숏폼 스와이프 (터치/스크롤 기반)
-[TRYON-020] 시착 결과 페이지 구현,Story,Highest,,AI 가상시착,시착 페이지,Must,"담당자C",12h,원본↔결과 비교 슬라이더 / 다운로드 / 공유
-[TRYON-021] EventSource API 기반 SSE 클라이언트 연동,Task,Highest,,AI 가상시착,시착 페이지,Must,"담당자C",8h,브라우저 EventSource API로 processing→completed 전환
-[TRYON-022] 크레딧 잔여 표시 배지 및 소진 안내 바텀시트,Story,Highest,,AI 가상시착,시착 페이지,Must,"담당자C",4h,N/5 크레딧 표시
-[TRYON-023] 웹 File Input 기반 베이스 이미지 업로드 연동,Task,Highest,,AI 가상시착,시착 페이지,Must,"담당자C",8h,웹 파일 선택 → multipart 전송 + 미리보기
-[TRYON-024] 이미지 다운로드 및 피드 공개 전환 기능,Story,Highest,,AI 가상시착,시착 페이지,Must,"담당자C",8h,Blob 다운로드 / 공개 전환 시 캡션 바텀시트
-[TRYON-025] AI 시착/크레딧/베이스이미지 단위 테스트,Task,Highest,,AI 가상시착,테스트,Must,"담당자C",8h,시착 도메인 단위 테스트
-[TRYON-026] 시착 플로우 페이지 UI/통합 테스트,Task,Highest,,AI 가상시착,테스트,Must,"담당자C",8h,시착 웹 페이지 UI 테스트
-[CLOSET-001] clothing_images + closet_items Entity 및 Repository 구현,Task,Highest,,개인 옷장,아이템 관리,Must,"담당자D",4h,Closet Entity/Repository
-[CLOSET-002] 아이템 추가 API 구현,Story,Highest,,개인 옷장,아이템 관리,Must,"담당자D",8h,POST /closet/items
-[CLOSET-003] 아이템 목록 조회 API 구현,Story,Highest,,개인 옷장,아이템 관리,Must,"담당자D",8h,GET /closet/items (카테고리 필터/정렬/페이지네이션)
-[CLOSET-004] 아이템 상세 조회 API 구현,Story,Highest,,개인 옷장,아이템 관리,Must,"담당자D",4h,GET /closet/items/{item_id}
-[CLOSET-005] 아이템 수정 API 구현,Story,Highest,,개인 옷장,아이템 관리,Must,"담당자D",4h,PATCH /closet/items/{item_id} (카테고리/메모)
-[CLOSET-006] 아이템 삭제 API 구현,Story,Highest,,개인 옷장,아이템 관리,Must,"담당자D",4h,DELETE /closet/items/{item_id} 소프트 딜리트
-[CLOSET-007] 계정당 200개 상한 검증 로직 구현,Task,Highest,,개인 옷장,비즈니스 로직,Must,"담당자D",4h,ERR-201-A 상한 검증
-[CLOSET-008] 타인 옷장에서 내 옷장으로 Deep Copy 로직,Task,Highest,,개인 옷장,비즈니스 로직,Must,"담당자D",4h,independent object 복사
-[CLOSET-009] AI 시착 완료 시 옷장 자동 저장 연동,Task,Highest,,개인 옷장,비즈니스 로직,Must,"담당자D",4h,TRYON-013 연동 자동 저장
-[CLOSET-010] collections 테이블 Entity 및 Repository 구현,Task,Highest,,개인 옷장,컬렉션 관리,Must,"담당자D",4h,Collection Entity/Repository (1depth 폴더 구조)
-[CLOSET-011] 컬렉션 생성 API 구현,Story,Highest,,개인 옷장,컬렉션 관리,Must,"담당자D",4h,POST /closet/collections (이름+커버이미지)
-[CLOSET-012] 컬렉션 목록 조회 API 구현,Story,Highest,,개인 옷장,컬렉션 관리,Must,"담당자D",4h,GET /closet/collections (정렬/페이지네이션)
-[CLOSET-013] 컬렉션 수정/삭제 API 구현,Story,Highest,,개인 옷장,컬렉션 관리,Must,"담당자D",4h,PATCH/DELETE /closet/collections/{collectionId}
-[CLOSET-014] 아이템-컬렉션 이동/해제 API 구현,Story,Highest,,개인 옷장,컬렉션 관리,Must,"담당자D",8h,PATCH /closet/items/{itemId}/collection (컬렉션 배정/해제)
-[CLOSET-015] 컬렉션 상세 페이지 구현 (컬렉션 내 아이템 목록),Story,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",8h,컬렉션 상세 + 아이템 그리드 웹 페이지
-[CLOSET-016] 개인 옷장 페이지 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",12h,최상단 아이템 + 하단 컬렉션 목록 / 카테고리 탭 / 정렬 / 그리드↔리스트 전환
-[CLOSET-017] 아이템 상세 페이지 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",8h,시착/복사 버튼 포함 상세 웹 페이지
-[CLOSET-018] 아이템 추가 페이지 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",8h,웹 파일 업로드 / 카테고리 / 메모 입력
-[CLOSET-019] 아이템 편집/삭제 UI 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",4h,편집/삭제 확인 모달
-[CLOSET-020] 옷장 CRUD API 클라이언트 연동,Task,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",8h,전체 API 클라이언트 연동 및 상태 관리
-[CLOSET-021] EmptyState UI 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,"담당자D",4h,아이템/컬렉션 없을 때 빈 상태 안내
-[CLOSET-022] 옷장 CRUD/컬렉션/비즈니스 로직 단위 테스트,Task,Highest,,개인 옷장,테스트,Must,"담당자D",4h,옷장 도메인 단위 테스트
-[CLOSET-023] 옷장 페이지 UI 테스트,Task,Highest,,개인 옷장,테스트,Must,"담당자D",4h,옷장 웹 페이지 UI 테스트
-[FEED-001] posts + post_images 테이블 Entity 및 Repository 구현,Task,Highest,,커뮤니티 피드,게시물 관리,Must,"담당자E",8h,Post/PostImage Entity/Repository (다중 이미지 지원)
-[FEED-002] 게시물 작성 API 구현,Story,Highest,,커뮤니티 피드,게시물 관리,Must,"담당자E",12h,POST /posts (다중 이미지 최대 5장 + 태그 배열 + 로컬/서버 저장 이미지 URL 혼합 지원)
-[FEED-002a] 게시물 작성 시 Google Vision API 이미지 분석 연동,Task,High,,커뮤니티 피드,게시물 관리,Should,"담당자E",12h,이미지 업로드 시점에 Vision API Label Detection 호출 → 옷 관련 태그 자동 추천
-[FEED-002b] Vision API 분석 결과 태그 추천 UI 구현,Story,High,,커뮤니티 피드,피드 페이지,Should,"담당자E",8h,게시물 작성 화면에서 Vision API 태그 추천 ChipGroup 노출
-[FEED-003] 피드 목록 조회 API 구현,Story,Highest,,커뮤니티 피드,게시물 관리,Must,"담당자E",12h,GET /posts (전체/팔로잉 탭 + 최신/인기순)
-[FEED-004] 게시물 상세 조회 API 구현,Story,Highest,,커뮤니티 피드,게시물 관리,Must,"담당자E",4h,GET /posts/{post_id} (is_liked 포함)
-[FEED-005] 게시물 삭제 API 구현,Story,Highest,,커뮤니티 피드,게시물 관리,Must,"담당자E",4h,DELETE /posts/{post_id}
-[FEED-006] 시착 직후 게시물 생성 연동 로직 구현,Task,Highest,,커뮤니티 피드,게시물 관리,Must,"담당자E",8h,SCR-024 CreatePostButton → SCR-012 이동 시 시착 결과 이미지 첫 번째 자동 완성 + 서버 저장 이미지 목록 조회
-[FEED-007] likes 테이블 Entity 및 Repository 구현,Task,High,,커뮤니티 피드,좋아요,Should,"담당자E",4h,UNIQUE(post_id+user_id) Like Entity
-[FEED-008] 좋아요 토글 API 구현,Story,High,,커뮤니티 피드,좋아요,Should,"담당자E",8h,POST /posts/{post_id}/likes (like_count 동기화)
-[FEED-009] comments 테이블 Entity 및 Repository 구현,Task,Medium,,커뮤니티 피드,댓글,Could,"담당자E",4h,대댓글 depth 1-2 Comment Entity
-[FEED-010] 댓글 목록 조회 API 구현,Story,Medium,,커뮤니티 피드,댓글,Could,"담당자E",8h,GET /posts/{post_id}/comments (대댓글 포함)
-[FEED-011] 댓글 작성 API 구현,Story,Medium,,커뮤니티 피드,댓글,Could,"담당자E",4h,POST /posts/{post_id}/comments (parent_comment_id)
-[FEED-012] 댓글 삭제 API 구현,Story,Medium,,커뮤니티 피드,댓글,Could,"담당자E",4h,DELETE /comments/{comment_id}
-[FEED-013] reports 테이블 Entity 및 Repository 구현,Task,High,,커뮤니티 피드,신고,Should,"담당자E",4h,UNIQUE(post_id+reporter_id) Report Entity
-[FEED-014] 게시물 신고 API 구현,Story,High,,커뮤니티 피드,신고,Should,"담당자E",4h,POST /posts/{post_id}/report (중복 방지)
-[FEED-015] 신고 N회 누적 자동 블라인드 트리거 구현,Task,High,,커뮤니티 피드,신고,Should,"담당자E",8h,5회 이상 신고 시 is_blinded=true
-[FEED-016] 홈 피드 페이지 구현,Story,Highest,,커뮤니티 피드,피드 페이지,Must,"담당자E",12h,2열 반응형 그리드 / 전체-팔로잉 탭 웹 페이지
-[FEED-017] 최신순/인기순 정렬 토글 구현,Story,Highest,,커뮤니티 피드,피드 페이지,Must,"담당자E",4h,정렬 토글 UI
-[FEED-018] 피드 무한 스크롤 및 이미지 Lazy Load,Task,Highest,,커뮤니티 피드,피드 페이지,Must,"담당자E",8h,Intersection Observer 기반 무한 스크롤 + Lazy Load
-[FEED-019] 게시물 상세 페이지 구현,Story,Highest,,커뮤니티 피드,피드 페이지,Must,"담당자E",12h,이미지/캡션/좋아요/댓글/신고 상세 웹 페이지
-[FEED-020] 게시물 작성 페이지 구현,Story,Highest,,커뮤니티 피드,피드 페이지,Must,"담당자E",16h,시착 직후 진입 시 시착 결과 첫 이미지 자동 완성 / 로컬 앨범 + 서버 저장 시착 결과 다중 선택(최대 5장) / 태그 자동완성 + 수동 편집(최대 10개) / 캡션 / 공개 여부
-[FEED-021] 좋아요 버튼 UI 및 낙관적 업데이트 구현,Story,High,,커뮤니티 피드,피드 페이지,Should,"담당자E",4h,실패 시 롤백
-[FEED-022] 댓글 목록/작성/대댓글 UI 구현,Story,Medium,,커뮤니티 피드,피드 페이지,Could,"담당자E",12h,2 depth 대댓글 UI
-[FEED-023] 게시물 신고 UI 구현,Story,High,,커뮤니티 피드,피드 페이지,Should,"담당자E",4h,신고 버튼 / 사유 입력 모달 / 중복 안내
-[FEED-024] 피드 CRUD API 클라이언트 연동,Task,Highest,,커뮤니티 피드,피드 페이지,Must,"담당자E",8h,전체 API 클라이언트 연동 및 상태 관리
-[FEED-025] 비로그인 사용자 피드 열람 및 로그인 유도,Story,Highest,,커뮤니티 피드,피드 페이지,Must,"담당자E",4h,시착/좋아요/댓글 시 로그인 유도 바텀시트
-[FEED-026] 피드/좋아요/댓글/신고 단위 테스트,Task,Highest,,커뮤니티 피드,테스트,Must,"담당자E",8h,피드 도메인 단위 테스트
-[FEED-027] 피드 페이지 UI 테스트,Task,Highest,,커뮤니티 피드,테스트,Must,"담당자E",4h,피드 웹 페이지 UI 테스트
-[TAG-001] tags + post_tags 테이블 Entity 및 Repository 구현,Task,Highest,,태그/검색,태그 관리,Must,"담당자E",4h,Tag/PostTag Entity/Repository
-[TAG-002] Google Vision API 태그 분석 서비스 구현,Task,Highest,,태그/검색,태그 자동추출,Must,"담당자E",12h,VisionApiPort + GoogleVisionTagAdapter 옷 관련 키워드 필터링
-[TAG-003] 이미지 태그 자동 추출 API 구현,Story,Highest,,태그/검색,태그 자동추출,Must,"담당자E",8h,POST /tags/analyze (Vision API 분석 결과 반환)
-[TAG-004] 게시물 생성 시 태그 부착 서비스 로직,Task,Highest,,태그/검색,태그 관리,Must,"담당자E",8h,AttachTagsToPostUseCase (upsert + post_tags 매핑 + usage_count 증가)
-[TAG-005] 태그 자동완성 검색 API 구현,Story,Highest,,태그/검색,검색,Must,"담당자E",8h,GET /tags/search (usage_count 정렬)
-[TAG-006] 통합 검색 API 구현,Story,Highest,,태그/검색,검색,Must,"담당자E",12h,GET /search (태그 + 캡션 + 닉네임 통합 검색 + 페이지네이션)
-[TAG-007] 게시물 작성 태그 자동완성 UI 구현,Story,Highest,,태그/검색,태그 페이지,Must,"담당자E",12h,Vision API 태그 추천 ChipGroup + 수동 입력 + 최대 10개 편집
-[TAG-008] 통합 검색 페이지 구현,Story,Highest,,태그/검색,검색 페이지,Must,"담당자E",16h,검색바 / # 태그 모드 / 카테고리별 자동완성 / 인기 태그 / 검색 결과 그리드
-[TAG-009] 피드 카드 태그 칩 표시 UI 구현,Story,Highest,,태그/검색,태그 페이지,Must,"담당자E",4h,PostCard에 태그 최대 3개 칩 표시
-[TAG-010] 게시물 상세 태그 목록 UI 구현,Story,Highest,,태그/검색,태그 페이지,Must,"담당자E",4h,상세 페이지 TagChipList (탭 시 검색 이동)
-[TAG-011] 태그/검색 API 클라이언트 연동,Task,Highest,,태그/검색,검색 페이지,Must,"담당자E",8h,전체 태그/검색 API 클라이언트 연동 및 상태 관리
-[TAG-012] 태그/검색 단위 테스트 및 UI 테스트,Task,Highest,,태그/검색,테스트,Must,"담당자E",8h,태그/검색 도메인 단위 테스트 + 검색 페이지 UI 테스트
-[NOTI-001] notifications 테이블 Entity 및 Repository 구현,Task,Highest,,알림,알림 관리,Must,"담당자B",4h,Notification Entity/Repository
-[NOTI-002] 알림 생성 서비스 구현,Task,Highest,,알림,알림 관리,Must,"담당자B",8h,CreateNotificationUseCase (본인 활동 제외 로직 포함)
-[NOTI-003] 시착 완료 알림 트리거 연동,Task,Highest,,알림,알림 관리,Must,"담당자B",4h,TryonService → TRYON_COMPLETE 알림 생성 연동
-[NOTI-004] 좋아요/댓글/팔로우 게시 알림 트리거 연동,Task,Highest,,알림,알림 관리,Must,"담당자B",8h,LikeService/CommentService/PostService → LIKE/COMMENT/FOLLOW_POST 알림
-[NOTI-005] 알림 목록 조회 및 미읽음 수 API 구현,Story,Highest,,알림,알림 API,Must,"담당자B",8h,GET /notifications + GET /notifications/unread-count
-[NOTI-006] 알림 읽음 처리 API 구현,Story,Highest,,알림,알림 API,Must,"담당자B",4h,PATCH /notifications/{id}/read + /read-all
-[NOTI-007] 알림 페이지 UI 구현,Story,Highest,,알림,알림 페이지,Must,"담당자B",16h,알림 목록 / 유형별 아이콘 / 미읽음 인디케이터 / 전체 읽음 / 헤더 배지
-[NOTI-008] 알림 도메인 단위 테스트 및 UI 테스트,Task,Highest,,알림,테스트,Must,"담당자B",8h,알림 도메인 단위 테스트 + 알림 페이지 UI 테스트
-[ADMIN-001] Admin role 검증 미들웨어 구현,Task,High,,관리자,관리자,Should,"담당자A",4h,role=admin 권한 체크 필터
-[ADMIN-002] 신고 목록 조회 Admin API 구현,Story,High,,관리자,관리자,Should,"담당자A",4h,GET /admin/reports
-[ADMIN-003] 게시물 강제 블라인드 Admin API 구현,Story,High,,관리자,관리자,Should,"담당자A",4h,PATCH /admin/posts/{post_id}/blind
-[ADMIN-004] 블라인드 해제 Admin API 구현,Story,High,,관리자,관리자,Should,"담당자A",4h,PATCH /admin/posts/{post_id}/unblind
-[ADMIN-005] 악성 유저 정지 Admin API 구현,Story,High,,관리자,관리자,Should,"담당자A",4h,PATCH /admin/users/{user_id}/suspend (is_active=false)
-[ADMIN-006] 크레딧 수동 지급 Admin API 구현,Story,High,,관리자,관리자,Should,"담당자A",4h,POST /admin/users/{user_id}/credits
-[QA-001] 주요 도메인 간 API 통합 시나리오 테스트,Task,Highest,,QA/통합,통합 테스트,Must,"전원",16h,시착→게시물→피드 흐름 통합 테스트
-[QA-002] End-to-End 시나리오 테스트 수행,Task,Highest,,QA/통합,통합 테스트,Must,"전원",16h,주요 사용자 시나리오 E2E 테스트 (브라우저 기반)
-[QA-003] 크로스 브라우저/모바일 반응형 QA,Task,Highest,,QA/통합,전체 QA,Must,"전원",12h,Chrome/Safari/Firefox + 모바일 뷰포트 반응형 테스트
-[QA-004] 전체 기능 QA 수행 및 버그 수정,Task,Highest,,QA/통합,전체 QA,Must,"전원",24h,MVP 출시 전 전체 QA
+공통 인프라,Epic,,공통 인프라,,,,lwseok0516@gmail.com,,프로젝트 초기 설정 / DB 설계 / 공통 모듈 / 공통 FE 컴포넌트 (반응형 웹 / 모바일 최적화)
+인증/사용자,Epic,,인증/사용자,,,,tr9273@naver.com,,소셜 로그인 / JWT 인증 / 사용자 관리 / 팔로우 / 프로필 / 온보딩 (BE+FE 풀스택)
+AI 가상시착,Epic,,AI 가상시착,,,,a8853665@gmail.com,,베이스 이미지 / 크레딧 시스템 / AI 시착 생성 / SSE / 시착 화면 (BE+FE 풀스택)
+개인 옷장,Epic,,개인 옷장,,,,kikilee.ato@gmail.com,,아이템 CRUD / 컬렉션(폴더) 관리 / 비즈니스 로직 / 옷장 화면 (BE+FE 풀스택)
+커뮤니티 피드,Epic,,커뮤니티 피드,,,,jcwo214@naver.com,,게시물(다중 이미지) / 좋아요 / 댓글 / 신고 / 피드 화면 (BE+FE 풀스택)
+태그/검색,Epic,,태그/검색,,,,jcwo214@naver.com,,Google Vision API 태그 자동추출 / 태그 검색 자동완성 / 통합 검색 (BE+FE 풀스택)
+알림,Epic,,알림,,,,tr9273@naver.com,,시착 완료 / 좋아요·댓글 / 팔로우 게시 알림 (BE+FE 풀스택)
+관리자,Epic,,관리자,,,,lwseok0516@gmail.com,,콘텐츠 모더레이션 / 유저 관리 / 크레딧 보상 (Admin API)
+QA/통합,Epic,,QA/통합,,,,,,통합 테스트 / E2E 테스트 / 전체 QA
+[INFRA-001] Git 저장소 생성 및 브랜치 전략 수립,Task,Highest,,공통 인프라,프로젝트 초기 설정,Must,,4,팀 전체 협의
+[INFRA-002] 백엔드 프로젝트 스켈레톤 생성,Task,Highest,,공통 인프라,프로젝트 초기 설정,Must,lwseok0516@gmail.com,4,Spring Boot 등 백엔드 프레임워크 기반 프로젝트 구조 생성
+[INFRA-003] 웹 프론트엔드 프로젝트 스켈레톤 생성,Task,Highest,,공통 인프라,프로젝트 초기 설정,Must,lwseok0516@gmail.com,4,React/Next.js/Vite 등 웹 프레임워크 기반 모바일 퍼스트 프로젝트 구조 생성
+[INFRA-004] CI/CD 파이프라인 기본 구성,Task,Highest,,공통 인프라,프로젝트 초기 설정,Must,lwseok0516@gmail.com,8,빌드/배포 자동화 파이프라인 구성 (BE + FE 정적 호스팅)
+[INFRA-005] 전체 ERD 기반 DB 스키마 DDL 작성,Task,Highest,,공통 인프라,DB 설계,Must,lwseok0516@gmail.com,8,simul-erd.md 기준 전체 테이블 DDL 작성
+[INFRA-006] DB 마이그레이션 도구 설정,Task,Highest,,공통 인프라,DB 설계,Must,lwseok0516@gmail.com,4,Flyway/Liquibase 마이그레이션 도구 설정
+[INFRA-007] 개발/스테이징 DB 인스턴스 생성,Task,Highest,,공통 인프라,DB 설계,Must,lwseok0516@gmail.com,4,개발 및 스테이징 환경 DB 인스턴스 생성
+[INFRA-008] 공통 에러 코드 체계 및 Exception Handler 구현,Task,Highest,,공통 인프라,공통 모듈,Must,lwseok0516@gmail.com,8,ERR-000 ~ 전체 에러 코드 정의 및 글로벌 예외 처리
+[INFRA-009] 공통 에러 Response DTO 구현,Task,Highest,,공통 인프라,공통 모듈,Must,lwseok0516@gmail.com,4,error_code / message / detail 구조 DTO
+[INFRA-010] 공통 페이지네이션 모듈 구현,Task,Highest,,공통 인프라,공통 모듈,Must,lwseok0516@gmail.com,4,page/per_page 공통 Request/Response 처리
+[INFRA-011] 이미지 업로드 서비스 구현,Task,Highest,,공통 인프라,공통 모듈,Must,lwseok0516@gmail.com,12,서버 로컬 파일 시스템 기반 이미지 업로드 서비스 (향후 S3 전환 가능하도록 추상화)
+[INFRA-012] 이미지 유효성 검증 유틸리티 구현,Task,Highest,,공통 인프라,공통 모듈,Must,lwseok0516@gmail.com,8,이미지 리사이징/포맷/용량/해상도 검증
+[INFRA-013] HTTPS 강제 및 CORS 설정,Task,Highest,,공통 인프라,공통 모듈,Must,lwseok0516@gmail.com,4,보안 기본 설정
+[INFRA-014] 반응형 레이아웃 및 모바일 퍼스트 디자인 시스템 구축,Task,Highest,,공통 인프라,공통 FE,Must,lwseok0516@gmail.com,8,모바일 최적화 CSS/레이아웃 시스템 + 뷰포트/미디어쿼리 기본 설정
+[INFRA-015] 하단 네비게이션 바 웹 컴포넌트 구현,Story,Highest,,공통 인프라,공통 FE,Must,lwseok0516@gmail.com,8,홈/시착/프로필 하단 탭 바 (모바일 웹 고정 하단 내비게이션)
+[INFRA-016] SPA 라우팅 및 페이지 전환 구현,Task,Highest,,공통 인프라,공통 FE,Must,lwseok0516@gmail.com,8,React Router 등 SPA 라우팅 설정 + 페이지 전환 애니메이션
+[INFRA-017] 공통 네트워크 에러 핸들러 구현,Task,Highest,,공통 인프라,공통 FE,Must,lwseok0516@gmail.com,8,오프라인 배너 / 토큰 만료 자동 갱신 / Axios 인터셉터
+[INFRA-018] 공통 이미지 업로드 컴포넌트 구현,Story,Highest,,공통 인프라,공통 FE,Must,lwseok0516@gmail.com,8,웹 File Input 기반 이미지 선택 + 미리보기 + 포맷/용량 클라이언트 검증
+[INFRA-019] 공통 로딩/토스트 컴포넌트 구현,Story,Highest,,공통 인프라,공통 FE,Must,lwseok0516@gmail.com,4,로딩 인디케이터 및 토스트 메시지
+[INFRA-020] 공통 확인 다이얼로그 컴포넌트 구현,Story,Highest,,공통 인프라,공통 FE,Must,lwseok0516@gmail.com,4,확인/취소 다이얼로그 (모달)
+[INFRA-021] 공통 바텀시트 컴포넌트 구현,Story,Highest,,공통 인프라,공통 FE,Must,lwseok0516@gmail.com,4,모바일 웹 바텀시트 공통 컴포넌트
+[AUTH-001] 카카오 OAuth2 Provider 연동 구현,Story,Highest,,인증/사용자,소셜 로그인,Must,tr9273@naver.com,12,POST /auth/social (provider=kakao)
+[AUTH-002] 네이버 OAuth2 Provider 연동 구현,Story,Highest,,인증/사용자,소셜 로그인,Must,tr9273@naver.com,12,POST /auth/social (provider=naver)
+[AUTH-003] 구글 OAuth2 Provider 연동 구현,Story,Highest,,인증/사용자,소셜 로그인,Must,tr9273@naver.com,12,POST /auth/social (provider=google)
+[AUTH-004] 소셜 로그인 공통 서비스 레이어 구현,Task,Highest,,인증/사용자,소셜 로그인,Must,tr9273@naver.com,8,provider 분기 / 신규-기존 사용자 처리
+[AUTH-005] 로그인 페이지 UI 구현,Story,Highest,,인증/사용자,소셜 로그인,Must,tr9273@naver.com,8,카카오/네이버/구글 소셜 로그인 버튼 웹 페이지
+[AUTH-006] OAuth2 소셜 로그인 웹 리다이렉트 연동,Task,Highest,,인증/사용자,소셜 로그인,Must,tr9273@naver.com,12,OAuth2 웹 리다이렉트 플로우 (Callback URL 처리)
+[AUTH-007] JWT Access/Refresh Token 발급 로직 구현,Task,Highest,,인증/사용자,JWT 인증,Must,tr9273@naver.com,8,JWT 토큰 발급 모듈
+[AUTH-008] 토큰 갱신 API 구현,Story,Highest,,인증/사용자,JWT 인증,Must,tr9273@naver.com,4,POST /auth/refresh
+[AUTH-009] JWT 인터셉터/필터 구현,Task,Highest,,인증/사용자,JWT 인증,Must,tr9273@naver.com,8,Spring Security Filter 인증 미들웨어
+[AUTH-010] 로그아웃 API 구현,Story,Highest,,인증/사용자,JWT 인증,Must,tr9273@naver.com,4,DELETE /auth/logout 토큰 무효화
+[AUTH-011] JWT 토큰 저장/갱신/만료 웹 클라이언트 로직,Task,Highest,,인증/사용자,JWT 인증,Must,tr9273@naver.com,8,localStorage/httpOnly Cookie 기반 토큰 관리 + Axios 인터셉터
+[AUTH-012] users 테이블 Entity 및 Repository 구현,Task,Highest,,인증/사용자,사용자 관리,Must,tr9273@naver.com,4,User Entity/Repository
+[AUTH-013] 내 정보 조회 API 구현,Story,Highest,,인증/사용자,사용자 관리,Must,tr9273@naver.com,4,GET /users/me
+[AUTH-014] 프로필 수정 API 구현,Story,Highest,,인증/사용자,사용자 관리,Must,tr9273@naver.com,4,PATCH /users/me (닉네임/bio/프로필이미지)
+[AUTH-015] 회원 탈퇴 API 구현,Story,Highest,,인증/사용자,사용자 관리,Must,tr9273@naver.com,4,DELETE /users/me 소프트 딜리트
+[AUTH-016] 타인 프로필 조회 API 구현,Story,Highest,,인증/사용자,사용자 관리,Must,tr9273@naver.com,4,GET /users/{user_id} 팔로워/팔로잉 수 포함
+[AUTH-017] 사용자 게시물 목록 API 구현,Story,Highest,,인증/사용자,사용자 관리,Must,tr9273@naver.com,8,GET /users/{user_id}/posts 공개/비공개 분기
+[AUTH-018] follows 테이블 Entity 및 Repository 구현,Task,Highest,,인증/사용자,팔로우,Must,tr9273@naver.com,4,Follow Entity/Repository
+[AUTH-019] 팔로우 API 구현,Story,Highest,,인증/사용자,팔로우,Must,tr9273@naver.com,4,POST /follows/{user_id}
+[AUTH-020] 언팔로우 API 구현,Story,Highest,,인증/사용자,팔로우,Must,tr9273@naver.com,4,DELETE /follows/{user_id}
+[AUTH-021] 프로필 페이지 UI 구현,Story,Highest,,인증/사용자,프로필 페이지,Must,tr9273@naver.com,12,헤더/통계/옷장/게시물 그리드 프로필 웹 페이지
+[AUTH-022] 프로필 편집 페이지 UI 및 API 연동,Story,Highest,,인증/사용자,프로필 페이지,Must,tr9273@naver.com,8,프로필 편집 웹 페이지
+[AUTH-023] 설정 페이지 UI 구현,Story,Highest,,인증/사용자,프로필 페이지,Must,tr9273@naver.com,8,알림/로그아웃/탈퇴 설정 웹 페이지
+[AUTH-024] 팔로우/언팔로우 버튼 UI 및 API 연동,Story,Highest,,인증/사용자,프로필 페이지,Must,tr9273@naver.com,4,팔로우 기능 FE
+[AUTH-025] 스플래시 페이지 구현,Story,Highest,,인증/사용자,온보딩,Must,tr9273@naver.com,4,웹 앱 최초 접속 스플래시
+[AUTH-026] 온보딩 가이드 페이지 구현,Story,Highest,,인증/사용자,온보딩,Must,tr9273@naver.com,8,최초 로그인 전 온보딩 가이드 웹 페이지
+[AUTH-027] 소셜 로그인/JWT/사용자 관리 단위 테스트,Task,Highest,,인증/사용자,테스트,Must,tr9273@naver.com,8,인증 도메인 단위 테스트
+[AUTH-028] 로그인/프로필/설정 페이지 UI 테스트,Task,Highest,,인증/사용자,테스트,Must,tr9273@naver.com,4,인증 웹 페이지 UI 테스트
+[TRYON-001] base_images 테이블 Entity 및 Repository 구현,Task,Highest,,AI 가상시착,베이스 이미지,Must,a8853665@gmail.com,4,BaseImage Entity/Repository
+[TRYON-002] 내 베이스 이미지 목록 조회 API 구현,Story,Highest,,AI 가상시착,베이스 이미지,Must,a8853665@gmail.com,4,GET /users/me/base-images
+[TRYON-003] 새 베이스 이미지 업로드 API 구현,Story,Highest,,AI 가상시착,베이스 이미지,Must,a8853665@gmail.com,8,POST /tryon/base-images (multipart/form-data)
+[TRYON-004] 시착 결과를 베이스 이미지로 복제 등록 API,Story,Highest,,AI 가상시착,베이스 이미지,Must,a8853665@gmail.com,8,POST /tryon/base-images/from-post
+[TRYON-005] 베이스 이미지 포맷/해상도/용량 서버 검증,Task,Highest,,AI 가상시착,베이스 이미지,Must,a8853665@gmail.com,4,JPG/PNG/HEIC 256x256 20MB 검증
+[TRYON-006] tryon_credits 테이블 Entity 및 Repository 구현,Task,Highest,,AI 가상시착,크레딧 시스템,Must,a8853665@gmail.com,4,TryonCredit Entity/Repository
+[TRYON-007] 크레딧 잔여 조회 API 구현,Story,Highest,,AI 가상시착,크레딧 시스템,Must,a8853665@gmail.com,4,GET /tryon/credits
+[TRYON-008] 시착 성공 시 크레딧 차감 서비스 로직,Task,Highest,,AI 가상시착,크레딧 시스템,Must,a8853665@gmail.com,4,일일 5회 제한 차감 로직
+[TRYON-009] KST 자정 기준 크레딧 리셋 스케줄러 구현,Task,Highest,,AI 가상시착,크레딧 시스템,Must,a8853665@gmail.com,4,Asia/Seoul 기준 매일 리셋
+[TRYON-010] AI 시착 생성 요청 API 구현,Story,Highest,,AI 가상시착,AI 시착 생성,Must,a8853665@gmail.com,12,POST /tryon/generate
+[TRYON-011] 외부 AI 모델 서버 비동기 호출 클라이언트 구현,Task,Highest,,AI 가상시착,AI 시착 생성,Must,a8853665@gmail.com,16,비동기 큐 처리 AI 서버 연동 모듈
+[TRYON-012] SSE 스트림 서버 구현,Story,Highest,,AI 가상시착,AI 시착 생성,Must,a8853665@gmail.com,12,GET /tryon/status/{job_id} SSE 스트림
+[TRYON-013] 시착 완료 시 비공개 게시물 자동 생성 로직,Task,Highest,,AI 가상시착,AI 시착 생성,Must,a8853665@gmail.com,8,is_public=false Post 자동 생성
+[TRYON-014] 타임아웃/실패 시 자동 재시도 및 크레딧 보존,Task,Highest,,AI 가상시착,AI 시착 생성,Must,a8853665@gmail.com,8,ERR-103-B/C/D 에러 처리
+[TRYON-015] 부적절 이미지 감지 시 생성 거부 처리,Task,Highest,,AI 가상시착,AI 시착 생성,Must,a8853665@gmail.com,4,ERR-103-D 이미지 필터링
+[TRYON-016] AI 시착 홈 페이지 구현,Story,Highest,,AI 가상시착,시착 페이지,Must,a8853665@gmail.com,12,크레딧 배지 / 최근 결과 / CTA 버튼 웹 페이지
+[TRYON-017] 베이스 이미지 선택 페이지 구현,Story,Highest,,AI 가상시착,시착 페이지,Must,a8853665@gmail.com,12,목록 / 파일 업로드 / 시착물 재사용 선택 웹 페이지
+[TRYON-018] 시착 옷 선택 페이지 구현,Story,Highest,,AI 가상시착,시착 페이지,Must,a8853665@gmail.com,12,옷장 / 새 업로드 / 피드 3탭 웹 페이지
+[TRYON-019] 시착 생성 중 대기 페이지 구현,Story,Highest,,AI 가상시착,시착 페이지,Must,a8853665@gmail.com,16,프로그레스바 + 랜덤 인기 피드 숏폼 스와이프 (터치/스크롤 기반)
+[TRYON-020] 시착 결과 페이지 구현,Story,Highest,,AI 가상시착,시착 페이지,Must,a8853665@gmail.com,12,원본↔결과 비교 슬라이더 / 다운로드 / 공유
+[TRYON-021] EventSource API 기반 SSE 클라이언트 연동,Task,Highest,,AI 가상시착,시착 페이지,Must,a8853665@gmail.com,8,브라우저 EventSource API로 processing→completed 전환
+[TRYON-022] 크레딧 잔여 표시 배지 및 소진 안내 바텀시트,Story,Highest,,AI 가상시착,시착 페이지,Must,a8853665@gmail.com,4,N/5 크레딧 표시
+[TRYON-023] 웹 File Input 기반 베이스 이미지 업로드 연동,Task,Highest,,AI 가상시착,시착 페이지,Must,a8853665@gmail.com,8,웹 파일 선택 → multipart 전송 + 미리보기
+[TRYON-024] 이미지 다운로드 및 피드 공개 전환 기능,Story,Highest,,AI 가상시착,시착 페이지,Must,a8853665@gmail.com,8,Blob 다운로드 / 공개 전환 시 캡션 바텀시트
+[TRYON-025] AI 시착/크레딧/베이스이미지 단위 테스트,Task,Highest,,AI 가상시착,테스트,Must,a8853665@gmail.com,8,시착 도메인 단위 테스트
+[TRYON-026] 시착 플로우 페이지 UI/통합 테스트,Task,Highest,,AI 가상시착,테스트,Must,a8853665@gmail.com,8,시착 웹 페이지 UI 테스트
+[CLOSET-001] clothing_images + closet_items Entity 및 Repository 구현,Task,Highest,,개인 옷장,아이템 관리,Must,kikilee.ato@gmail.com,4,Closet Entity/Repository
+[CLOSET-002] 아이템 추가 API 구현,Story,Highest,,개인 옷장,아이템 관리,Must,kikilee.ato@gmail.com,8,POST /closet/items
+[CLOSET-003] 아이템 목록 조회 API 구현,Story,Highest,,개인 옷장,아이템 관리,Must,kikilee.ato@gmail.com,8,GET /closet/items (카테고리 필터/정렬/페이지네이션)
+[CLOSET-004] 아이템 상세 조회 API 구현,Story,Highest,,개인 옷장,아이템 관리,Must,kikilee.ato@gmail.com,4,GET /closet/items/{item_id}
+[CLOSET-005] 아이템 수정 API 구현,Story,Highest,,개인 옷장,아이템 관리,Must,kikilee.ato@gmail.com,4,PATCH /closet/items/{item_id} (카테고리/메모)
+[CLOSET-006] 아이템 삭제 API 구현,Story,Highest,,개인 옷장,아이템 관리,Must,kikilee.ato@gmail.com,4,DELETE /closet/items/{item_id} 소프트 딜리트
+[CLOSET-007] 계정당 200개 상한 검증 로직 구현,Task,Highest,,개인 옷장,비즈니스 로직,Must,kikilee.ato@gmail.com,4,ERR-201-A 상한 검증
+[CLOSET-008] 타인 옷장에서 내 옷장으로 Deep Copy 로직,Task,Highest,,개인 옷장,비즈니스 로직,Must,kikilee.ato@gmail.com,4,independent object 복사
+[CLOSET-009] AI 시착 완료 시 옷장 자동 저장 연동,Task,Highest,,개인 옷장,비즈니스 로직,Must,kikilee.ato@gmail.com,4,TRYON-013 연동 자동 저장
+[CLOSET-010] collections 테이블 Entity 및 Repository 구현,Task,Highest,,개인 옷장,컬렉션 관리,Must,kikilee.ato@gmail.com,4,Collection Entity/Repository (1depth 폴더 구조)
+[CLOSET-011] 컬렉션 생성 API 구현,Story,Highest,,개인 옷장,컬렉션 관리,Must,kikilee.ato@gmail.com,4,POST /closet/collections (이름+커버이미지)
+[CLOSET-012] 컬렉션 목록 조회 API 구현,Story,Highest,,개인 옷장,컬렉션 관리,Must,kikilee.ato@gmail.com,4,GET /closet/collections (정렬/페이지네이션)
+[CLOSET-013] 컬렉션 수정/삭제 API 구현,Story,Highest,,개인 옷장,컬렉션 관리,Must,kikilee.ato@gmail.com,4,PATCH/DELETE /closet/collections/{collectionId}
+[CLOSET-014] 아이템-컬렉션 이동/해제 API 구현,Story,Highest,,개인 옷장,컬렉션 관리,Must,kikilee.ato@gmail.com,8,PATCH /closet/items/{itemId}/collection (컬렉션 배정/해제)
+[CLOSET-015] 컬렉션 상세 페이지 구현 (컬렉션 내 아이템 목록),Story,Highest,,개인 옷장,옷장 페이지,Must,kikilee.ato@gmail.com,8,컬렉션 상세 + 아이템 그리드 웹 페이지
+[CLOSET-016] 개인 옷장 페이지 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,kikilee.ato@gmail.com,12,최상단 아이템 + 하단 컬렉션 목록 / 카테고리 탭 / 정렬 / 그리드↔리스트 전환
+[CLOSET-017] 아이템 상세 페이지 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,kikilee.ato@gmail.com,8,시착/복사 버튼 포함 상세 웹 페이지
+[CLOSET-018] 아이템 추가 페이지 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,kikilee.ato@gmail.com,8,웹 파일 업로드 / 카테고리 / 메모 입력
+[CLOSET-019] 아이템 편집/삭제 UI 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,kikilee.ato@gmail.com,4,편집/삭제 확인 모달
+[CLOSET-020] 옷장 CRUD API 클라이언트 연동,Task,Highest,,개인 옷장,옷장 페이지,Must,kikilee.ato@gmail.com,8,전체 API 클라이언트 연동 및 상태 관리
+[CLOSET-021] EmptyState UI 구현,Story,Highest,,개인 옷장,옷장 페이지,Must,kikilee.ato@gmail.com,4,아이템/컬렉션 없을 때 빈 상태 안내
+[CLOSET-022] 옷장 CRUD/컬렉션/비즈니스 로직 단위 테스트,Task,Highest,,개인 옷장,테스트,Must,kikilee.ato@gmail.com,4,옷장 도메인 단위 테스트
+[CLOSET-023] 옷장 페이지 UI 테스트,Task,Highest,,개인 옷장,테스트,Must,kikilee.ato@gmail.com,4,옷장 웹 페이지 UI 테스트
+[FEED-001] posts + post_images 테이블 Entity 및 Repository 구현,Task,Highest,,커뮤니티 피드,게시물 관리,Must,jcwo214@naver.com,8,Post/PostImage Entity/Repository (다중 이미지 지원)
+[FEED-002] 게시물 작성 API 구현,Story,Highest,,커뮤니티 피드,게시물 관리,Must,jcwo214@naver.com,12,POST /posts (다중 이미지 최대 5장 + 태그 배열 + 로컬/서버 저장 이미지 URL 혼합 지원)
+[FEED-002a] 게시물 작성 시 Google Vision API 이미지 분석 연동,Task,High,,커뮤니티 피드,게시물 관리,Should,jcwo214@naver.com,12,이미지 업로드 시점에 Vision API Label Detection 호출 → 옷 관련 태그 자동 추천
+[FEED-002b] Vision API 분석 결과 태그 추천 UI 구현,Story,High,,커뮤니티 피드,피드 페이지,Should,jcwo214@naver.com,8,게시물 작성 화면에서 Vision API 태그 추천 ChipGroup 노출
+[FEED-003] 피드 목록 조회 API 구현,Story,Highest,,커뮤니티 피드,게시물 관리,Must,jcwo214@naver.com,12,GET /posts (전체/팔로잉 탭 + 최신/인기순)
+[FEED-004] 게시물 상세 조회 API 구현,Story,Highest,,커뮤니티 피드,게시물 관리,Must,jcwo214@naver.com,4,GET /posts/{post_id} (is_liked 포함)
+[FEED-005] 게시물 삭제 API 구현,Story,Highest,,커뮤니티 피드,게시물 관리,Must,jcwo214@naver.com,4,DELETE /posts/{post_id}
+[FEED-006] 시착 직후 게시물 생성 연동 로직 구현,Task,Highest,,커뮤니티 피드,게시물 관리,Must,jcwo214@naver.com,8,SCR-024 CreatePostButton → SCR-012 이동 시 시착 결과 이미지 첫 번째 자동 완성 + 서버 저장 이미지 목록 조회
+[FEED-007] likes 테이블 Entity 및 Repository 구현,Task,High,,커뮤니티 피드,좋아요,Should,jcwo214@naver.com,4,UNIQUE(post_id+user_id) Like Entity
+[FEED-008] 좋아요 토글 API 구현,Story,High,,커뮤니티 피드,좋아요,Should,jcwo214@naver.com,8,POST /posts/{post_id}/likes (like_count 동기화)
+[FEED-009] comments 테이블 Entity 및 Repository 구현,Task,Medium,,커뮤니티 피드,댓글,Could,jcwo214@naver.com,4,대댓글 depth 1-2 Comment Entity
+[FEED-010] 댓글 목록 조회 API 구현,Story,Medium,,커뮤니티 피드,댓글,Could,jcwo214@naver.com,8,GET /posts/{post_id}/comments (대댓글 포함)
+[FEED-011] 댓글 작성 API 구현,Story,Medium,,커뮤니티 피드,댓글,Could,jcwo214@naver.com,4,POST /posts/{post_id}/comments (parent_comment_id)
+[FEED-012] 댓글 삭제 API 구현,Story,Medium,,커뮤니티 피드,댓글,Could,jcwo214@naver.com,4,DELETE /comments/{comment_id}
+[FEED-013] reports 테이블 Entity 및 Repository 구현,Task,High,,커뮤니티 피드,신고,Should,jcwo214@naver.com,4,UNIQUE(post_id+reporter_id) Report Entity
+[FEED-014] 게시물 신고 API 구현,Story,High,,커뮤니티 피드,신고,Should,jcwo214@naver.com,4,POST /posts/{post_id}/report (중복 방지)
+[FEED-015] 신고 N회 누적 자동 블라인드 트리거 구현,Task,High,,커뮤니티 피드,신고,Should,jcwo214@naver.com,8,5회 이상 신고 시 is_blinded=true
+[FEED-016] 홈 피드 페이지 구현,Story,Highest,,커뮤니티 피드,피드 페이지,Must,jcwo214@naver.com,12,2열 반응형 그리드 / 전체-팔로잉 탭 웹 페이지
+[FEED-017] 최신순/인기순 정렬 토글 구현,Story,Highest,,커뮤니티 피드,피드 페이지,Must,jcwo214@naver.com,4,정렬 토글 UI
+[FEED-018] 피드 무한 스크롤 및 이미지 Lazy Load,Task,Highest,,커뮤니티 피드,피드 페이지,Must,jcwo214@naver.com,8,Intersection Observer 기반 무한 스크롤 + Lazy Load
+[FEED-019] 게시물 상세 페이지 구현,Story,Highest,,커뮤니티 피드,피드 페이지,Must,jcwo214@naver.com,12,이미지/캡션/좋아요/댓글/신고 상세 웹 페이지
+[FEED-020] 게시물 작성 페이지 구현,Story,Highest,,커뮤니티 피드,피드 페이지,Must,jcwo214@naver.com,16,시착 직후 진입 시 시착 결과 첫 이미지 자동 완성 / 로컬 앨범 + 서버 저장 시착 결과 다중 선택(최대 5장) / 태그 자동완성 + 수동 편집(최대 10개) / 캡션 / 공개 여부
+[FEED-021] 좋아요 버튼 UI 및 낙관적 업데이트 구현,Story,High,,커뮤니티 피드,피드 페이지,Should,jcwo214@naver.com,4,실패 시 롤백
+[FEED-022] 댓글 목록/작성/대댓글 UI 구현,Story,Medium,,커뮤니티 피드,피드 페이지,Could,jcwo214@naver.com,12,2 depth 대댓글 UI
+[FEED-023] 게시물 신고 UI 구현,Story,High,,커뮤니티 피드,피드 페이지,Should,jcwo214@naver.com,4,신고 버튼 / 사유 입력 모달 / 중복 안내
+[FEED-024] 피드 CRUD API 클라이언트 연동,Task,Highest,,커뮤니티 피드,피드 페이지,Must,jcwo214@naver.com,8,전체 API 클라이언트 연동 및 상태 관리
+[FEED-025] 비로그인 사용자 피드 열람 및 로그인 유도,Story,Highest,,커뮤니티 피드,피드 페이지,Must,jcwo214@naver.com,4,시착/좋아요/댓글 시 로그인 유도 바텀시트
+[FEED-026] 피드/좋아요/댓글/신고 단위 테스트,Task,Highest,,커뮤니티 피드,테스트,Must,jcwo214@naver.com,8,피드 도메인 단위 테스트
+[FEED-027] 피드 페이지 UI 테스트,Task,Highest,,커뮤니티 피드,테스트,Must,jcwo214@naver.com,4,피드 웹 페이지 UI 테스트
+[TAG-001] tags + post_tags 테이블 Entity 및 Repository 구현,Task,Highest,,태그/검색,태그 관리,Must,jcwo214@naver.com,4,Tag/PostTag Entity/Repository
+[TAG-002] Google Vision API 태그 분석 서비스 구현,Task,Highest,,태그/검색,태그 자동추출,Must,jcwo214@naver.com,12,VisionApiPort + GoogleVisionTagAdapter 옷 관련 키워드 필터링
+[TAG-003] 이미지 태그 자동 추출 API 구현,Story,Highest,,태그/검색,태그 자동추출,Must,jcwo214@naver.com,8,POST /tags/analyze (Vision API 분석 결과 반환)
+[TAG-004] 게시물 생성 시 태그 부착 서비스 로직,Task,Highest,,태그/검색,태그 관리,Must,jcwo214@naver.com,8,AttachTagsToPostUseCase (upsert + post_tags 매핑 + usage_count 증가)
+[TAG-005] 태그 자동완성 검색 API 구현,Story,Highest,,태그/검색,검색,Must,jcwo214@naver.com,8,GET /tags/search (usage_count 정렬)
+[TAG-006] 통합 검색 API 구현,Story,Highest,,태그/검색,검색,Must,jcwo214@naver.com,12,GET /search (태그 + 캡션 + 닉네임 통합 검색 + 페이지네이션)
+[TAG-007] 게시물 작성 태그 자동완성 UI 구현,Story,Highest,,태그/검색,태그 페이지,Must,jcwo214@naver.com,12,Vision API 태그 추천 ChipGroup + 수동 입력 + 최대 10개 편집
+[TAG-008] 통합 검색 페이지 구현,Story,Highest,,태그/검색,검색 페이지,Must,jcwo214@naver.com,16,검색바 / # 태그 모드 / 카테고리별 자동완성 / 인기 태그 / 검색 결과 그리드
+[TAG-009] 피드 카드 태그 칩 표시 UI 구현,Story,Highest,,태그/검색,태그 페이지,Must,jcwo214@naver.com,4,PostCard에 태그 최대 3개 칩 표시
+[TAG-010] 게시물 상세 태그 목록 UI 구현,Story,Highest,,태그/검색,태그 페이지,Must,jcwo214@naver.com,4,상세 페이지 TagChipList (탭 시 검색 이동)
+[TAG-011] 태그/검색 API 클라이언트 연동,Task,Highest,,태그/검색,검색 페이지,Must,jcwo214@naver.com,8,전체 태그/검색 API 클라이언트 연동 및 상태 관리
+[TAG-012] 태그/검색 단위 테스트 및 UI 테스트,Task,Highest,,태그/검색,테스트,Must,jcwo214@naver.com,8,태그/검색 도메인 단위 테스트 + 검색 페이지 UI 테스트
+[NOTI-001] notifications 테이블 Entity 및 Repository 구현,Task,Highest,,알림,알림 관리,Must,tr9273@naver.com,4,Notification Entity/Repository
+[NOTI-002] 알림 생성 서비스 구현,Task,Highest,,알림,알림 관리,Must,tr9273@naver.com,8,CreateNotificationUseCase (본인 활동 제외 로직 포함)
+[NOTI-003] 시착 완료 알림 트리거 연동,Task,Highest,,알림,알림 관리,Must,tr9273@naver.com,4,TryonService → TRYON_COMPLETE 알림 생성 연동
+[NOTI-004] 좋아요/댓글/팔로우 게시 알림 트리거 연동,Task,Highest,,알림,알림 관리,Must,tr9273@naver.com,8,LikeService/CommentService/PostService → LIKE/COMMENT/FOLLOW_POST 알림
+[NOTI-005] 알림 목록 조회 및 미읽음 수 API 구현,Story,Highest,,알림,알림 API,Must,tr9273@naver.com,8,GET /notifications + GET /notifications/unread-count
+[NOTI-006] 알림 읽음 처리 API 구현,Story,Highest,,알림,알림 API,Must,tr9273@naver.com,4,PATCH /notifications/{id}/read + /read-all
+[NOTI-007] 알림 페이지 UI 구현,Story,Highest,,알림,알림 페이지,Must,tr9273@naver.com,16,알림 목록 / 유형별 아이콘 / 미읽음 인디케이터 / 전체 읽음 / 헤더 배지
+[NOTI-008] 알림 도메인 단위 테스트 및 UI 테스트,Task,Highest,,알림,테스트,Must,tr9273@naver.com,8,알림 도메인 단위 테스트 + 알림 페이지 UI 테스트
+[ADMIN-001] Admin role 검증 미들웨어 구현,Task,High,,관리자,관리자,Should,lwseok0516@gmail.com,4,role=admin 권한 체크 필터
+[ADMIN-002] 신고 목록 조회 Admin API 구현,Story,High,,관리자,관리자,Should,lwseok0516@gmail.com,4,GET /admin/reports
+[ADMIN-003] 게시물 강제 블라인드 Admin API 구현,Story,High,,관리자,관리자,Should,lwseok0516@gmail.com,4,PATCH /admin/posts/{post_id}/blind
+[ADMIN-004] 블라인드 해제 Admin API 구현,Story,High,,관리자,관리자,Should,lwseok0516@gmail.com,4,PATCH /admin/posts/{post_id}/unblind
+[ADMIN-005] 악성 유저 정지 Admin API 구현,Story,High,,관리자,관리자,Should,lwseok0516@gmail.com,4,PATCH /admin/users/{user_id}/suspend (is_active=false)
+[ADMIN-006] 크레딧 수동 지급 Admin API 구현,Story,High,,관리자,관리자,Should,lwseok0516@gmail.com,4,POST /admin/users/{user_id}/credits
+[QA-001] 주요 도메인 간 API 통합 시나리오 테스트,Task,Highest,,QA/통합,통합 테스트,Must,,16,시착→게시물→피드 흐름 통합 테스트
+[QA-002] End-to-End 시나리오 테스트 수행,Task,Highest,,QA/통합,통합 테스트,Must,,16,주요 사용자 시나리오 E2E 테스트 (브라우저 기반)
+[QA-003] 크로스 브라우저/모바일 반응형 QA,Task,Highest,,QA/통합,전체 QA,Must,,12,Chrome/Safari/Firefox + 모바일 뷰포트 반응형 테스트
+[QA-004] 전체 기능 QA 수행 및 버그 수정,Task,Highest,,QA/통합,전체 QA,Must,,24,MVP 출시 전 전체 QA
