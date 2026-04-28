@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+# Commit message file
+MSG_FILE=$1
+
+# Read the first line of the commit message
+FIRST_LINE=$(head -n1 "$MSG_FILE")
+
+# Determine emoji based on prefix
+EMOJI=""
+if [[ "$FIRST_LINE" =~ ^feat(.*): ]]; then
+  EMOJI="✨"
+elif [[ "$FIRST_LINE" =~ ^fix(.*): ]]; then
+  EMOJI="🐛"
+elif [[ "$FIRST_LINE" =~ ^refactor(.*): ]]; then
+  EMOJI="♻️"
+elif [[ "$FIRST_LINE" =~ ^env(.*): ]]; then
+  EMOJI="🔧"
+elif [[ "$FIRST_LINE" =~ ^test(.*): ]]; then
+  EMOJI="✅"
+elif [[ "$FIRST_LINE" =~ ^chore(.*): ]]; then
+  EMOJI="🚧"
+elif [[ "$FIRST_LINE" =~ ^docs(.*): ]]; then
+  EMOJI="📝"
+elif [[ "$FIRST_LINE" =~ ^style(.*): ]]; then
+  EMOJI="💄"
+elif [[ "$FIRST_LINE" =~ ^merge(.*): ]]; then
+  EMOJI="🔀"
+fi
+
+# Insert emoji at the beginning of the message if an emoji was mapped
+if [[ -n "$EMOJI" ]]; then
+  # Check if the emoji is already there to avoid duplicates
+  if [[ ! "$FIRST_LINE" =~ ^$EMOJI ]]; then
+    TEMP_FILE=$(mktemp)
+    sed "1s/^/$EMOJI /" "$MSG_FILE" > "$TEMP_FILE"
+    mv "$TEMP_FILE" "$MSG_FILE"
+  fi
+fi

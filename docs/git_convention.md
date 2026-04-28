@@ -126,10 +126,10 @@ git config core.hooksPath .githooks
 
 #### 방법 B. `npm install` 시 자동 설정
 
-[`Co-living platform/package.json`](../../Co-living%20platform/package.json)의 `scripts`에 아래를 추가하면, `npm install` 시 자동으로 Hook이 등록됩니다:
+프로젝트 최상단 폴더에 있는 `package.json` 파일의 `scripts` 속성에 아래 내용을 추가해두면, 팀원들이 브랜치를 내려받고 `npm install`을 실행할 때 자동으로 훅이 프로젝트에 적용됩니다:
 
 ```json
-"postinstall": "cd .. && bash .githooks/setup.sh"
+"postinstall": "git config core.hooksPath .githooks"
 ```
 
 ---
