@@ -67,6 +67,28 @@
   transform: translateY(-1px);
 }
 
+.primary-dark {
+  background: color-mix(in srgb, var(--color-surface-dark) 90%, transparent);
+  color: var(--color-text-white);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 28px 14px color-mix(in srgb, var(--color-surface-dark) 20%, transparent);
+}
+
+.primary-dark:hover {
+  background: var(--color-surface-dark);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 28px 14px color-mix(in srgb, var(--color-surface-dark) 30%, transparent);
+  transform: translateY(-1px);
+}
+
 .large {
   background: color-mix(in srgb, var(--color-green) 80%, transparent);
   color: var(--color-text-primary);
@@ -89,6 +111,31 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.4),
     inset 0 -1px 0 rgba(255, 255, 255, 0.1),
     inset 0 0 28px 14px color-mix(in srgb, var(--color-green) 30%, transparent);
+  transform: translateY(-1px);
+}
+
+.large-dark {
+  background: color-mix(in srgb, var(--color-surface-dark) 90%, transparent);
+  color: var(--color-text-white);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 28px 14px color-mix(in srgb, var(--color-surface-dark) 20%, transparent);
+  padding: 16px 20px;
+  border-radius: var(--radius-large);
+  font-size: 18px;
+}
+
+.large-dark:hover {
+  background: var(--color-surface-dark);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 28px 14px color-mix(in srgb, var(--color-surface-dark) 30%, transparent);
   transform: translateY(-1px);
 }
 

@@ -1,17 +1,17 @@
 'use client';
 
 import React from 'react';
-import styles from './ClosetDetailModal.module.css';
+import styles from './DetailModal.module.css';
 import Button from '@/components/Button';
 import Link from 'next/link';
 
-interface ClosetDetailModalProps {
+interface DetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   itemId: number | null;
 }
 
-export default function ClosetDetailModal({ isOpen, onClose, itemId }: ClosetDetailModalProps) {
+export default function DetailModal({ isOpen, onClose, itemId }: DetailModalProps) {
   if (!isOpen || itemId === null) return null;
 
   return (

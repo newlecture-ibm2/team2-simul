@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Button from './_components/Button';
+import Button from '@/components/Button';
 import Toggle from './_components/Toggle/Toggle';
 import styles from './page.module.css';
 
