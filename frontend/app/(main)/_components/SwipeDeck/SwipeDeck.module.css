@@ -8,15 +8,59 @@
   align-items: center;
   padding: 40px var(--space-page-x) 150px var(--space-page-x);
   background:
-    radial-gradient(
-      120% 110% at -7% 111%,
-      var(--color-green) 0%,
-      transparent 100%
+    linear-gradient(
+      123deg,
+      color-mix(in srgb, var(--color-green), transparent 25%) 0%,
+      transparent 25%
     ),
     radial-gradient(
-      120% 110% at 107% 111%,
-      var(--color-surface-fog) 0%,
+      30% 71% at 44% 87%,
+      rgba(130, 170, 60, 0.18) 0%,
+      rgba(130, 170, 60, 0) 100%
+    ),
+    radial-gradient(
+      34% 54% at 36% 100%,
+      rgba(130, 170, 60, 0.12) 0%,
+      rgba(130, 170, 60, 0) 100%
+    ),
+    radial-gradient(
+      43% 50% at 46% 45%,
+      color-mix(in srgb, var(--color-green), transparent 25%) 0%,
       transparent 100%
+    ),
+    linear-gradient(
+      135deg,
+      rgba(215, 215, 190, 0.8) 21%,
+      rgba(215, 215, 190, 0) 48%
+    ),
+    linear-gradient(
+      216deg,
+      rgba(60, 95, 25, 0) 0%,
+      rgba(60, 95, 25, 0.08) 1%,
+      rgba(60, 95, 25, 0) 17%
+    ),
+    linear-gradient(
+      129deg,
+      rgba(60, 95, 25, 0) 29%,
+      rgba(60, 95, 25, 0.12) 38%,
+      rgba(60, 95, 25, 0) 50%
+    ),
+    radial-gradient(
+      41% 97% at 91% 40%,
+      color-mix(in srgb, var(--color-green), transparent 70%) 0%,
+      rgba(215, 215, 190, 0.5) 34%,
+      rgba(130, 170, 60, 0.15) 70%,
+      rgba(130, 170, 60, 0) 100%
+    ),
+    radial-gradient(
+      50% 50% at 0% 100%,
+      color-mix(in srgb, var(--color-green), transparent 90%) 0%,
+      transparent 100%
+    ),
+    linear-gradient(
+      360deg,
+      var(--color-surface-fog) 0%,
+      var(--color-surface-fog) 100%
     );
 }
 
@@ -61,7 +105,7 @@
   height: 100%;
   border-radius: var(--radius-hero);
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--color-green-hover), transparent 60%);
   cursor: grab;
   touch-action: none; /* Prevent browser scrolling when dragging the card */
   user-select: none;
@@ -99,7 +143,7 @@
     0 8px 32px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.5),
     inset 0 -1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 0 28px 14px rgba(255, 255, 255, 0.6);
+    inset 0 0 28px 14px rgba(255, 255, 255, 0.2);
   z-index: 1;
 }
 
