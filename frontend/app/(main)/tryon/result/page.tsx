@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Button from './_components/Button/Button';
+import Button from '@/components/Button';
 import styles from './page.module.css';
 
 export default function TryonResultPage() {
@@ -47,11 +47,11 @@ export default function TryonResultPage() {
 
       <div className={styles.actions}>
         <div className={styles.actionRow}>
-          <Button variant="primary" size="lg" fullWidth>💾 저장하기</Button>
-          <Button variant="primary" size="lg" fullWidth>📢 피드에 공유</Button>
+          <Button variant="large-dark" fullWidth>저장하기</Button>
+          <Button variant="large-dark" fullWidth>피드에 공유</Button>
         </div>
         <Link href="/tryon/select-clothes">
-          <Button variant="primary" size="lg" fullWidth>🔄 다른 옷으로 다시 시착</Button>
+          <Button variant="large-dark" fullWidth>다른 옷으로 다시 시착</Button>
         </Link>
       </div>
     </div>

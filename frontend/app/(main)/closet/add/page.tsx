@@ -1,4 +1,4 @@
-import Button from './_components/Button';
+import Button from '@/components/Button';
 import styles from './page.module.css';
 
 export const metadata = {

@@ -46,7 +46,7 @@
 
 .imageFrame, .addFrame {
   flex: 0 0 auto;
-  width: 160px;
+  width: 280px;
   aspect-ratio: 4 / 6;
   border-radius: var(--radius-comfortable);
   overflow: hidden;
@@ -73,7 +73,7 @@
 }
 
 .plusIcon {
-  font-size: 36px;
+  font-size: 60px;
   color: var(--color-text-secondary);
   font-weight: 300;
 }
@@ -126,4 +126,80 @@
 .submitRow {
   display: flex;
   gap: 10px;
+  margin-bottom: 200px;
+}
+
+/* Tag List */
+.tagContainer {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.tagList {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.tagList::-webkit-scrollbar {
+  display: none;
+}
+
+.tagItem {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: color-mix(in srgb, var(--color-surface-sand) 60%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.deleteTag {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  transition: opacity var(--transition-fast);
+}
+
+.deleteTag:hover {
+  opacity: 0.6;
+}
+
+.addTagBtn {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-surface-sand) 40%, transparent);
+  border: 1px dashed var(--color-border-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: 18px;
+  transition: all var(--transition-fast);
+}
+
+.addTagBtn:hover {
+  background: var(--color-surface-sand);
+  border-style: solid;
 }

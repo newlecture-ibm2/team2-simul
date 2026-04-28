@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Button from './_components/Button';
+import Button from '@/components/Button';
 import styles from './page.module.css';
 
 export const metadata = {
@@ -33,7 +33,7 @@ export default function ProcessingPage() {
         </div>
       </div>
       <Link href="/tryon/result" style={{ width: '100%' }}>
-        <Button variant="large" fullWidth>결과 보기 (임시)</Button>
+        <Button variant="large-dark" fullWidth>결과 보기 (임시)</Button>
       </Link>
     </div>
   );
