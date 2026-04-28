@@ -1,0 +1,171 @@
+.processing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start; /* 중앙 정렬 대신 위로 붙임 */
+  flex: 1;
+  padding: 24px 16px 50px; /* 상단 여백을 명시적으로 적게 줌 */
+  text-align: center;
+}
+
+.progressSection {
+  width: 100%;
+  max-width: 400px;
+  margin-top: 0;
+  margin-bottom: 24px;
+}
+
+.progressBar {
+  width: 100%;
+  height: 6px;
+  background: var(--color-surface-sand);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 3px;
+  width: 65%;
+  animation: progress 3s ease-in-out infinite;
+}
+
+@keyframes progress {
+  0% { width: 20%; }
+  50% { width: 80%; }
+  100% { width: 20%; }
+}
+
+.progressText {
+  font-size: var(--font-body);
+  color: var(--color-text-secondary);
+}
+
+.spinnerIcon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.title {
+  font-size: var(--font-heading);
+  font-weight: var(--weight-bold);
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: var(--font-body);
+  color: var(--color-text-secondary);
+  margin-bottom: 32px;
+}
+
+.feedPreview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4; /* 정사각형에서 직사각형으로 변경 */
+  margin: 0 auto 10px auto; /* 아래 컨텐츠와의 간격을 10px로 수정 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* 기존 .frame 스타일 병합 */
+  border-radius: var(--radius-hero);
+  background:
+    radial-gradient(
+      227.77% 227.77% at -8.45% -10.97%,
+      var(--color-primary) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      111.77% 111.77% at 107% 111%,
+      var(--color-primary) 0%,
+      transparent 100%
+    ),
+    var(--color-surface-warm-wash);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 28px 14px color-mix(in srgb, var(--color-green) 20%, transparent);
+}
+
+/* 프레임 상단 텍스트 */
+.frameText {
+  position: absolute;
+  top: 32px;
+  left: 20px;
+  right: 20px;
+  z-index: 10;
+  text-align: center;
+}
+
+.frameText h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 12px;
+}
+
+.frameText p {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+/* 3개의 떠있는 원 */
+.circle {
+  position: absolute;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  border: 4px solid var(--color-surface-white);
+  animation: float 5s ease-in-out infinite;
+  
+  /* 프레임 안쪽으로 들어오도록 사이즈를 비율로 조절 */
+  width: 45%; 
+  aspect-ratio: 1;
+  height: auto;
+}
+
+.circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.circle1 {
+  top: 35%; /* 텍스트 아래로 내림 */
+  left: 5%;
+  z-index: 1;
+  animation-delay: 0s;
+}
+
+.circle2 {
+  top: 30%; /* 텍스트 아래로 내림 */
+  right: 5%;
+  z-index: 2;
+  animation-delay: -2s;
+}
+
+.circle3 {
+  bottom: 5%; 
+  left: 27.5%; /* 50% - (45%/2) = 정확히 중앙 */
+  z-index: 3;
+  animation-delay: -4s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}

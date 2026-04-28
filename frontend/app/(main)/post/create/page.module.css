@@ -1,0 +1,205 @@
+.createPage {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: var(--space-page-y) var(--space-page-x);
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin: 0 0 24px 0;
+  
+  position: sticky;
+  top: 65px;
+  z-index: 90;
+  padding-top: 12px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--font-family-latin);
+}
+
+.carouselContainer {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.imageScrollArea {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  
+  /* Scrollbar hiding */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.imageScrollArea::-webkit-scrollbar {
+  display: none;
+}
+
+.imageFrame, .addFrame {
+  flex: 0 0 auto;
+  width: 280px;
+  aspect-ratio: 4 / 6;
+  border-radius: var(--radius-comfortable);
+  overflow: hidden;
+  position: relative;
+}
+
+.imageFrame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.addFrame {
+  background-color: var(--color-surface-sand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.addFrame:hover {
+  background-color: var(--color-surface-fog);
+}
+
+.plusIcon {
+  font-size: 60px;
+  color: var(--color-text-secondary);
+  font-weight: 300;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.formGroup label {
+  display: block;
+  font-size: var(--font-caption-bold);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+.textareaWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.captionInput {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px 16px 36px 16px; /* 하단에 글자 수 표시 공간 확보 */
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-comfortable);
+  font-size: var(--font-body);
+  color: var(--color-text-primary);
+  background: var(--color-surface-white);
+  resize: vertical;
+  font-family: inherit;
+}
+
+.captionInput::placeholder {
+  color: var(--color-text-disabled);
+}
+
+.captionCounter {
+  position: absolute;
+  bottom: 12px;
+  right: 16px;
+  font-size: var(--font-caption);
+  color: var(--color-text-disabled);
+  text-align: right;
+  pointer-events: none; /* 텍스트 입력 방해하지 않게 */
+}
+
+
+.submitRow {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 200px;
+}
+
+/* Tag List */
+.tagContainer {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.tagList {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.tagList::-webkit-scrollbar {
+  display: none;
+}
+
+.tagItem {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: color-mix(in srgb, var(--color-surface-sand) 60%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.deleteTag {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  transition: opacity var(--transition-fast);
+}
+
+.deleteTag:hover {
+  opacity: 0.6;
+}
+
+.addTagBtn {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-surface-sand) 40%, transparent);
+  border: 1px dashed var(--color-border-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: 18px;
+  transition: all var(--transition-fast);
+}
+
+.addTagBtn:hover {
+  background: var(--color-surface-sand);
+  border-style: solid;
+}

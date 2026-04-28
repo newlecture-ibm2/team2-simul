@@ -1,0 +1,110 @@
+.resultPage {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: var(--space-page-y) var(--space-page-x);
+  display: flex;
+  flex-direction: column;
+}
+
+.resultPage h1 {
+  font-size: var(--font-heading);
+  font-weight: var(--weight-bold);
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+/* Main 4:6 Image Frame */
+.imageFrame {
+  width: 100%;
+  aspect-ratio: 4 / 6;
+  border-radius: var(--radius-hero); /* r값을 많이 준 사각형 */
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+  background: var(--color-surface-fog);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.mainImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.3s ease;
+}
+
+.viewBadge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: color-mix(in srgb, var(--color-surface-dark) 60%, transparent);
+  color: white;
+  padding: 6px 14px;
+  border-radius: var(--radius-comfortable);
+  font-size: 13px;
+  font-weight: var(--weight-bold);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Thumbnails */
+.thumbnailContainer {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 0;
+  justify-content: flex-start;
+  z-index: 10;
+}
+
+.thumbnail {
+  width: 60px; /* 메인 이미지를 너무 가리지 않도록 살짝 줄임 */
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius-standard);
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  opacity: 0.6;
+}
+
+.activeThumbnail {
+  border-color: var(--color-primary);
+  opacity: 1;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbLabel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-size: 11px;
+  text-align: center;
+  padding: 4px 0;
+  font-weight: var(--weight-medium);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 200px;
+}
+
+.actionRow {
+  display: flex;
+  gap: 10px;
+}
