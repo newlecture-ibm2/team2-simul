@@ -2,6 +2,7 @@ import Link from 'next/link';
 import styles from './page.module.css';
 import MainToggle from './_components/MainToggle';
 import FeedGrid from './_components/FeedGrid';
+import SwipeDeck from './_components/SwipeDeck/SwipeDeck';
 
 export const metadata = {
   title: '홈 피드 — SIMUL',
@@ -11,6 +12,7 @@ export const metadata = {
 export default function HomePage() {
   return (
     <div className={styles.homePage}>
+      <SwipeDeck />
       <MainToggle />
       <FeedGrid />
     </div>
