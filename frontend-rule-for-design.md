@@ -141,7 +141,6 @@ app/(main)/closet/
 | BottomNav | 루트 레이아웃 전용 (app/layout.tsx) |
 | Button | 기본형 버튼 레퍼런스 |
 | Toggle | 기본형 토글 레퍼런스 |
-| EmptyState | 기본형 빈 상태 레퍼런스 |
 
 ## API 함수 규칙
 ```
