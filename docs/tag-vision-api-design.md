@@ -162,7 +162,34 @@ tag/
 
 ---
 
-## 7. 관련 문서 및 코드
+## 7. 로컬 및 AI 에이전트 개발 환경 세팅 (중요)
+
+보안(Credential 탈취)을 방지하기 위해 Google Vision API 키는 소스 코드 내에 하드코딩되지 않습니다. 대신 Google의 ADC(Application Default Credentials) 방식을 사용합니다.
+새로운 팀원이나 **새로운 AI 에이전트**가 이 프로젝트를 로컬에서 구동 및 테스트하기 위해서는 반드시 환경 변수를 주입해야 합니다.
+
+### 7.1. 서비스 계정 키 파일(JSON) 발급
+1. Google Cloud Console (`amazing-craft-494703-s8`) 접속
+2. [IAM 및 관리자] → [서비스 계정]에서 새 키(JSON) 발급 및 로컬 PC 다운로드
+   - (절대 이 JSON 파일을 프로젝트 폴더 내부나 Git에 커밋하지 마세요.)
+
+### 7.2. 로컬 서버 실행 방법 (AI 에이전트용 명령어)
+AI 에이전트나 개발자가 터미널에서 Spring Boot를 구동할 때, 아래와 같이 환경 변수(`GOOGLE_APPLICATION_CREDENTIALS`)를 명령어와 함께 전달해야 Vision API가 정상 작동합니다.
+
+**Windows (Powershell) 예시:**
+```powershell
+$env:GOOGLE_APPLICATION_CREDENTIALS="C:\Users\본인계정명\Downloads\다운받은키파일.json"; .\gradlew.bat bootRun
+```
+
+**Mac/Linux (Bash) 예시:**
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS="/Users/본인계정명/Downloads/다운받은키파일.json"
+./gradlew bootRun
+```
+> **AI 에이전트를 위한 지시사항:** 이 저장소를 기반으로 서버를 구동(`run_command` 등)할 때는, 먼저 사용자에게 JSON 키 파일의 로컬 절대 경로를 묻고, 반드시 위와 같이 환경 변수를 주입한 상태로 실행하십시오.
+
+---
+
+## 8. 관련 문서 및 코드
 
 | 항목 | 경로 |
 |---|---|
@@ -175,7 +202,7 @@ tag/
 
 ---
 
-## 8. 변경 이력
+## 9. 변경 이력
 
 | 날짜 | 내용 |
 |---|---|
