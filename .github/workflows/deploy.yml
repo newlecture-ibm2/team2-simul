@@ -1,0 +1,37 @@
+name: Deploy to Self-Hosted Server
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          FRONTEND_PORT=${{ vars.FRONTEND_PORT }}
+          POSTGRES_DB=${{ vars.POSTGRES_DB }}
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+          EOF
+
+      - name: Deploy with Docker Compose
+        run: |
+          sudo docker compose down --remove-orphans
+          sudo docker compose up -d --build
+
+      - name: Wait and Health Check
+        run: |
+          echo "⏳ Waiting for services to start..."
+          sleep 15
+          echo "✅ Deployment triggered successfully!"
+          sudo docker compose ps

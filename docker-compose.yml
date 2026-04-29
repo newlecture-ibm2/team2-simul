@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    container_name: simul-frontend
+    # 프론트엔드만 외부망으로 포트 개방 (변수를 통해 제어하며, 기본값은 3222)
+    ports:
+      - "${FRONTEND_PORT:-3222}:3000"
+    environment:
+      - BACKEND_URL=http://backend:8080
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      # GitHub Secrets/Variables로 주입받을 추가 프론트엔드 환경변수
+    depends_on:
+      - backend
+    networks:
+      - simul-network
+    restart: always
+
+  backend:
+    build:
+      context: ./backend
+    container_name: simul-backend
+    # ports 구문을 없애 외부 접근을 차단하고, expose를 통해 동일 네트워크 내에서만 8080 포트 노출
+    expose:
+      - "8080"
+    environment:
+      # Spring Boot 환경변수 매핑 (application.yml을 오버라이딩)
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${POSTGRES_DB}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      # GitHub Secrets/Variables로 주입받을 추가 백엔드 환경변수
+    depends_on:
+      - db
+    networks:
+      - simul-network
+    restart: always
+
+  db:
+    image: postgres:17
+    container_name: simul-postgres
+    # DB 역시 외부 접근 차단, 내부 네트워크에서만 5432 포트 노출
+    expose:
+      - "5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - simul-db-data:/var/lib/postgresql/data
+    networks:
+      - simul-network
+    restart: always
+
+volumes:
+  simul-db-data:
+    name: simul-db-data
+
+networks:
+  simul-network:
+    driver: bridge
