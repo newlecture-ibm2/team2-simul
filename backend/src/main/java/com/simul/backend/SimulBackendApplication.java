@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
     HibernateJpaAutoConfiguration.class, 
     FlywayAutoConfiguration.class
 })
+@org.springframework.context.annotation.ComponentScan(basePackages = "com.simul")
 public class SimulBackendApplication {
 
 	public static void main(String[] args) {
