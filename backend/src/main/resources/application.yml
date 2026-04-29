@@ -1,11 +1,18 @@
 spring:
   application:
     name: simul-backend
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
 
 server:
   port: 8080
 
 # === JWT 설정 ===
+# Google Vision API 인증경로는 환경변수 GOOGLE_APPLICATION_CREDENTIALS로 설정
+# 예시: set GOOGLE_APPLICATION_CREDENTIALS=C:\secrets\google-vision-key.json
+
 jwt:
   secret: c2ltdWwtc2VjcmV0LWtleS1zaW11bC1zZWNyZXQta2V5LXNpbXVsLXNlY3JldC1rZXktc2ltdWwtc2VjcmV0LWtleQ==
   access-token-validity-in-seconds: 3600       # 1시간

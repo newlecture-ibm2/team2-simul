@@ -35,8 +35,17 @@ dependencies {
 	// OpenAPI (Swagger)
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
 
+	// Google Cloud Vision API
+	implementation(platform("com.google.cloud:libraries-bom:26.32.0"))
+	implementation("com.google.cloud:google-cloud-vision")
+
+	// Lombok
+	compileOnly("org.projectlombok:lombok")
+	annotationProcessor("org.projectlombok:lombok")
+
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
+	testRuntimeOnly("com.h2database:h2")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
