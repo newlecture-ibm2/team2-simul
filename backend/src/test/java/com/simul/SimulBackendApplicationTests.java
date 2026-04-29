@@ -1,9 +1,12 @@
-package com.simul.backend;
+package com.simul;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import org.springframework.test.context.ActiveProfiles;
+
 @SpringBootTest
+@ActiveProfiles("test")
 class SimulBackendApplicationTests {
 
 	@Test
