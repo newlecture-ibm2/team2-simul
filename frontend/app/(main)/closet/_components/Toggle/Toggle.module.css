@@ -1,6 +1,5 @@
 .toggleTrack {
   display: flex;
-  width: 140px; /* 폭을 좁게 */
   height: 42px;
   padding: 4px;
   box-sizing: border-box;
@@ -19,6 +18,15 @@
   position: relative;
   overflow: hidden;
 }
+
+.medium {
+  width: 210px;
+}
+
+.small {
+  width: 105px;
+}
+
 
 .toggleTrack::before {
   content: '';
