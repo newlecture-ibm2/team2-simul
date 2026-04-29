@@ -46,12 +46,13 @@ erDiagram
         UUID collection_id FK "nullable (미배정 시 최상단 노출)"
         ENUM category "top, bottom, outer, shoes, accessory"
         VARCHAR memo
+        INT sort_order "정렬 순서"
         INT try_count
         TIMESTAMP created_at
         TIMESTAMP deleted_at
     }
 
-    collections {
+    closet_collections {
         UUID collection_id PK
         UUID user_id FK
         VARCHAR name "컬렉션 이름 (max 50)"

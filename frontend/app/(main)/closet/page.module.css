@@ -129,3 +129,46 @@
     inset 0 -1px 0 rgba(255, 255, 255, 0.1),
     inset 0 0 28px 14px color-mix(in srgb, var(--color-green) 20%, transparent);
 }
+
+
+
+.folderGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  padding-bottom: 24px;
+}
+
+/* Bottom Add Button (Grid End) */
+.bottomAddBtnWrapper {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0 100px;
+}
+
+.gridAddBtn {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-circle);
+  background-color: rgba(0, 0, 0, 0.05);
+  border: 2px dashed rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gridAddBtn:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  transform: scale(1.02);
+}
+
+.plusIconLarge {
+  font-size: 36px;
+  font-weight: 200;
+  color: rgba(0, 0, 0, 0.2);
+  line-height: 1;
+}
+
