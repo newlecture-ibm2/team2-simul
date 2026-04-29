@@ -1,6 +1,6 @@
-package com.simul.backend.closet.application.port.out;
+package com.simul.closet.application.port.out;
 
-import com.simul.backend.closet.domain.model.ClosetItem;
+import com.simul.closet.domain.model.ClosetItem;
 
 import java.util.Optional;
 import java.util.UUID;

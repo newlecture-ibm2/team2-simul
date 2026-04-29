@@ -52,7 +52,7 @@ erDiagram
         TIMESTAMP deleted_at
     }
 
-    collections {
+    closet_collections {
         UUID collection_id PK
         UUID user_id FK
         VARCHAR name "컬렉션 이름 (max 50)"

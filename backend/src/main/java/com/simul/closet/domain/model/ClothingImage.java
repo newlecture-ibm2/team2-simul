@@ -1,6 +1,6 @@
-package com.simul.backend.closet.domain.model;
+package com.simul.closet.domain.model;
 
-import com.simul.backend.common.domain.model.BaseEntity;
+import com.simul.common.adapter.out.persistence.BaseJpaEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -12,7 +12,7 @@ import java.util.UUID;
 @Table(name = "clothing_images")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ClothingImage extends BaseEntity {
+public class ClothingImage extends BaseJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

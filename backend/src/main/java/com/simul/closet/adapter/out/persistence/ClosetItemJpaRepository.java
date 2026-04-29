@@ -1,6 +1,6 @@
-package com.simul.backend.closet.adapter.out.persistence;
+package com.simul.closet.adapter.out.persistence;
 
-import com.simul.backend.closet.domain.model.ClosetItem;
+import com.simul.closet.domain.model.ClosetItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

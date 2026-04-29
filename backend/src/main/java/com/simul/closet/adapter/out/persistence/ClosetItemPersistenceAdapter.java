@@ -1,7 +1,7 @@
-package com.simul.backend.closet.adapter.out.persistence;
+package com.simul.closet.adapter.out.persistence;
 
-import com.simul.backend.closet.application.port.out.ClosetItemPersistencePort;
-import com.simul.backend.closet.domain.model.ClosetItem;
+import com.simul.closet.application.port.out.ClosetItemPersistencePort;
+import com.simul.closet.domain.model.ClosetItem;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

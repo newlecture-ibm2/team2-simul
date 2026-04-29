@@ -1,6 +1,6 @@
-package com.simul.backend.closet.domain.model;
+package com.simul.closet.domain.model;
 
-import com.simul.backend.common.domain.model.BaseEntity;
+import com.simul.common.adapter.out.persistence.BaseJpaEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -13,7 +13,7 @@ import java.util.UUID;
 @Table(name = "closet_items")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ClosetItem extends BaseEntity {
+public class ClosetItem extends BaseJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -29,7 +29,7 @@ public class ClosetItem extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "collection_id")
-    private Collection collection;
+    private ClosetCollection closetCollection;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "category")
@@ -45,10 +45,10 @@ public class ClosetItem extends BaseEntity {
     private Integer tryCount = 0;
 
     @Builder
-    public ClosetItem(UUID userId, ClothingImage clothingImage, Collection collection, Category category, String memo, Integer sortOrder) {
+    public ClosetItem(UUID userId, ClothingImage clothingImage, ClosetCollection closetCollection, Category category, String memo, Integer sortOrder) {
         this.userId = userId;
         this.clothingImage = clothingImage;
-        this.collection = collection;
+        this.closetCollection = closetCollection;
         this.category = category;
         this.memo = memo;
         this.sortOrder = sortOrder;
@@ -60,8 +60,8 @@ public class ClosetItem extends BaseEntity {
         this.memo = memo;
     }
 
-    public void setCollection(Collection collection) {
-        this.collection = collection;
+    public void setClosetCollection(ClosetCollection closetCollection) {
+        this.closetCollection = closetCollection;
     }
 
     public void updateSortOrder(Integer sortOrder) {

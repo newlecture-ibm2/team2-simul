@@ -1,6 +1,6 @@
-package com.simul.backend.closet.domain.model;
+package com.simul.closet.domain.model;
 
-import com.simul.backend.common.domain.model.BaseEntity;
+import com.simul.common.adapter.out.persistence.BaseJpaEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -13,7 +13,7 @@ import java.util.UUID;
 @Table(name = "collections")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Collection extends BaseEntity {
+public class ClosetCollection extends BaseJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -33,7 +33,7 @@ public class Collection extends BaseEntity {
     private Integer sortOrder;
 
     @Builder
-    public Collection(UUID userId, String name, String coverImageUrl, Integer sortOrder) {
+    public ClosetCollection(UUID userId, String name, String coverImageUrl, Integer sortOrder) {
         this.userId = userId;
         this.name = name;
         this.coverImageUrl = coverImageUrl;
