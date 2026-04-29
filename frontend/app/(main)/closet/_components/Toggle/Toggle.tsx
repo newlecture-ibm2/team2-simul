@@ -11,11 +11,18 @@ interface ToggleProps {
   activeId: string;
   onChange: (id: string) => void;
   className?: string;
+  size?: 'small' | 'medium';
 }
 
-export default function Toggle({ options, activeId, onChange, className = '' }: ToggleProps) {
+export default function Toggle({ 
+  options, 
+  activeId, 
+  onChange, 
+  className = '',
+  size = 'medium' 
+}: ToggleProps) {
   return (
-    <div className={`${styles.toggleTrack} ${className}`}>
+    <div className={`${styles.toggleTrack} ${styles[size]} ${className}`}>
       {options.map((option) => {
         const isActive = activeId === option.id;
         return (

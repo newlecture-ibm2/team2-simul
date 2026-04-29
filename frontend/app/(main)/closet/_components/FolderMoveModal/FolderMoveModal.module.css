@@ -1,0 +1,179 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1); /* Lighter background for popover feel */
+  z-index: 1000;
+}
+
+.modal {
+  position: fixed;
+  top: 276px; /* Positioned to start near the folder button */
+  right: calc(max(16px, 50vw - 225px + 16px) + 68px); /* 56px button + 12px gap */
+  width: 330px;
+  max-height: 300px;
+  padding: 16px;
+
+  /* Glassmorphism */
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-comfortable);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 12px;
+  color: var(--color-text-primary);
+  opacity: 0.6;
+  padding-left: 4px;
+}
+
+.folderList {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+
+.folderItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: var(--radius-standard);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.folderItem:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.folderItem.selected {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.folderInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.folderIcon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.5;
+}
+
+.folderName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.radioCircle {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.folderItem.selected .radioCircle {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+
+.radioInner {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: white;
+  transform: scale(0);
+  transition: transform 0.2s ease;
+}
+
+.folderItem.selected .radioInner {
+  transform: scale(1);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  flex: 1;
+  padding: 10px 0;
+  border: none;
+  border-radius: var(--radius-button);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancelBtn {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--color-text-secondary);
+}
+
+.confirmBtn {
+  background: var(--color-primary);
+  color: white;
+}
+
+
+.confirmBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Full Screen Variant for ClosetDetailModal matching */
+.fullScreenOverlay {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.fullScreenModal {
+  position: relative;
+  top: auto;
+  right: auto;
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: var(--radius-section);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.fullScreenModal .title {
+  font-size: 18px;
+  opacity: 1;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.fullScreenModal .folderList {
+  max-height: 40vh;
+}
+

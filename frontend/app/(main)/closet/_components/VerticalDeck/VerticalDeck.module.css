@@ -1,0 +1,112 @@
+.deckContainer {
+  height: calc(100vh - 250px); /* +100px taller than before */
+  width: 100%;
+  overflow-y: scroll;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  position: relative;
+}
+
+.deckContainer::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.scrollSpacer {
+  position: relative;
+  width: 100%;
+}
+
+.viewport {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100%; /* Match container perfectly */
+  /* Make sure viewport tracks the scroll position by being sticky */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.cardWrapper {
+  position: absolute;
+  top: 50%; /* Shifted up from 50% center */
+  left: calc(50% + 20px); /* Move deck right by 20px to make room for scrubber */
+  width: 280px;
+  height: 280px; /* Smaller cards for mobile */
+  /* transform origin center center is default */
+  will-change: transform, opacity, z-index;
+}
+
+/* Timeline Scrubber */
+.scrubberContainer {
+  position: absolute;
+  left: 0; /* 붙이기 위해 0으로 변경 */
+  top: 20px;
+  bottom: 20px;
+  width: 32px;
+  z-index: 2000; /* Above cards */
+  display: flex;
+  justify-content: center;
+  pointer-events: none; /* Let track handle events */
+}
+
+.scrubberTrack {
+  position: relative;
+  width: 24px;
+  height: 100%;
+  pointer-events: auto; /* Clickable */
+  cursor: grab;
+  touch-action: none; /* Prevent browser scroll when dragging */
+}
+
+.scrubberTrack:active {
+  cursor: grabbing;
+}
+
+/* The vertical line */
+.scrubberTrack::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  background: color-mix(in srgb, var(--color-text-secondary) 30%, transparent);
+  border-radius: 2px;
+}
+
+.scrubberThumb {
+  position: absolute;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 8px rgba(0,0,0,0.3);
+  pointer-events: none; /* Let track handle drag */
+  transition: transform 0.1s;
+}
+
+.scrubberTrack:active .scrubberThumb {
+  transform: translate(-50%, -50%) scale(1.5);
+}
+
+.scrubberLabel {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  pointer-events: none;
+}

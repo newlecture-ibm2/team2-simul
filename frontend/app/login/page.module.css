@@ -1,51 +1,137 @@
 .loginPage {
+  position: relative;
+  width: 100%;
+  height: 100vh;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex: 1;
-  padding: var(--space-page-y) var(--space-page-x);
+  overflow: hidden;
+}
+
+.backgroundLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/images/login-bg.png');
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.85);
+  z-index: 1;
+}
+
+.backgroundLayer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+}
+
+.loginContainer {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 420px;
+  padding: 20px;
 }
 
 .loginCard {
-  width: 100%;
-  max-width: 480px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-section);
+  padding: 40px 32px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 32px;
+  box-shadow: 
+    0 24px 48px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .brandSection {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
   text-align: center;
+  margin-bottom: 32px;
 }
 
 .logoMark {
-  width: 64px;
-  height: 64px;
-  background: var(--color-primary);
+  width: 56px;
+  height: 56px;
+  background: var(--color-green);
+  color: var(--color-green-hover);
   border-radius: var(--radius-comfortable);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-white);
   font-size: 28px;
-  font-weight: var(--weight-bold);
+  font-weight: 800;
+  margin: 0 auto 16px;
+  box-shadow: 0 8px 16px rgba(209, 220, 85, 0.3);
 }
 
 .brandName {
-  font-size: var(--font-display);
-  font-weight: var(--weight-semibold);
-  color: var(--color-text-primary);
-  letter-spacing: -1px;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-text-white);
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
 }
 
 .brandTagline {
-  font-size: var(--font-body);
-  color: var(--color-text-secondary);
+  font-size: var(--font-caption);
+  color: rgba(255, 255, 255, 0.8);
   line-height: 1.5;
+  max-width: 240px;
+}
+
+.tabSection {
+  display: flex;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px;
+  border-radius: var(--radius-button);
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.tabBtn {
+  flex: 1;
+  padding: 10px;
+  border-radius: var(--radius-button);
+  font-size: var(--font-caption-bold);
+  color: rgba(255, 255, 255, 0.6);
+  transition: all var(--transition-fast);
+}
+
+.activeTab {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.contentSection {
+  width: 100%;
+}
+
+.formTitle {
+  font-size: var(--font-heading);
+  color: white;
+  margin-bottom: 4px;
+  font-weight: var(--weight-bold);
+}
+
+.switchTypeBtn {
+  width: 100%;
+  margin-top: 24px;
+  font-size: var(--font-caption);
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: underline;
 }
