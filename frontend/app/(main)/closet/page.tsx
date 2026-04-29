@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ClosetCard from './_components/ClosetCard/ClosetCard';
 import ClosetDetailModal from './_components/ClosetDetailModal/ClosetDetailModal';
@@ -22,7 +22,7 @@ const DUMMY_FOLDERS_DATA = [
   { id: 3, title: 'wishlist', itemCount: 12, lastUpdated: '어제', images: [] },
 ];
 
-export default function ClosetPage() {
+function ClosetPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab') as 'stack' | 'grid' | 'folder' | null;
@@ -165,5 +165,13 @@ export default function ClosetPage() {
         itemId={selectedItemId}
       />
     </div>
+  );
+}
+
+export default function ClosetPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: '20px', textAlign: 'center' }}>Loading...</div>}>
+      <ClosetPageContent />
+    </Suspense>
   );
 }
