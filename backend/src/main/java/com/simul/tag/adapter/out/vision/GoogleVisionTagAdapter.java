@@ -21,13 +21,23 @@ import java.util.Set;
 public class GoogleVisionTagAdapter implements VisionApiPort {
 
     // 블랙리스트: 사진에 흔히 나오지만 패션과 무관한 단어만 제거
+    // 실제 테스트 결과를 반영하여 지속적으로 보완 중
     private static final Set<String> EXCLUDED_KEYWORDS = Set.of(
+            // 인체 부위
             "Person", "People", "Human", "Face", "Smile", "Skin", "Head",
-            "Selfie", "Smartphone", "Mobile phone", "Phone",
+            "Hand", "Arm", "Leg", "Waist", "Thigh", "Neck", "Shoulder",
+            "Hair", "Eyebrow", "Lip", "Nose", "Chin", "Forehead", "Torso",
+            // 직업/사람 관련 포괄적 단어
+            "Model",
+            // 표정/자세
+            "Selfie", "Standing", "Sitting", "Gesture", "Happy", "Cool",
+            // 배경/사물
+            "Smartphone", "Mobile phone", "Phone",
             "Wall", "Floor", "Sky", "Room", "Building", "Background",
-            "Furniture", "Photography", "Hand", "Arm", "Leg",
-            "Hair", "Eyebrow", "Lip", "Nose", "Chin", "Forehead",
-            "Standing", "Sitting", "Gesture", "Happy", "Cool",
+            "Furniture", "Photography", "Mirror",
+            // 너무 포괄적인 단어 (모든 옷 사진에 붙어서 태그 가치가 없음)
+            "Fashion", "Style", "Pattern", "Texture", "Design",
+            // 도형/속성
             "Rectangle", "Font", "Circle", "Material property"
     );
 
@@ -58,6 +68,7 @@ public class GoogleVisionTagAdapter implements VisionApiPort {
             }
 
             for (EntityAnnotation annotation : res.getLabelAnnotationsList()) {
+                // AI의 다양성을 유지하되(화이트리스트 지양), 불확실한 쓰레기 태그를 막기 위해 70% 컷오프 유지
                 if (annotation.getScore() >= 0.7f) {
                     String label = annotation.getDescription();
                     if (isValidFashionTag(label)) {
