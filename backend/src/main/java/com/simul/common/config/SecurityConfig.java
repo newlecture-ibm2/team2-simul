@@ -31,12 +31,12 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // 인증 불필요 경로
-                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**").permitAll()
                 // 피드/게시물 상세는 비로그인 열람 허용
-                .requestMatchers("GET", "/api/posts", "/api/posts/**").permitAll()
+                .requestMatchers("GET", "/posts", "/posts/**").permitAll()
                 // 관리자 전용
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/admin/**").hasRole("ADMIN")
                 // 나머지는 인증 필요
                 .anyRequest().authenticated()
             )

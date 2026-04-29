@@ -13,12 +13,12 @@ import java.util.Map;
  * 인증 API 컨트롤러
  *
  * 엔드포인트:
- * - POST /api/auth/social   → 소셜 로그인 (카카오/네이버/구글)
- * - POST /api/auth/refresh  → Access Token 갱신
- * - DELETE /api/auth/logout  → 로그아웃
+ * - POST /auth/social   → 소셜 로그인 (카카오/네이버/구글)
+ * - POST /auth/refresh  → Access Token 갱신
+ * - DELETE /auth/logout  → 로그아웃
  */
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 public class AuthController {
 
     private final SocialLoginUseCase socialLoginUseCase;
@@ -34,7 +34,7 @@ public class AuthController {
 
     /**
      * 소셜 로그인
-     * POST /api/auth/social
+     * POST /auth/social
      *
      * Request Body:
      * {
@@ -60,7 +60,7 @@ public class AuthController {
 
     /**
      * 토큰 갱신
-     * POST /api/auth/refresh
+     * POST /auth/refresh
      *
      * Request Body:
      * { "refreshToken": "jwt..." }
@@ -76,7 +76,7 @@ public class AuthController {
 
     /**
      * 로그아웃
-     * DELETE /api/auth/logout
+     * DELETE /auth/logout
      *
      * MVP에서는 Stateless JWT이므로 서버 측 별도 처리 없음
      * 프론트엔드에서 httpOnly 쿠키 삭제로 처리
