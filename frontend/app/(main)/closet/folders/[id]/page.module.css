@@ -1,0 +1,285 @@
+.folderDetailPage {
+  max-width: 450px;
+  margin: 0 auto;
+  padding: 8px var(--space-page-x) 100px var(--space-page-x);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin: 0 0 24px 0;
+  position: sticky;
+  top: 65px;
+  z-index: 90;
+  padding-top: 12px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--radius-circle);
+  transition: background var(--transition-fast);
+}
+
+.backBtn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.backIcon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--font-family-latin);
+  margin: 0;
+}
+
+.titleInput {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--font-family-latin);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--color-primary);
+  padding: 0;
+  color: var(--color-text-primary);
+  outline: none;
+  width: 180px;
+}
+
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.cardWrapper {
+  position: relative;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.cardWrapper.dragging {
+  opacity: 0.4;
+  transform: scale(0.95);
+}
+
+.cardWrapper.dragOver {
+  transform: scale(1.03);
+  box-shadow: 0 0 0 3px var(--color-primary);
+  border-radius: var(--radius-hero);
+}
+
+/* Edit Mode - selectable cards */
+.editOverlay {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-circle);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.editOverlay.selected {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.checkIcon {
+  width: 14px;
+  height: 14px;
+  color: white;
+}
+
+/* Edit Mode - Floating Action Buttons (stacked below + button) */
+.floatingActionGroup {
+  position: fixed;
+  top: 208px; /* 140px (+ button top) + 56px (+ button height) + 12px gap */
+  right: calc(max(16px, 50vw - 225px + 16px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 100;
+}
+
+.floatingActionBtn {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-circle);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.floatingActionBtn:hover {
+  transform: scale(1.05);
+}
+
+.floatingActionBtn .actionIcon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.deleteBtn {
+  background-color: #ff4b4b;
+}
+
+.deleteBtn:hover {
+  background-color: #e03e3e;
+}
+
+.moveBtn {
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.addBtn {
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+
+/* Pagination */
+.paginationWrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+  padding-bottom: 32px;
+}
+
+.paginationTrack {
+  display: flex;
+  height: 42px;
+  padding: 4px;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-button);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 28px 14px rgba(255, 255, 255, 1);
+  gap: 2px;
+}
+
+.pageBtn {
+  min-width: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  border-radius: var(--radius-button);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+  z-index: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  opacity: 0.8;
+}
+
+.activePage {
+  background: color-mix(in srgb, var(--color-green) 60%, transparent);
+  color: var(--color-text-primary);
+  opacity: 1;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 28px 14px color-mix(in srgb, var(--color-green) 20%, transparent);
+}
+
+/* Bottom Add Button (Grid End) */
+.bottomAddBtnWrapper {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0 100px;
+}
+
+.gridAddBtn {
+  width: 100px;
+  height: 100px;
+  border-radius: var(--radius-circle);
+  background-color: rgba(0, 0, 0, 0.05);
+  border: 2px dashed rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gridAddBtn:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  transform: scale(1.02);
+}
+
+.plusIconLarge {
+  font-size: 40px;
+  font-weight: 200;
+  color: rgba(0, 0, 0, 0.2);
+  line-height: 1;
+}
+
+
+
+
+
+/* Empty state */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 80px 0;
+  color: var(--color-text-secondary);
+  font-size: 16px;
+}
