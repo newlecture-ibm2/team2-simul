@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: simul-backend
+
+server:
+  port: 8080
+
+jwt:
+  secret: c2ltdWwtc2VjcmV0LWtleS1zaW11bC1zZWNyZXQta2V5LXNpbXVsLXNlY3JldC1rZXktc2ltdWwtc2VjcmV0LWtleQ== # example base64 encoded secret >= 256 bits
+  access-token-validity-in-seconds: 3600
+  refresh-token-validity-in-seconds: 1209600
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
