@@ -1,30 +1,39 @@
 'use client';
 
+import { useAuth } from '../useAuth';
 import styles from './SocialLoginButtons.module.css';
 
 export default function SocialLoginButtons() {
+  const { login, isLoading } = useAuth();
+
   return (
     <>
       <div className={styles.socialButtons}>
-        <button className={`${styles.socialBtn} ${styles.kakao}`}>
+        <button 
+          className={`${styles.socialBtn} ${styles.kakao}`}
+          onClick={() => login('kakao')}
+          disabled={isLoading}
+        >
           <span className={styles.socialIcon}>💬</span>
-          카카오로 시작하기
+          {isLoading ? '연결 중...' : '카카오로 시작하기'}
         </button>
-        <button className={`${styles.socialBtn} ${styles.naver}`}>
+        <button 
+          className={`${styles.socialBtn} ${styles.naver}`}
+          onClick={() => login('naver')}
+          disabled={isLoading}
+        >
           <span className={styles.socialIcon}>N</span>
-          네이버로 시작하기
+          {isLoading ? '연결 중...' : '네이버로 시작하기'}
         </button>
-        <button className={`${styles.socialBtn} ${styles.google}`}>
+        <button 
+          className={`${styles.socialBtn} ${styles.google}`}
+          onClick={() => login('google')}
+          disabled={isLoading}
+        >
           <span className={styles.socialIcon}>G</span>
-          Google로 시작하기
+          {isLoading ? '연결 중...' : 'Google로 시작하기'}
         </button>
       </div>
-
-      <div className={styles.divider}>또는</div>
-
-      <p className={styles.emailLink}>
-        이메일로 로그인하려면 <a href="#">여기를 클릭</a>하세요
-      </p>
 
       <p className={styles.privacyNote}>
         계속 진행하면 SIMUL의{' '}
