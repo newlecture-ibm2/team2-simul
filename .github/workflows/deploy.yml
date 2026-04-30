@@ -24,6 +24,10 @@ jobs:
           NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
           EOF
 
+      - name: Create Vision API Key File
+        run: |
+          echo '${{ secrets.VISION_API_KEY_JSON }}' > vision-key.json
+
       - name: Deploy with Docker Compose
         run: |
           docker compose down --remove-orphans

@@ -13,19 +13,15 @@ import java.util.UUID;
 public class PostPersistenceAdapter implements PostRepositoryPort {
 
     private final PostJpaRepository postJpaRepository;
-    private final PostPersistenceMapper postPersistenceMapper;
 
     @Override
     public Post save(Post post) {
-        PostJpaEntity jpaEntity = postPersistenceMapper.mapToJpaEntity(post);
-        PostJpaEntity savedEntity = postJpaRepository.save(jpaEntity);
-        return postPersistenceMapper.mapToDomainEntity(savedEntity);
+        return postJpaRepository.save(post);
     }
 
     @Override
     public Optional<Post> findById(UUID postId) {
-        return postJpaRepository.findById(postId)
-                .map(postPersistenceMapper::mapToDomainEntity);
+        return postJpaRepository.findById(postId);
     }
 
     @Override

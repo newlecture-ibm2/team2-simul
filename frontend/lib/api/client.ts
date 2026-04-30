@@ -21,12 +21,17 @@ export async function apiClient<T>(
     url += `?${searchParams.toString()}`;
   }
 
+  const headers: HeadersInit = {
+    ...fetchOptions.headers,
+  };
+
+  if (!(fetchOptions.body instanceof FormData) && !headers['Content-Type' as keyof typeof headers]) {
+    (headers as Record<string, string>)['Content-Type'] = 'application/json';
+  }
+
   const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...fetchOptions.headers,
-    },
     ...fetchOptions,
+    headers,
   });
 
   if (!response.ok) {

@@ -61,6 +61,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // → SecurityConfig의 인가 설정에 따라 401 또는 허용
                 SecurityContextHolder.clearContext();
             }
+        } else {
+            // [LOCAL DEV ONLY] 토큰이 없더라도 로컬 테스트 편의를 위해 Mock User 주입
+            UUID mockUserId = UUID.fromString("00000000-0000-0000-0000-000000000000");
+            UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(
+                    mockUserId,
+                    null,
+                    List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
         filterChain.doFilter(request, response);

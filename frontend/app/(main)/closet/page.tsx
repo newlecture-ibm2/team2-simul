@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ClosetCard from './_components/ClosetCard/ClosetCard';
 import ClosetDetailModal from './_components/ClosetDetailModal/ClosetDetailModal';
@@ -22,11 +22,11 @@ const DUMMY_FOLDERS_DATA = [
   { id: 3, title: 'wishlist', itemCount: 12, lastUpdated: '어제', images: [] },
 ];
 
-function ClosetContent() {
+export default function ClosetPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab') as 'stack' | 'grid' | 'folder' | null;
-  
+
   const [activeTab, setActiveTab] = useState<'stack' | 'grid' | 'folder'>(tabParam || 'stack');
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -63,8 +63,8 @@ function ClosetContent() {
       {/* Header & Toggle */}
       <header className={styles.header}>
         <h1 className={styles.title}>나의 옷장</h1>
-        
-        <Toggle 
+
+        <Toggle
           options={[
             { id: 'stack', icon: '/icons/hanger.png', label: '세로로보기' },
             { id: 'grid', icon: '/icons/rectangle.grid.2x2.png', label: '그리드로보기' },
@@ -76,9 +76,9 @@ function ClosetContent() {
       </header>
       {/* Main Content */}
       {activeTab === 'stack' && (
-        <VerticalDeck 
-          items={DUMMY_ITEMS} 
-          onItemClick={handleCardClick} 
+        <VerticalDeck
+          items={DUMMY_ITEMS}
+          onItemClick={handleCardClick}
         />
       )}
       {activeTab === 'grid' && (
@@ -86,9 +86,9 @@ function ClosetContent() {
           {/* Grid */}
           <div className={styles.grid}>
             {DUMMY_ITEMS.slice((currentPage - 1) * 10, currentPage * 10).map(item => (
-              <ClosetCard 
-                key={item.id} 
-                id={item.id} 
+              <ClosetCard
+                key={item.id}
+                id={item.id}
                 onClick={handleCardClick}
               />
             ))}
@@ -112,12 +112,12 @@ function ClosetContent() {
           )}
         </>
       )}
-      
+
       {activeTab === 'folder' && (
         <>
           <div className={styles.folderGrid}>
             {folders.map(folder => (
-              <FolderCard 
+              <FolderCard
                 key={folder.id}
                 id={folder.id}
                 title={folder.title}
@@ -133,8 +133,8 @@ function ClosetContent() {
 
           {/* Bottom Add Button (Folder Tab End) */}
           <div className={styles.bottomAddBtnWrapper}>
-            <button 
-              className={styles.gridAddBtn} 
+            <button
+              className={styles.gridAddBtn}
               aria-label="폴더 추가"
               onClick={handleAddFolder}
             >
@@ -145,12 +145,12 @@ function ClosetContent() {
       )}
 
       {/* Floating Add Button */}
-      <FloatingAddButton 
-        ariaLabel="아이템 추가" 
-        onClick={() => setIsAddModalOpen(true)} 
+      <FloatingAddButton
+        ariaLabel="아이템 추가"
+        onClick={() => setIsAddModalOpen(true)}
       />
 
-      <ClosetAddModal 
+      <ClosetAddModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSave={(data) => {
@@ -159,19 +159,11 @@ function ClosetContent() {
         }}
       />
 
-      <ClosetDetailModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <ClosetDetailModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         itemId={selectedItemId}
       />
     </div>
-  );
-}
-
-export default function ClosetPage() {
-  return (
-    <Suspense fallback={null}>
-      <ClosetContent />
-    </Suspense>
   );
 }
