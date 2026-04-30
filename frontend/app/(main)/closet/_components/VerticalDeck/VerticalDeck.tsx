@@ -5,13 +5,13 @@ import ClosetCard from '../ClosetCard/ClosetCard';
 import styles from './VerticalDeck.module.css';
 
 interface Item {
-  id: number;
+  id: string;
   imageUrl?: string;
 }
 
 interface VerticalDeckProps {
   items: Item[];
-  onItemClick: (id: number) => void;
+  onItemClick: (id: string) => void;
 }
 
 export default function VerticalDeck({ items, onItemClick }: VerticalDeckProps) {
