@@ -6,6 +6,7 @@ import com.simul.post.domain.model.Post;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,8 +23,7 @@ public class PostController {
 
     @PostMapping
     public ResponseEntity<?> createPost(
-            // TODO: Principal or AuthUser injection
-            @RequestParam(value = "userId", required = false) UUID userId,
+            @AuthenticationPrincipal UUID userId,
             @RequestPart("images") List<MultipartFile> images,
             @RequestParam(value = "caption", required = false, defaultValue = "") String caption,
             @RequestParam(value = "isPublic", required = false, defaultValue = "false") Boolean isPublic,
@@ -31,9 +31,12 @@ public class PostController {
             @RequestParam(value = "baseImageId", required = false) UUID baseImageId,
             @RequestParam(value = "itemId", required = false) UUID itemId
     ) {
-        // Fallback for mock user if not provided
+        // userId가 null인 경우는 Spring Security 설정상 로그인하지 않은 사용자 접근 차단으로 막혀야 함
         if (userId == null) {
-            userId = UUID.randomUUID(); 
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "error_code", "ERR-001",
+                    "message", "로그인이 필요한 서비스입니다."
+            ));
         }
 
         CreatePostCommand command = CreatePostCommand.builder()

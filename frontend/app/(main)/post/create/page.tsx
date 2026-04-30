@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Button from '@/components/Button';
+import Button from './_components/Button';
 import { createPost } from '@/lib/api/feedAPI';
 import { analyzeTags } from '@/lib/api/tagAPI';
 import styles from './page.module.css';
