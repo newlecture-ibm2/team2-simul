@@ -60,9 +60,10 @@ Tag → (없음) | Notification ← TryOn, Post
 ```
 - Port(UseCase) 인터페이스로만 타 도메인 접근. Repository/Entity 직접 접근 금지.
 
-## 공통 응답 (Pagination)
-- 목록 반환 시 파편화 방지를 위해 `com.simul.common.dto.PageResponse<T>` 사용 강제
-- 형식: `{ "data": [...], "current_page", "per_page", "total_elements", "total_pages", "has_next" }`
+## 공통 응답 (Cursor Pagination)
+- 피드 및 목록 반환 시 데이터 중복 방지를 위해 커서 기반 무한 스크롤 권장
+- 공통 DTO `com.simul.common.dto.CursorResponse<T>` 사용 강제
+- 형식: `{ "data": [...], "next_cursor": "uuid...", "has_next": true }`
 
 ## 에러 처리
 - 공통 형식: `{ "error_code", "message", "detail" }`

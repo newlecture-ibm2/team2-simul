@@ -209,20 +209,18 @@ test: 시착 도메인 단위 테스트 추가
 
 ## 7. 공통 응답 및 에러 처리 표준
 
-### 7-1. 공통 페이지네이션 Response 형식
+### 7-1. 공통 무한 스크롤(커서 기반) Response 형식
 
-목록(피드, 옷장, 알림 등)을 반환할 때는 파편화를 방지하기 위해 반드시 `com.simul.common.dto.PageResponse<T>`를 사용하여 아래 규격으로 응답한다:
+데이터의 중복/누락을 방지하고 성능을 최적화하기 위해, 피드 및 목록 API는 커서(Cursor) 기반 무한 스크롤을 권장하며 `com.simul.common.dto.CursorResponse<T>`를 사용하여 아래 규격으로 응답한다:
 ```json
 {
   "data": [...],
-  "current_page": 1,
-  "per_page": 10,
-  "total_elements": 42,
-  "total_pages": 5,
+  "next_cursor": "550e8400-e29b-41d4-a716-446655440000",
   "has_next": true
 }
 ```
-- 무한 스크롤(Slice) 조회 시 `total_elements`와 `total_pages`는 `null`로 내려간다.
+- 다음 페이지가 없을 경우 `next_cursor`는 `null`이며 `has_next`는 `false`로 내려간다.
+- 기존의 오프셋 방식 무한 스크롤이 불가피한 경우 `PageResponse<T>`를 혼용할 수 있다.
 
 ### 7-2. 에러 Response 형식
 
