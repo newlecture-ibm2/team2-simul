@@ -60,6 +60,10 @@ Tag → (없음) | Notification ← TryOn, Post
 ```
 - Port(UseCase) 인터페이스로만 타 도메인 접근. Repository/Entity 직접 접근 금지.
 
+## 공통 응답 (Pagination)
+- 목록 반환 시 파편화 방지를 위해 `com.simul.common.dto.PageResponse<T>` 사용 강제
+- 형식: `{ "data": [...], "current_page", "per_page", "total_elements", "total_pages", "has_next" }`
+
 ## 에러 처리
 - 공통 형식: `{ "error_code", "message", "detail" }`
 - 코드 접두사: `ERR-0xx`(공통) `ERR-1xx`(시착) `ERR-2xx`(옷장) `ERR-3xx`(피드/태그) `ERR-4xx`(신고)
