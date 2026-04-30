@@ -168,77 +168,38 @@
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  background: color-mix(in srgb, var(--color-surface-sand) 60%, transparent);
+  justify-content: center;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 99px;
   font-size: 13px;
   font-weight: var(--weight-medium);
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary);
   white-space: nowrap;
-}
-
-.deleteTag {
-  background: none;
-  border: none;
-  padding: 0;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-secondary);
-  font-size: 12px;
-  transition: opacity var(--transition-fast);
-}
-
-.deleteTag:hover {
-  opacity: 0.6;
-}
-
-/* Tag Input (Inline) */
-.tagInputWrapper {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.tagInput {
-  width: 90px;
-  padding: 6px 12px;
-  border-radius: 99px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background: rgba(255, 255, 255, 0.5);
-  font-size: 13px;
-  outline: none;
-  transition: border-color var(--transition-fast);
-}
-
-.tagInput:focus {
-  border-color: var(--color-primary);
-}
-
-.addTagBtn {
-  flex: 0 0 auto;
-  width: 34px;
-  height: 34px;
-  border-radius: var(--radius-circle);
-  background: color-mix(in srgb, var(--color-surface-sand) 40%, transparent);
-  border: 1px dashed var(--color-border-default);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--color-text-secondary);
-  font-size: 18px;
   transition: all var(--transition-fast);
 }
 
-.addTagBtn:hover {
-  background: var(--color-surface-sand);
-  border-style: solid;
+.tagItem:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.tagItemSelected {
+  background: color-mix(in srgb, var(--color-green) 60%, transparent);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-primary);
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.tagCountText {
+  font-size: 12px;
+  color: var(--color-text-disabled);
+  text-align: right;
+  margin-top: 8px;
 }
 
 /* ── Caption Textarea ── */

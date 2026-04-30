@@ -15,7 +15,7 @@ export default function PostCreatePage() {
   const [tags, setTags] = useState<string[]>([]);
   const [caption, setCaption] = useState('');
   const [isPublic, setIsPublic] = useState(false);
-  const [newTagInput, setNewTagInput] = useState('');
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -32,19 +32,17 @@ export default function PostCreatePage() {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
 
-      if (images.length === 0) {
-        setIsAnalyzing(true);
-        try {
-          const result = await analyzeTags(file);
-          if (result && Array.isArray(result)) {
-            const newTags = Array.from(new Set([...tags, ...result])).slice(0, 10);
-            setTags(newTags);
-          }
-        } catch (err) {
-          console.error('태그 분석 실패:', err);
-        } finally {
-          setIsAnalyzing(false);
+      setIsAnalyzing(true);
+      try {
+        const result = await analyzeTags(file);
+        const extractedTags = result?.recommended_tags;
+        if (extractedTags && Array.isArray(extractedTags)) {
+          setSuggestedTags(prev => Array.from(new Set([...prev, ...extractedTags])));
         }
+      } catch (err) {
+        console.error('태그 분석 실패:', err);
+      } finally {
+        setIsAnalyzing(false);
       }
 
       setImages([...images, file]);
@@ -57,14 +55,15 @@ export default function PostCreatePage() {
     setImageUrls(imageUrls.filter((_, i) => i !== index));
   };
 
-  const handleDeleteTag = (tagToDelete: string) => {
-    setTags(tags.filter(tag => tag !== tagToDelete));
-  };
-
-  const handleAddTag = () => {
-    if (newTagInput.trim() && tags.length < 10 && !tags.includes(newTagInput.trim())) {
-      setTags([...tags, newTagInput.trim()]);
-      setNewTagInput('');
+  const handleToggleTag = (tagToToggle: string) => {
+    if (tags.includes(tagToToggle)) {
+      setTags(tags.filter(tag => tag !== tagToToggle));
+    } else {
+      if (tags.length >= 10) {
+        alert('태그는 최대 10개까지만 선택 가능합니다.');
+        return;
+      }
+      setTags([...tags, tagToToggle]);
     }
   };
 
@@ -135,33 +134,22 @@ export default function PostCreatePage() {
           </div>
         )}
         <div className={styles.tagList}>
-          {tags.map((tag, index) => (
-            <div key={index} className={styles.tagItem}>
-              #{tag}
+          {suggestedTags.map((tag, index) => {
+            const isSelected = tags.includes(tag);
+            return (
               <button
-                className={styles.deleteTag}
-                onClick={() => handleDeleteTag(tag)}
-                aria-label="태그 삭제"
+                key={index}
+                className={`${styles.tagItem} ${isSelected ? styles.tagItemSelected : ''}`}
+                onClick={() => handleToggleTag(tag)}
+                aria-label={`태그 ${tag} ${isSelected ? '해제' : '선택'}`}
               >
-                ✕
+                #{tag}
               </button>
-            </div>
-          ))}
-          {tags.length < 10 && (
-            <div className={styles.tagInputWrapper}>
-              <input
-                type="text"
-                className={styles.tagInput}
-                value={newTagInput}
-                onChange={e => setNewTagInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleAddTag()}
-                placeholder="태그 입력"
-              />
-              <button className={styles.addTagBtn} onClick={handleAddTag} aria-label="태그 추가">
-                +
-              </button>
-            </div>
-          )}
+            );
+          })}
+        </div>
+        <div className={styles.tagCountText}>
+          선택된 태그: {tags.length} / 10
         </div>
       </div>
 
