@@ -2,7 +2,10 @@ package com.simul.closet.adapter.out.persistence;
 
 import com.simul.closet.application.port.out.ClosetItemPersistencePort;
 import com.simul.closet.domain.model.ClosetItem;
+import com.simul.closet.domain.model.Category;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -28,6 +31,11 @@ public class ClosetItemPersistenceAdapter implements ClosetItemPersistencePort {
     @Override
     public List<ClosetItem> findByUserId(UUID userId) {
         return closetItemJpaRepository.findAllByUserIdAndDeletedAtIsNull(userId);
+    }
+
+    @Override
+    public Page<ClosetItem> findByUserIdWithFilter(UUID userId, Category category, Pageable pageable) {
+        return closetItemJpaRepository.findByUserIdAndCategoryWithPaging(userId, category, pageable);
     }
 
     @Override
