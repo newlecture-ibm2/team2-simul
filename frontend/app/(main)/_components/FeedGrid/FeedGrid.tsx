@@ -74,10 +74,9 @@ export default function FeedGrid({ tab = 'all', sort = 'recent' }: FeedGridProps
       const data = await getFeedPosts({ tab, sort, page, size: 20 });
       
       if (data.content.length === 0 && page === 0) {
-        // API는 동작하지만 게시물이 0개 → 더미 모드
-        setUseDummy(true);
-        setPosts(generateDummyPosts(1, 8));
-        setPage(1);
+        // 실제 데이터가 없으면 Empty State를 렌더링하기 위해 posts를 비움
+        setPosts([]);
+        setHasMore(false);
       } else {
         setPosts(prev => page === 0 ? data.content : [...prev, ...data.content]);
         setHasMore(!data.last);

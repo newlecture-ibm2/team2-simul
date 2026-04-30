@@ -35,7 +35,7 @@ public class FileStorageService {
             Path filePath = fullDirPath.resolve(fileName);
             Files.copy(file.getInputStream(), filePath);
 
-            return "/" + uploadBaseDir + datePath + fileName;
+            return "/api/" + uploadBaseDir + datePath + fileName;
         } catch (IOException e) {
             throw new RuntimeException("Failed to store file.", e);
         }
