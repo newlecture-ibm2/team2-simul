@@ -10,5 +10,6 @@ public interface ClosetItemPersistencePort {
     ClosetItem save(ClosetItem closetItem);
     Optional<ClosetItem> findById(UUID id);
     List<ClosetItem> findByUserId(UUID userId);
+    long countByUserId(UUID userId);
     void delete(ClosetItem closetItem);
 }

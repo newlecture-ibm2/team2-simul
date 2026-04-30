@@ -9,14 +9,29 @@ spring:
 server:
   port: 8080
 
+# === JWT 설정 ===
 # Google Vision API 인증경로는 환경변수 GOOGLE_APPLICATION_CREDENTIALS로 설정
 # 예시: set GOOGLE_APPLICATION_CREDENTIALS=C:\secrets\google-vision-key.json
 
 jwt:
-  secret: c2ltdWwtc2VjcmV0LWtleS1zaW11bC1zZWNyZXQta2V5LXNpbXVsLXNlY3JldC1rZXktc2ltdWwtc2VjcmV0LWtleQ== # example base64 encoded secret >= 256 bits
-  access-token-validity-in-seconds: 3600
-  refresh-token-validity-in-seconds: 1209600
+  secret: c2ltdWwtc2VjcmV0LWtleS1zaW11bC1zZWNyZXQta2V5LXNpbXVsLXNlY3JldC1rZXktc2ltdWwtc2VjcmV0LWtleQ==
+  access-token-validity-in-seconds: 3600       # 1시간
+  refresh-token-validity-in-seconds: 1209600   # 14일
 
+# === OAuth2 소셜 로그인 설정 ===
+# 인프라 담당자 또는 팀에서 소셜 앱 등록 후 Client ID/Secret 입력
+oauth2:
+  kakao:
+    client-id: ${KAKAO_CLIENT_ID:your-kakao-client-id}
+    client-secret: ${KAKAO_CLIENT_SECRET:your-kakao-client-secret}
+  naver:
+    client-id: ${NAVER_CLIENT_ID:your-naver-client-id}
+    client-secret: ${NAVER_CLIENT_SECRET:your-naver-client-secret}
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:your-google-client-id}
+    client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
+
+# === Swagger/OpenAPI ===
 springdoc:
   api-docs:
     path: /api-docs

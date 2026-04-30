@@ -31,6 +31,11 @@ public class ClosetItemPersistenceAdapter implements ClosetItemPersistencePort {
     }
 
     @Override
+    public long countByUserId(UUID userId) {
+        return closetItemJpaRepository.countByUserIdAndDeletedAtIsNull(userId);
+    }
+
+    @Override
     public void delete(ClosetItem closetItem) {
         closetItem.softDelete();
         closetItemJpaRepository.save(closetItem);

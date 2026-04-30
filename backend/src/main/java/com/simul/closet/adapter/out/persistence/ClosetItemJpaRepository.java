@@ -16,4 +16,7 @@ public interface ClosetItemJpaRepository extends JpaRepository<ClosetItem, UUID>
 
     @Query("SELECT ci FROM ClosetItem ci WHERE ci.id = :id AND ci.deletedAt IS NULL")
     Optional<ClosetItem> findByIdAndDeletedAtIsNull(@Param("id") UUID id);
+
+    @Query("SELECT COUNT(ci) FROM ClosetItem ci WHERE ci.userId = :userId AND ci.deletedAt IS NULL")
+    long countByUserIdAndDeletedAtIsNull(@Param("userId") UUID userId);
 }

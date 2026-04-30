@@ -1,0 +1,99 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.inputGroup {
+  width: 100%;
+}
+
+.input {
+  width: 100%;
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-standard);
+  color: white;
+  font-size: var(--font-body);
+  transition: all var(--transition-fast);
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--color-green);
+  box-shadow: 0 0 0 4px rgba(209, 220, 85, 0.1);
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 14px;
+  background: var(--color-green);
+  color: var(--color-green-hover);
+  border-radius: var(--radius-button);
+  font-weight: var(--weight-bold);
+  font-size: var(--font-body);
+  margin-top: 8px;
+  transition: transform var(--transition-fast), filter var(--transition-fast);
+}
+
+.submitBtn:hover {
+  filter: brightness(1.1);
+}
+
+.submitBtn:active {
+  transform: scale(0.98);
+}
+
+.submitBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.forgotPassword {
+  font-size: var(--font-caption);
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* 추가 필드 스타일 */
+.genderGroup {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.genderBtn {
+  flex: 1;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-standard);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: var(--font-body);
+  transition: all var(--transition-fast);
+}
+
+.genderBtn.active {
+  background: color-mix(in srgb, var(--color-green) 20%, transparent);
+  border-color: var(--color-green);
+  color: var(--color-green);
+  font-weight: var(--weight-bold);
+  box-shadow: 0 0 15px rgba(209, 220, 85, 0.15);
+}
+
+.label {
+  display: block;
+  font-size: var(--font-caption);
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 6px;
+  margin-left: 4px;
+}
