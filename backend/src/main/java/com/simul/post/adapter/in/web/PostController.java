@@ -1,9 +1,14 @@
 package com.simul.post.adapter.in.web;
 
 import com.simul.post.application.dto.CreatePostCommand;
+import com.simul.post.application.dto.FeedPostResponse;
 import com.simul.post.application.port.in.CreatePostUseCase;
+import com.simul.post.application.port.in.GetFeedPostsUseCase;
 import com.simul.post.domain.model.Post;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,6 +25,7 @@ import java.util.UUID;
 public class PostController {
 
     private final CreatePostUseCase createPostUseCase;
+    private final GetFeedPostsUseCase getFeedPostsUseCase;
 
     @PostMapping
     public ResponseEntity<?> createPost(
@@ -55,5 +61,16 @@ public class PostController {
                 "message", "Post created successfully",
                 "postId", post.getPostId()
         ));
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getFeedPosts(
+            @AuthenticationPrincipal UUID userId,
+            @RequestParam(value = "tab", defaultValue = "all") String tab,
+            @RequestParam(value = "sort", defaultValue = "recent") String sort,
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        Page<FeedPostResponse> posts = getFeedPostsUseCase.getFeedPosts(userId, tab, sort, pageable);
+        return ResponseEntity.ok(posts);
     }
 }

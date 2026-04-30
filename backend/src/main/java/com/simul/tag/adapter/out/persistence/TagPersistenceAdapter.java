@@ -41,4 +41,10 @@ public class TagPersistenceAdapter implements TagPersistencePort {
     public void deletePostTagsByPostId(UUID postId) {
         postTagJpaRepository.deleteByPostId(postId);
     }
+
+    @Override
+    public List<PostTag> findPostTagsByPostIds(List<UUID> postIds) {
+        if (postIds == null || postIds.isEmpty()) return List.of();
+        return postTagJpaRepository.findByPostIdIn(postIds);
+    }
 }
