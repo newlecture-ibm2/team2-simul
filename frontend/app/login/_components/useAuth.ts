@@ -10,14 +10,19 @@ export function useAuth() {
   const login = async (provider: 'kakao' | 'naver' | 'google') => {
     setIsLoading(true);
     
-    // [인프라 미완성 상태의 Mock 로직]
-    // 1. 실제 API 호출 대신 1.5초 지연을 줍니다 (서버 통신 흉내)
+    if (provider === 'naver') {
+      const clientId = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID;
+      const redirectUri = encodeURIComponent('http://localhost:3000/auth/callback/naver');
+      const state = encodeURIComponent(Math.random().toString(36).substring(2));
+      
+      // 네이버 인증 페이지로 이동
+      window.location.href = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}`;
+      return;
+    }
+
+    // [Mock logic for others]
     console.log(`${provider} 로그인을 시도합니다...`);
-    
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    // 2. 성공 시 메인 피드로 이동 (실제로는 여기서 JWT 토큰을 저장하게 됩니다)
-    console.log(`${provider} 로그인 성공! 메인 페이지로 이동합니다.`);
     setIsLoading(false);
     router.push('/');
   };
