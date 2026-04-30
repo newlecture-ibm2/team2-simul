@@ -7,5 +7,6 @@ import java.util.UUID;
 
 public interface PostTagJpaRepository extends JpaRepository<PostTag, UUID> {
     List<PostTag> findByPostId(UUID postId);
+    List<PostTag> findByPostIdIn(List<UUID> postIds);
     void deleteByPostId(UUID postId);
 }

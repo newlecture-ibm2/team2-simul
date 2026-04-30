@@ -5,8 +5,10 @@ import com.simul.user.domain.model.User;
 import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * User Persistence Adapter (Output Port 구현체)
@@ -44,5 +46,15 @@ public class UserPersistenceAdapter implements UserPersistencePort {
     public Optional<User> findByProviderAndProviderId(String provider, String providerId) {
         return userJpaRepository.findByProviderAndProviderIdAndDeletedAtIsNull(provider, providerId)
                 .map(userPersistenceMapper::mapToDomainEntity);
+    }
+
+    @Override
+    public List<User> findByIds(List<UUID> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return List.of();
+        }
+        return userJpaRepository.findByUserIdInAndDeletedAtIsNull(userIds).stream()
+                .map(userPersistenceMapper::mapToDomainEntity)
+                .collect(Collectors.toList());
     }
 }

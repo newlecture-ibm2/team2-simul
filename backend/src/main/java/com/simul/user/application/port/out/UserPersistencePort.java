@@ -1,6 +1,7 @@
 package com.simul.user.application.port.out;
 
 import com.simul.user.domain.model.User;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,6 +21,11 @@ public interface UserPersistencePort {
      * ID로 사용자 조회
      */
     Optional<User> findById(UUID userId);
+
+    /**
+     * ID 목록으로 사용자 조회
+     */
+    List<User> findByIds(List<UUID> userIds);
 
     /**
      * 소셜 로그인 제공자 + 제공자ID로 사용자 조회
