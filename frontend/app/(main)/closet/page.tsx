@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ClosetCard from './_components/ClosetCard/ClosetCard';
 import ClosetDetailModal from './_components/ClosetDetailModal/ClosetDetailModal';
@@ -23,6 +23,14 @@ const DUMMY_FOLDERS_DATA = [
 ];
 
 export default function ClosetPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ClosetPageContent />
+    </Suspense>
+  );
+}
+
+function ClosetPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab') as 'stack' | 'grid' | 'folder' | null;
