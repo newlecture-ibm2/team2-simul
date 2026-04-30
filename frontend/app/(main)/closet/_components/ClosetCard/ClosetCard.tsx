@@ -4,9 +4,9 @@ import { useState } from 'react';
 import styles from './ClosetCard.module.css';
 
 interface ClosetCardProps {
-  id: number;
+  id: string;
   imageUrl?: string;
-  onClick?: (id: number) => void;
+  onClick?: (id: string) => void;
 }
 
 export default function ClosetCard({ 

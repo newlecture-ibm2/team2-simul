@@ -172,3 +172,38 @@
   line-height: 1;
 }
 
+/* Loading & Error */
+.loadingWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.errorWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-height: 200px;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.errorWrapper button {
+  padding: 8px 20px;
+  border-radius: var(--radius-button);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: var(--color-surface-white);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all var(--transition-fast);
+}
+
+.errorWrapper button:hover {
+  background: var(--color-surface-sand);
+}
+
