@@ -1,3 +1,4 @@
 backend/.gradle/
 backend/build/
 .env
+docker-compose.override.yml
