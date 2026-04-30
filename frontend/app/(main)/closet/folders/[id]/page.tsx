@@ -13,10 +13,10 @@ import ClosetAddModal from '../../_components/ClosetAddModal';
 import styles from './page.module.css';
 
 // Dummy folder metadata (would come from API)
-const FOLDER_DATA: Record<string, { title: string; items: { id: number }[] }> = {
-  '1': { title: 'shirts outfit', items: Array.from({ length: 3 }, (_, i) => ({ id: i + 1 })) },
-  '2': { title: 'spring vibes', items: Array.from({ length: 8 }, (_, i) => ({ id: i + 1 })) },
-  '3': { title: 'wishlist', items: Array.from({ length: 12 }, (_, i) => ({ id: i + 1 })) },
+const FOLDER_DATA: Record<string, { title: string; items: { id: string }[] }> = {
+  '1': { title: 'shirts outfit', items: Array.from({ length: 3 }, (_, i) => ({ id: String(i + 1) })) },
+  '2': { title: 'spring vibes', items: Array.from({ length: 8 }, (_, i) => ({ id: String(i + 1) })) },
+  '3': { title: 'wishlist', items: Array.from({ length: 12 }, (_, i) => ({ id: String(i + 1) })) },
 };
 
 const ITEMS_PER_PAGE = 10;
@@ -31,19 +31,19 @@ export default function FolderDetailPage() {
   const [viewMode, setViewMode] = useState<'view' | 'edit'>('view');
   const [folderTitle, setFolderTitle] = useState(folderMeta.title);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [items, setItems] = useState(folderMeta.items);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [isClosetAddModalOpen, setIsClosetAddModalOpen] = useState(false);
 
   // Available items to add (dummy data)
-  const AVAILABLE_ITEMS = Array.from({ length: 20 }, (_, i) => ({ id: i + 100 }));
+  const AVAILABLE_ITEMS = Array.from({ length: 20 }, (_, i) => ({ id: String(i + 100) }));
 
   // For the modal list, we'll convert FOLDER_DATA to an array
   const allFolders = Object.entries(FOLDER_DATA).map(([id, data]) => ({ id, title: data.title }));
@@ -54,7 +54,7 @@ export default function FolderDetailPage() {
     currentPage * ITEMS_PER_PAGE
   );
 
-  const toggleSelectItem = (id: number) => {
+  const toggleSelectItem = (id: string) => {
     setSelectedItems(prev => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -66,7 +66,7 @@ export default function FolderDetailPage() {
     });
   };
 
-  const handleCardClick = (id: number) => {
+  const handleCardClick = (id: string) => {
     if (viewMode === 'edit') {
       toggleSelectItem(id);
     } else {
@@ -214,8 +214,6 @@ export default function FolderDetailPage() {
           </div>
         </div>
       )}
-
-
 
       {/* Floating Add Button (Always exists) */}
       <FloatingAddButton 
