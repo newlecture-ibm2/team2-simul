@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from './_components/Button';
 import { createPost } from '@/lib/api/feedAPI';
@@ -19,6 +19,49 @@ export default function PostCreatePage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Drag to scroll state
+  const [isDragging, setIsDragging] = useState(false);
+  const [hasDragged, setHasDragged] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const handleMouseDown = (e: MouseEvent<HTMLDivElement>) => {
+    if (!scrollRef.current) return;
+    setIsDragging(true);
+    setHasDragged(false);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeft(scrollRef.current.scrollLeft);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+    if (!isDragging || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2; // 스크롤 속도
+    
+    if (Math.abs(walk) > 10) {
+      setHasDragged(true); // 실제 스크롤 발생
+    }
+    
+    scrollRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+  const handleCaptureClick = (e: MouseEvent) => {
+    if (hasDragged) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  };
 
   const handleAddImageClick = () => {
     if (images.length >= 5) {
@@ -97,7 +140,15 @@ export default function PostCreatePage() {
 
       {/* Image Carousel */}
       <div className={styles.carouselContainer}>
-        <div className={styles.imageScrollArea}>
+        <div 
+          className={`${styles.imageScrollArea} ${isDragging ? styles.dragging : ''}`}
+          ref={scrollRef}
+          onMouseDown={handleMouseDown}
+          onMouseLeave={handleMouseLeave}
+          onMouseUp={handleMouseUp}
+          onMouseMove={handleMouseMove}
+          onClickCapture={handleCaptureClick}
+        >
           {imageUrls.map((url, index) => (
             <div key={index} className={styles.imageFrame}>
               <img src={url} alt={`Upload ${index + 1}`} />

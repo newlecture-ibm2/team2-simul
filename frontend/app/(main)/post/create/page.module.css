@@ -45,6 +45,10 @@
   display: none;
 }
 
+.dragging {
+  cursor: grabbing !important;
+}
+
 .imageFrame,
 .addFrame {
   flex: 0 0 auto;
@@ -152,8 +156,15 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 .tagList {
@@ -302,11 +313,11 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
-.toggleSwitch input:checked + .toggleSlider {
+.toggleSwitch input:checked+.toggleSlider {
   background-color: var(--color-primary);
 }
 
-.toggleSwitch input:checked + .toggleSlider::before {
+.toggleSwitch input:checked+.toggleSlider::before {
   transform: translateX(20px);
 }
 
