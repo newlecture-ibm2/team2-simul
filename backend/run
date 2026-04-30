@@ -1,0 +1,13 @@
+#!/bin/bash
+echo "========================================="
+echo "Starting Spring Boot (Profile: local)..."
+echo "========================================="
+
+if [ -f "../.env" ]; then
+  set -a
+  source ../.env
+  set +a
+fi
+
+export SPRING_PROFILES_ACTIVE=local
+./gradlew bootRun
