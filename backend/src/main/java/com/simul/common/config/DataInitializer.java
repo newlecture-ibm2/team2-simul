@@ -7,9 +7,9 @@ import com.simul.closet.domain.model.Category;
 import com.simul.closet.domain.model.ClosetCollection;
 import com.simul.closet.domain.model.ClosetItem;
 import com.simul.closet.domain.model.ClothingImage;
-import com.simul.post.adapter.out.persistence.PostImageJpaEntity;
-import com.simul.post.adapter.out.persistence.PostJpaEntity;
 import com.simul.post.adapter.out.persistence.PostJpaRepository;
+import com.simul.post.domain.model.Post;
+import com.simul.post.domain.model.PostImage;
 import com.simul.post.domain.model.PostStatus;
 import com.simul.user.adapter.out.persistence.UserJpaEntity;
 import com.simul.user.adapter.out.persistence.UserJpaRepository;
@@ -117,7 +117,7 @@ public class DataInitializer implements CommandLineRunner {
         // ==========================================
         // 4. 게시물 생성 (공개 게시물)
         // ==========================================
-        List<PostJpaEntity> posts = new ArrayList<>();
+        List<Post> posts = new ArrayList<>();
 
         String[][] postData = {
                 // {userId index, caption, imageUrl}
@@ -137,7 +137,7 @@ public class DataInitializer implements CommandLineRunner {
             String caption = postData[i][1];
             String imageUrl = postData[i][2];
 
-            PostJpaEntity post = PostJpaEntity.builder()
+            Post post = Post.builder()
                     .userId(userIds[userIdx])
                     .imageUrl(imageUrl)
                     .status(PostStatus.COMPLETED)
@@ -148,12 +148,12 @@ public class DataInitializer implements CommandLineRunner {
                     .build();
 
             // 각 게시물에 이미지 2장씩 추가
-            PostImageJpaEntity img1 = PostImageJpaEntity.builder()
+            PostImage img1 = PostImage.builder()
                     .post(post)
                     .imageUrl(imageUrl)
                     .sortOrder(0)
                     .build();
-            PostImageJpaEntity img2 = PostImageJpaEntity.builder()
+            PostImage img2 = PostImage.builder()
                     .post(post)
                     .imageUrl("/uploads/images/sample/post_" + String.format("%02d", i + 1) + "_sub.jpg")
                     .sortOrder(1)
@@ -182,7 +182,7 @@ public class DataInitializer implements CommandLineRunner {
     // ==========================================
 
     private UserJpaEntity createUser(UUID userId, String provider, String providerId,
-                                     String name, String nickname, Gender gender, String bio, Role role) {
+                                      String name, String nickname, Gender gender, String bio, Role role) {
         return UserJpaEntity.builder()
                 .userId(userId)
                 .provider(provider)
