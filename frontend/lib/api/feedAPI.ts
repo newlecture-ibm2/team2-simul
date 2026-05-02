@@ -42,7 +42,7 @@ export async function getFeedPosts(params?: {
 }
 
 /** 게시물 상세 조회 */
-export async function getPostDetail(id: number) {
+export async function getPostDetail(id: string) {
   return apiClient(`/posts/${id}`);
 }
 
@@ -56,12 +56,12 @@ export async function createPost(data: FormData) {
 }
 
 /** 좋아요 토글 */
-export async function toggleLike(postId: number) {
+export async function toggleLike(postId: string) {
   return apiClient(`/posts/${postId}/likes`, { method: 'POST' });
 }
 
 /** 댓글 작성 */
-export async function createComment(postId: number, content: string) {
+export async function createComment(postId: string, content: string) {
   return apiClient(`/posts/${postId}/comments`, {
     method: 'POST',
     body: JSON.stringify({ content }),
