@@ -71,10 +71,34 @@ export async function deleteClosetItem(id: string) {
   return apiClient(`/closet/items/${id}`, { method: 'DELETE' });
 }
 
+export interface ClosetCollectionResponse {
+  collectionId: string;
+  name: string;
+  coverImageUrl: string | null;
+  itemCount: number;
+  createdAt: string;
+}
+
+export interface ClosetCollectionListResponse {
+  collections: ClosetCollectionResponse[];
+  hasNext: boolean;
+  totalCount: number;
+}
+
 /** 컬렉션(폴더) 추가 */
 export async function addClosetCollection(formData: FormData) {
   return apiClient('/closet/collections', {
     method: 'POST',
     body: formData,
   });
+}
+
+/** 컬렉션(폴더) 목록 조회 */
+export async function getClosetCollections(params?: { sort?: string; page?: number; size?: number }): Promise<ClosetCollectionListResponse> {
+  const queryParams: Record<string, string> = {};
+  if (params?.sort) queryParams.sort = params.sort;
+  if (params?.page !== undefined) queryParams.page = String(params.page);
+  if (params?.size !== undefined) queryParams.size = String(params.size);
+
+  return apiClient<ClosetCollectionListResponse>('/closet/collections', { params: queryParams });
 }
