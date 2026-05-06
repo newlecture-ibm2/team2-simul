@@ -48,14 +48,10 @@ export async function getClosetItem(id: string): Promise<ClosetItemResponse> {
 }
 
 /** 아이템 추가 */
-export async function addClosetItem(data: {
-  imageUrl: string;
-  category: string;
-  memo?: string;
-}) {
+export async function addClosetItem(formData: FormData) {
   return apiClient('/closet/items', {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: formData,
   });
 }
 
