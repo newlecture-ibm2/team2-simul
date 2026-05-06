@@ -10,7 +10,10 @@ import com.simul.user.domain.model.Gender;
 import com.simul.user.domain.model.User;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * 사용자 서비스 (UseCase 구현체)
@@ -36,6 +39,13 @@ public class UserService implements LoadUserUseCase, RegisterUserUseCase {
             .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         return UserResponse.from(user);
+    }
+
+    @Override
+    public Map<UUID, UserResponse> loadUsers(List<UUID> userIds) {
+        List<User> users = userPersistencePort.findByIds(userIds);
+        return users.stream()
+                .collect(Collectors.toMap(User::getUserId, UserResponse::from));
     }
 
     /**

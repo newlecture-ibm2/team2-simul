@@ -6,7 +6,7 @@ import Button from '@/components/Button';
 import ClosetCard from '../../../../_components/ClosetCard/ClosetCard';
 
 interface Item {
-  id: number;
+  id: string;
   imageUrl?: string;
 }
 
@@ -14,7 +14,7 @@ interface AddItemModalProps {
   isOpen: boolean;
   onClose: () => void;
   availableItems: Item[];
-  onAdd: (selectedIds: number[]) => void;
+  onAdd: (selectedIds: string[]) => void;
 }
 
 export default function AddItemModal({
@@ -23,7 +23,7 @@ export default function AddItemModal({
   availableItems,
   onAdd,
 }: AddItemModalProps) {
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 9;
 
@@ -35,7 +35,7 @@ export default function AddItemModal({
     currentPage * ITEMS_PER_PAGE
   );
 
-  const toggleItem = (id: number) => {
+  const toggleItem = (id: string) => {
     const newSelected = new Set(selectedIds);
     if (newSelected.has(id)) {
       newSelected.delete(id);

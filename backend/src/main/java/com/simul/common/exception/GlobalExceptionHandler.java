@@ -1,8 +1,11 @@
 package com.simul.common.exception;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.stream.Collectors;
 
 /**
  * 전역 예외 처리기
@@ -30,5 +33,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity
             .status(ErrorCode.INTERNAL_ERROR.getHttpStatus())
             .body(response);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
+        String detailMessage = e.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+
+        ErrorResponse response = ErrorResponse.of(
+                ErrorCode.INVALID_INPUT,
+                detailMessage
+        );
+        return ResponseEntity
+                .status(ErrorCode.INVALID_INPUT.getHttpStatus())
+                .body(response);
     }
 }

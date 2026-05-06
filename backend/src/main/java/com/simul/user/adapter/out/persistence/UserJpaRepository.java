@@ -2,6 +2,7 @@ package com.simul.user.adapter.out.persistence;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,4 +25,9 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, UUID> {
      * ID로 활성 사용자 조회 (Soft Delete 필터)
      */
     Optional<UserJpaEntity> findByUserIdAndDeletedAtIsNull(UUID userId);
+
+    /**
+     * ID 목록으로 활성 사용자 조회
+     */
+    List<UserJpaEntity> findByUserIdInAndDeletedAtIsNull(List<UUID> userIds);
 }

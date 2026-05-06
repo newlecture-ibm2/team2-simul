@@ -3,8 +3,11 @@ package com.simul.post.adapter.out.persistence;
 import com.simul.post.application.port.out.PostRepositoryPort;
 import com.simul.post.domain.model.Post;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -30,5 +33,16 @@ public class PostPersistenceAdapter implements PostRepositoryPort {
             entity.softDelete();
             postJpaRepository.save(entity);
         });
+    }
+
+    @Override
+    public Page<Post> findAllPublicPosts(Pageable pageable) {
+        return postJpaRepository.findAllByIsPublicTrueAndIsBlindedFalse(pageable);
+    }
+
+    @Override
+    public Page<Post> findFollowingPosts(List<UUID> userIds, Pageable pageable) {
+        if (userIds == null || userIds.isEmpty()) return Page.empty(pageable);
+        return postJpaRepository.findAllByUserIdInAndIsPublicTrueAndIsBlindedFalse(userIds, pageable);
     }
 }

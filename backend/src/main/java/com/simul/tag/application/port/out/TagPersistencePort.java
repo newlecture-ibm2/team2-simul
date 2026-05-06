@@ -12,5 +12,6 @@ public interface TagPersistencePort {
     Tag saveTag(Tag tag);
     PostTag savePostTag(PostTag postTag);
     List<PostTag> findPostTagsByPostId(UUID postId);
+    List<PostTag> findPostTagsByPostIds(List<UUID> postIds);
     void deletePostTagsByPostId(UUID postId);
 }

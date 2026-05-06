@@ -1,6 +1,8 @@
 package com.simul.user.application.port.in;
 
 import com.simul.user.application.dto.UserResponse;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -14,4 +16,9 @@ public interface LoadUserUseCase {
      * @throws BusinessException USER_NOT_FOUND
      */
     UserResponse loadUser(UUID userId);
+
+    /**
+     * 여러 사용자 ID로 사용자 조회 맵 반환
+     */
+    Map<UUID, UserResponse> loadUsers(List<UUID> userIds);
 }

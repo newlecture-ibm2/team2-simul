@@ -16,7 +16,7 @@ const DUMMY_FOLDERS = [
 interface ClosetDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  itemId: number | null;
+  itemId: string | null;
 }
 
 export default function ClosetDetailModal({ isOpen, onClose, itemId }: ClosetDetailModalProps) {
