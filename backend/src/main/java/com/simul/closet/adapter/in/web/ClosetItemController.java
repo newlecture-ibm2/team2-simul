@@ -7,6 +7,7 @@ import com.simul.closet.application.port.in.AddItemUseCase;
 import com.simul.closet.application.port.in.GetItemUseCase;
 import com.simul.closet.application.port.in.GetItemsUseCase;
 import com.simul.closet.application.port.in.UpdateItemUseCase;
+import com.simul.closet.application.port.in.DeleteItemUseCase;
 import com.simul.closet.domain.model.Category;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ public class ClosetItemController {
     private final GetItemsUseCase getItemsUseCase;
     private final GetItemUseCase getItemUseCase;
     private final UpdateItemUseCase updateItemUseCase;
+    private final DeleteItemUseCase deleteItemUseCase;
 
     @PostMapping
     public ResponseEntity<UUID> addItem(
@@ -103,6 +105,22 @@ public class ClosetItemController {
                 .build();
 
         updateItemUseCase.updateItem(command);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{itemId}")
+    public ResponseEntity<Void> deleteItem(@PathVariable UUID itemId) {
+        log.info("Received request to delete item: itemId={}", itemId);
+
+        // TODO: SecurityContext에서 실제 로그인한 유저의 ID를 가져와야 함
+        UUID mockUserId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+        DeleteItemUseCase.DeleteItemCommand command = DeleteItemUseCase.DeleteItemCommand.builder()
+                .itemId(itemId)
+                .userId(mockUserId)
+                .build();
+
+        deleteItemUseCase.deleteItem(command);
         return ResponseEntity.noContent().build();
     }
 }
