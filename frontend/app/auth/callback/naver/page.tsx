@@ -23,7 +23,7 @@ function CallbackHandler() {
         body: JSON.stringify({
           provider: 'naver',
           code: code,
-          redirectUri: 'http://localhost:3000/auth/callback/naver'
+          redirectUri: `${window.location.origin}/auth/callback/naver`
         }),
       })
       .then(async (res) => {

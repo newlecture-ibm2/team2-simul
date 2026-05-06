@@ -12,7 +12,7 @@ export function useAuth() {
     
     if (provider === 'naver') {
       const clientId = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID;
-      const redirectUri = encodeURIComponent('http://localhost:3000/auth/callback/naver');
+      const redirectUri = encodeURIComponent(`${window.location.origin}/auth/callback/naver`);
       const state = encodeURIComponent(Math.random().toString(36).substring(2));
       
       // 네이버 인증 페이지로 이동
@@ -22,7 +22,7 @@ export function useAuth() {
 
     if (provider === 'kakao') {
       const clientId = process.env.NEXT_PUBLIC_KAKAO_CLIENT_ID;
-      const redirectUri = encodeURIComponent('http://localhost:3000/auth/callback/kakao');
+      const redirectUri = encodeURIComponent(`${window.location.origin}/auth/callback/kakao`);
       
       // 카카오 인증 페이지로 이동
       window.location.href = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}`;

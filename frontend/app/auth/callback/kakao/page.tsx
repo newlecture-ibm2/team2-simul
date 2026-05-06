@@ -22,7 +22,7 @@ function CallbackHandler() {
         body: JSON.stringify({
           provider: 'kakao',
           code: code,
-          redirectUri: 'http://localhost:3000/auth/callback/kakao'
+          redirectUri: `${window.location.origin}/auth/callback/kakao`
         }),
       })
       .then(async (res) => {
