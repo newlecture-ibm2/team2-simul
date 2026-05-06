@@ -32,12 +32,25 @@ public class TryOnService implements CreateTryOnUseCase {
 }
 ```
 
-### Step 2. 비즈니스 로직 검증
+### Step 2. 비즈니스 로직 검증 (`ImageUtils` 활용)
 `ImageStoragePort`를 호출하기 전에, 해당 도메인의 정책에 맞게 파일을 검증합니다.
-*(예: 해상도 제한, 용량 제한, 이미지 장수 제한 등)*
+공통 유틸리티인 `com.simul.common.utils.ImageUtils`를 사용하여 포맷, 용량, 해상도 등을 검증하고 필요시 리사이징을 수행할 수 있습니다.
+
+```java
+// 1. 포맷 검증 (JPG, PNG, HEIC, WebP 허용)
+ImageUtils.validateFormat(file);
+
+// 2. 용량 검증 (예: 10MB 제한)
+ImageUtils.validateSize(file, 10 * 1024 * 1024, ErrorCode.CLOSET_IMAGE_TOO_LARGE);
+
+// 3. 해상도 검증 (예: 256x256 이상)
+ImageUtils.validateResolution(file, 256, 256);
+```
 
 ### Step 3. 업로드 수행 (`uploadImage` 호출)
 검증이 끝난 파일을 `ImageStoragePort.uploadImage()` 메서드를 사용하여 저장합니다.
+*(참고: 너무 큰 이미지는 저장 전 `ImageUtils.resizeImageIfLarge(file)`를 활용해 가로 1080px 기준으로 리사이징하여 저장하는 것을 권장합니다.)*
+
 이때 두 번째 인자인 **`directoryPrefix`** 에 해당 도메인 이름(예: `"tryon"`, `"post"`, `"closet"`)을 전달해야 합니다.
 
 ```java
