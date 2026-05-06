@@ -70,3 +70,11 @@ export async function updateClosetItem(
 export async function deleteClosetItem(id: string) {
   return apiClient(`/closet/items/${id}`, { method: 'DELETE' });
 }
+
+/** 컬렉션(폴더) 추가 */
+export async function addClosetCollection(formData: FormData) {
+  return apiClient('/closet/collections', {
+    method: 'POST',
+    body: formData,
+  });
+}

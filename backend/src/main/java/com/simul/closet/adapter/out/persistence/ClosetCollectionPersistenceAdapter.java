@@ -23,4 +23,9 @@ public class ClosetCollectionPersistenceAdapter implements ClosetCollectionPersi
     public ClosetCollection findById(UUID id) {
         return closetCollectionJpaRepository.findById(id).orElse(null);
     }
+
+    @Override
+    public ClosetCollection save(ClosetCollection collection) {
+        return closetCollectionJpaRepository.save(collection);
+    }
 }
