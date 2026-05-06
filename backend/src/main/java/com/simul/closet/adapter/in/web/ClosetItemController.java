@@ -1,10 +1,12 @@
 package com.simul.closet.adapter.in.web;
 
+import com.simul.closet.adapter.in.web.dto.UpdateItemRequest;
 import com.simul.closet.application.dto.ClosetItemListResponse;
 import com.simul.closet.application.dto.ClosetItemResponse;
 import com.simul.closet.application.port.in.AddItemUseCase;
 import com.simul.closet.application.port.in.GetItemUseCase;
 import com.simul.closet.application.port.in.GetItemsUseCase;
+import com.simul.closet.application.port.in.UpdateItemUseCase;
 import com.simul.closet.domain.model.Category;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,7 @@ public class ClosetItemController {
     private final AddItemUseCase addItemUseCase;
     private final GetItemsUseCase getItemsUseCase;
     private final GetItemUseCase getItemUseCase;
+    private final UpdateItemUseCase updateItemUseCase;
 
     @PostMapping
     public ResponseEntity<UUID> addItem(
@@ -79,5 +82,27 @@ public class ClosetItemController {
         log.info("Received request to get item: itemId={}", itemId);
         ClosetItemResponse response = getItemUseCase.getItem(itemId);
         return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{itemId}")
+    public ResponseEntity<Void> updateItem(
+            @PathVariable UUID itemId,
+            @RequestBody UpdateItemRequest request
+    ) {
+        log.info("Received request to update item: itemId={}, category={}, memo={}", 
+                 itemId, request.getCategory(), request.getMemo());
+
+        // TODO: SecurityContext에서 실제 로그인한 유저의 ID를 가져와야 함
+        UUID mockUserId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+        UpdateItemUseCase.UpdateItemCommand command = UpdateItemUseCase.UpdateItemCommand.builder()
+                .itemId(itemId)
+                .userId(mockUserId)
+                .category(request.getCategory())
+                .memo(request.getMemo())
+                .build();
+
+        updateItemUseCase.updateItem(command);
+        return ResponseEntity.noContent().build();
     }
 }
