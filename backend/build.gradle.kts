@@ -40,6 +40,9 @@ dependencies {
 	implementation(platform("com.google.cloud:libraries-bom:26.32.0"))
 	implementation("com.google.cloud:google-cloud-vision")
 
+	// Thumbnailator for Image Resizing
+	implementation("net.coobird:thumbnailator:0.4.20")
+
 	// Lombok
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
