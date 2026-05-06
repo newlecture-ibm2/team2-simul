@@ -15,7 +15,7 @@ import java.util.Map;
  * 이미지를 받아 Google Vision API 기반 패션 태그 추천 목록을 반환합니다.
  */
 @RestController
-@RequestMapping("/api/tags")
+@RequestMapping("/tags")
 @RequiredArgsConstructor
 public class TagController {
 

@@ -124,7 +124,7 @@
 .metaSection {
   position: relative;
   background: color-mix(in srgb, var(--color-surface-white) 50%, transparent); /* 회색에서 흰색 불투명으로 변경 */
-  padding: 16px 40px 16px 16px;
+  padding: 16px;
   border-radius: var(--radius-standard);
   margin-bottom: 40px; /* gap 10px와 합쳐져 총 50px 간격 */
 }
@@ -152,11 +152,78 @@
   font-size: 14px;
   color: var(--color-text-primary);
   line-height: 1.5;
+  padding-right: 24px; /* Edit 버튼 공간 확보 */
 }
 
 .actions {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.editMode {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.memoInput {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  border-radius: var(--radius-standard);
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.8);
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+  color: var(--color-text-primary);
+}
+
+.memoInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.editActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.cancelBtn, .saveBtn {
+  padding: 6px 12px;
+  border-radius: var(--radius-standard);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s;
+}
+
+.cancelBtn {
+  background: var(--color-surface-sand);
+  color: var(--color-text-secondary);
+}
+
+.saveBtn {
+  background: var(--color-green);
+  color: var(--color-surface-white);
+}
+
+.cancelBtn:disabled, .saveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 

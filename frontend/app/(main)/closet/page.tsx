@@ -8,9 +8,11 @@ import FolderCard from './_components/FolderCard/FolderCard';
 import Toggle from './_components/Toggle/Toggle';
 import VerticalDeck from './_components/VerticalDeck/VerticalDeck';
 import FloatingAddButton from './_components/FloatingAddButton';
-import ClosetAddModal from './_components/ClosetAddModal';
+import ClosetAddModal from './_components/ClosetAddModal/ClosetAddModal';
 import { useClosetItems } from './_components/useClosetItems';
 import styles from './page.module.css';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { addClosetItem } from '@/lib/api/closetAPI';
 
 const DUMMY_FOLDERS_DATA = [
   { id: 1, title: 'shirts outfit', itemCount: 3, lastUpdated: '2주 전', images: [] },
@@ -24,6 +26,7 @@ function ClosetPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab') as 'stack' | 'grid' | 'folder' | null;
+  const queryClient = useQueryClient();
   
   const [activeTab, setActiveTab] = useState<'stack' | 'grid' | 'folder'>(tabParam || 'stack');
   const [currentPage, setCurrentPage] = useState(0);
@@ -41,6 +44,18 @@ function ClosetPageContent() {
   }), [currentPage]);
 
   const { items, isLoading, error, totalCount, refetch } = useClosetItems(apiParams);
+
+  const addMutation = useMutation({
+    mutationFn: (formData: FormData) => addClosetItem(formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['closetItems'] });
+      setIsAddModalOpen(false);
+    },
+    onError: (error) => {
+      console.error('Failed to add item:', error);
+      alert('아이템 추가에 실패했습니다.');
+    }
+  });
 
   // VerticalDeck / Grid용 아이템 변환
   const displayItems = useMemo(() =>
@@ -193,9 +208,8 @@ function ClosetPageContent() {
       <ClosetAddModal 
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onSave={(data) => {
-          console.log('Saving new item:', data);
-          // TODO: addClosetItem API 호출 후 refetch()
+        onSave={(formData) => {
+          addMutation.mutate(formData);
         }}
       />
 

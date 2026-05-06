@@ -9,10 +9,9 @@ function CallbackHandler() {
 
   useEffect(() => {
     const code = searchParams.get('code');
-    const state = searchParams.get('state');
 
     if (code) {
-      console.log('네이버 인가 코드를 수신했습니다. BFF로 로그인을 요청합니다...');
+      console.log('카카오 인가 코드를 수신했습니다. BFF로 로그인을 요청합니다...');
       
       // 내부 BFF API 호출 (Next.js API Route)
       fetch('/api/auth/social', {
@@ -21,9 +20,9 @@ function CallbackHandler() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          provider: 'naver',
+          provider: 'kakao',
           code: code,
-          redirectUri: `${window.location.origin}/auth/callback/naver`
+          redirectUri: `${window.location.origin}/auth/callback/kakao`
         }),
       })
       .then(async (res) => {
@@ -35,7 +34,6 @@ function CallbackHandler() {
       })
       .then((data) => {
         console.log('로그인 성공!', data);
-        // TODO: JWT 토큰 처리 로직 (현재는 성공 로그만 출력)
         // 성공 시 홈 피드로 이동
         router.push('/');
       })
@@ -57,13 +55,13 @@ function CallbackHandler() {
       gap: '20px'
     }}>
       <div className="loading-spinner"></div>
-      <p style={{ fontSize: '18px', fontWeight: 'bold' }}>네이버 로그인 처리 중...</p>
+      <p style={{ fontSize: '18px', fontWeight: 'bold' }}>카카오 로그인 처리 중...</p>
       <p style={{ color: '#666' }}>잠시만 기다려주세요.</p>
     </div>
   );
 }
 
-export default function NaverCallbackPage() {
+export default function KakaoCallbackPage() {
   return (
     <Suspense fallback={<div>로딩 중...</div>}>
       <CallbackHandler />
