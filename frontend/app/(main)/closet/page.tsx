@@ -12,7 +12,7 @@ import ClosetAddModal from './_components/ClosetAddModal/ClosetAddModal';
 import { useClosetItems } from './_components/useClosetItems';
 import styles from './page.module.css';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { addClosetItem } from '@/lib/api/closetAPI';
+import { addClosetItem, addClosetCollection } from '@/lib/api/closetAPI';
 
 const DUMMY_FOLDERS_DATA = [
   { id: 1, title: 'shirts outfit', itemCount: 3, lastUpdated: '2주 전', images: [] },
@@ -57,6 +57,18 @@ function ClosetPageContent() {
     }
   });
 
+  const addCollectionMutation = useMutation({
+    mutationFn: (formData: FormData) => addClosetCollection(formData),
+    onSuccess: (data) => {
+      console.log('Collection created with ID:', data);
+      // TODO: 컬렉션 목록 GET API 연동 후 invalidateQueries 처리 필요
+    },
+    onError: (error) => {
+      console.error('Failed to create collection:', error);
+      alert('폴더 생성에 실패했습니다.');
+    }
+  });
+
   // VerticalDeck / Grid용 아이템 변환
   const displayItems = useMemo(() =>
     items.map(item => ({
@@ -71,6 +83,12 @@ function ClosetPageContent() {
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   const handleAddFolder = () => {
+    // 1. API 호출: 기본 이름 '새 폴더'로 생성
+    const formData = new FormData();
+    formData.append('name', '새 폴더');
+    addCollectionMutation.mutate(formData);
+
+    // 2. UI 로컬 상태 업데이트 (임시)
     const newId = Date.now();
     const newFolder = {
       id: newId,
