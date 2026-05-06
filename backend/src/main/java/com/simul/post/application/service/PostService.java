@@ -5,6 +5,7 @@ import com.simul.post.application.dto.CreatePostCommand;
 import com.simul.post.application.dto.FeedPostResponse;
 import com.simul.post.application.port.in.CreatePostUseCase;
 import com.simul.post.application.port.in.GetFeedPostsUseCase;
+import com.simul.post.application.port.out.PostLikePersistencePort;
 import com.simul.post.application.port.out.PostRepositoryPort;
 import com.simul.post.domain.model.Post;
 import com.simul.post.domain.model.PostImage;
@@ -22,17 +23,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class PostService implements CreatePostUseCase, GetFeedPostsUseCase {
 
     private final PostRepositoryPort postRepositoryPort;
+    private final PostLikePersistencePort postLikePersistencePort;
     private final FileStorageService fileStorageService;
     private final AttachTagsToPostUseCase attachTagsToPostUseCase;
     private final LoadUserUseCase loadUserUseCase;
@@ -121,9 +119,12 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase {
         Map<UUID, UserResponse> userMap = loadUserUseCase.loadUsers(userIds);
         Map<UUID, List<String>> tagMap = loadTagsUseCase.loadTagsByPostIds(postIds);
 
+        // 로그인한 유저의 좋아요 여부를 일괄 조회
+        Set<UUID> likedPostIds = postLikePersistencePort.findLikedPostIdsByUserIdAndPostIds(currentUserId, postIds);
+
         return postsPage.map(post -> {
             UserResponse user = userMap.get(post.getUserId());
-            List<String> tags = tagMap.getOrDefault(post.getPostId(), Collections.emptyList());
+            List<String> postTags = tagMap.getOrDefault(post.getPostId(), Collections.emptyList());
             
             String imageUrl = post.getImages().isEmpty() ? null : post.getImages().get(0).getImageUrl();
             
@@ -133,10 +134,10 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase {
                     user != null ? user.nickname() : "Unknown",
                     user != null ? user.profileImageUrl() : null,
                     imageUrl,
-                    tags,
+                    postTags,
                     post.getCaption(),
                     post.getLikeCount(),
-                    false, // TODO: 좋아요 여부 연동
+                    likedPostIds.contains(post.getPostId()),
                     post.getCreatedAt()
             );
         });

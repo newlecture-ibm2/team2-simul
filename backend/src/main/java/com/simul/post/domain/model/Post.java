@@ -81,4 +81,14 @@ public class Post extends BaseJpaEntity {
         this.images.add(image);
         image.setPost(this);
     }
+
+    public void incrementLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decrementLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
+    }
 }
