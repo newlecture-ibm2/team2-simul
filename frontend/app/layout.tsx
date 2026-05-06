@@ -4,6 +4,7 @@ import styles from './layout.module.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BottomNav from '@/components/BottomNav';
+import Providers from '@/components/Providers';
 
 export const metadata: Metadata = {
   title: 'SIMUL — AI 가상시착 패션 플랫폼',
@@ -19,12 +20,14 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body>
-        <div className={styles.appContainer}>
-          <Header />
-          <main className={styles.main}>{children}</main>
-          <Footer />
-          <BottomNav />
-        </div>
+        <Providers>
+          <div className={styles.appContainer}>
+            <Header />
+            <main className={styles.main}>{children}</main>
+            <Footer />
+            <BottomNav />
+          </div>
+        </Providers>
       </body>
     </html>
   );

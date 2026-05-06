@@ -1,7 +1,9 @@
 package com.simul.closet.adapter.in.web;
 
 import com.simul.closet.application.dto.ClosetItemListResponse;
+import com.simul.closet.application.dto.ClosetItemResponse;
 import com.simul.closet.application.port.in.AddItemUseCase;
+import com.simul.closet.application.port.in.GetItemUseCase;
 import com.simul.closet.application.port.in.GetItemsUseCase;
 import com.simul.closet.domain.model.Category;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ public class ClosetItemController {
 
     private final AddItemUseCase addItemUseCase;
     private final GetItemsUseCase getItemsUseCase;
+    private final GetItemUseCase getItemUseCase;
 
     @PostMapping
     public ResponseEntity<UUID> addItem(
@@ -68,6 +71,13 @@ public class ClosetItemController {
                 .build();
 
         ClosetItemListResponse response = getItemsUseCase.getItems(query);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{itemId}")
+    public ResponseEntity<ClosetItemResponse> getItem(@PathVariable UUID itemId) {
+        log.info("Received request to get item: itemId={}", itemId);
+        ClosetItemResponse response = getItemUseCase.getItem(itemId);
         return ResponseEntity.ok(response);
     }
 }
