@@ -7,7 +7,7 @@ import Link from 'next/link';
 import DeleteConfirmModal from '../DeleteConfirmModal/DeleteConfirmModal';
 import FolderMoveModal from '../FolderMoveModal/FolderMoveModal';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getClosetItem, updateClosetItem } from '@/lib/api/closetAPI';
+import { getClosetItem, updateClosetItem, deleteClosetItem } from '@/lib/api/closetAPI';
 
 const DUMMY_FOLDERS = [
   { id: 1, title: 'shirts outfit' },
@@ -43,6 +43,19 @@ export default function ClosetDetailModal({ isOpen, onClose, itemId }: ClosetDet
     onError: (error) => {
       console.error('Failed to update memo:', error);
       alert('메모 수정에 실패했습니다.');
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteClosetItem(itemId as string),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['closetItems'] });
+      setShowDeleteConfirm(false);
+      onClose();
+    },
+    onError: (error) => {
+      console.error('Failed to delete item:', error);
+      alert('아이템 삭제에 실패했습니다.');
     }
   });
 
@@ -163,9 +176,7 @@ export default function ClosetDetailModal({ isOpen, onClose, itemId }: ClosetDet
         isOpen={showDeleteConfirm}
         count={1}
         onConfirm={() => {
-          console.log('Delete item:', itemId);
-          setShowDeleteConfirm(false);
-          onClose();
+          deleteMutation.mutate();
         }}
         onCancel={() => setShowDeleteConfirm(false)}
       />
