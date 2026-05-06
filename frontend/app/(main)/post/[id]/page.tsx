@@ -8,12 +8,6 @@ import { toggleLike } from '../../../../lib/api/feedAPI';
 import { useAuthStore } from '../../../../lib/stores/useAuthStore';
 import styles from './page.module.css';
 
-const DUMMY_COMMENTS = [
-  { id: 1, author: '수빈', text: '와 이거 너무 잘 어울려요! 어디 옷인가요?', avatar: '🧑' },
-  { id: 2, author: '지호', text: '시착 퀄리티 대박이네요 👏', avatar: '👩' },
-  { id: 3, author: '예린', text: '저도 이 옷으로 시착해봐야겠어요', avatar: '👧' },
-];
-
 export default function PostDetailPage() {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(24);
@@ -91,31 +85,14 @@ export default function PostDetailPage() {
             </button>
             <div className={styles.statItem}>
               <img src="/icons/bubble.png" alt="Comment" className={styles.statIcon} />
-              <span>{DUMMY_COMMENTS.length}</span>
+              <span>0</span>
             </div>
             <button className={styles.statItem}>
               <img src="/icons/paperplane.png" alt="Share" className={styles.statIcon} />
             </button>
           </div>
-
-          <div className={styles.commentSection}>
-            <div className={styles.commentList}>
-              {DUMMY_COMMENTS.map((c) => (
-                <div key={c.id} className={styles.commentItem}>
-                  <span className={styles.commentAvatar}>{c.avatar}</span>
-                  <div className={styles.commentBody}>
-                    <div className={styles.commentAuthor}>{c.author}</div>
-                    <div className={styles.commentText}>{c.text}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className={styles.commentInput}>
-              <input type="text" placeholder="댓글을 입력하세요..." />
-              <Button variant="primary" size="sm">게시</Button>
-            </div>
-          </div>
+          
+          {/* 댓글 기능은 추후 백엔드 API 연동 시 구현될 예정입니다. */}
           
           <button className={styles.reportBtn}>🚨 게시물 신고하기</button>
         </div>
