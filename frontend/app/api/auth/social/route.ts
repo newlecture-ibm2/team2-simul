@@ -8,7 +8,8 @@ export async function POST(request: NextRequest) {
 
     // 2. 실제 백엔드(Spring Boot) 서버로 로그인 요청 전달
     // 서버 간 통신이므로 브라우저의 CORS 제한을 받지 않습니다.
-    const backendResponse = await fetch('http://localhost:8080/auth/social', {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8080';
+    const backendResponse = await fetch(`${backendUrl}/auth/social`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
