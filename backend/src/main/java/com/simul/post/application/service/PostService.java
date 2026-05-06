@@ -170,8 +170,16 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         post.incrementViewCount();
         postRepositoryPort.save(post); // JPA 더티 체킹으로 업데이트 되지만 명시적 호출
 
-        // 4. 작성자 정보 조회
-        UserResponse author = loadUserUseCase.loadUser(post.getUserId());
+        // 4. 작성자 정보 조회 (존재하지 않는 사용자일 경우 예외 처리하여 알 수 없음으로 표시)
+        String nickname = "알 수 없음";
+        String profileImageUrl = null;
+        try {
+            UserResponse author = loadUserUseCase.loadUser(post.getUserId());
+            nickname = author.nickname();
+            profileImageUrl = author.profileImageUrl();
+        } catch (com.simul.common.exception.BusinessException e) {
+            // 사용자가 삭제되었거나 더미 데이터인 경우
+        }
 
         // 5. 이미지 URL 목록 추출 (sortOrder 기준으로 정렬)
         List<String> imageUrls = post.getImages().stream()
@@ -192,8 +200,8 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         return new PostDetailResponse(
                 post.getPostId(),
                 post.getUserId(),
-                author.nickname(),
-                author.profileImageUrl(),
+                nickname,
+                profileImageUrl,
                 imageUrls,
                 tags,
                 post.getCaption(),
