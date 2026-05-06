@@ -56,72 +56,64 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        log.info("🌱 로컬 개발용 초기 데이터 체크 및 생성을 시작합니다...");
+        if (userJpaRepository.count() > 0) {
+            log.info("✅ 기존 데이터가 존재합니다. 초기화를 건너뜁니다.");
+            return;
+        }
+
+        log.info("🌱 로컬 개발용 초기 데이터 생성을 시작합니다...");
 
         // ==========================================
-        // 1. 유저 3명 생성 (없을 경우에만)
+        // 1. 유저 3명 생성
         // ==========================================
-        if (userJpaRepository.findByProviderAndProviderIdAndDeletedAtIsNull("kakao", "kakao_admin_001").isEmpty()) {
-            UserJpaEntity admin = createUser(ADMIN_ID, "kakao", "kakao_admin_001",
-                    "관리자", "SimulAdmin", Gender.UNKNOWN, "SIMUL 관리자 계정입니다.", Role.ADMIN);
-            userJpaRepository.save(admin);
-            log.info("  → ADMIN 유저 생성 완료");
-        }
-        if (userJpaRepository.findByProviderAndProviderIdAndDeletedAtIsNull("kakao", "kakao_user_001").isEmpty()) {
-            UserJpaEntity user1 = createUser(USER1_ID, "kakao", "kakao_user_001",
-                    "정찬우", "chim-chan-man", Gender.MALE, "패션을 사랑하는 정찬우입니다 🌟", Role.USER);
-            userJpaRepository.save(user1);
-            log.info("  → USER1 유저 생성 완료");
-        }
-        if (userJpaRepository.findByProviderAndProviderIdAndDeletedAtIsNull("naver", "naver_user_001").isEmpty()) {
-            UserJpaEntity user2 = createUser(USER2_ID, "naver", "naver_user_001",
-                    "이우석", "rainstone_lee", Gender.MALE, "일상 속 스타일을 찾아서 👕", Role.USER);
-            userJpaRepository.save(user2);
-            log.info("  → USER2 유저 생성 완료");
-        }
+        UserJpaEntity admin = createUser(ADMIN_ID, "kakao", "kakao_admin_001",
+                "관리자", "SimulAdmin", Gender.UNKNOWN, "SIMUL 관리자 계정입니다.", Role.ADMIN);
+        UserJpaEntity user1 = createUser(USER1_ID, "kakao", "kakao_user_001",
+                "정찬우", "chim-chan-man", Gender.MALE, "패션을 사랑하는 정찬우입니다 🌟", Role.USER);
+        UserJpaEntity user2 = createUser(USER2_ID, "naver", "naver_user_001",
+                "이우석", "rainstone_lee", Gender.MALE, "일상 속 스타일을 찾아서 👕", Role.USER);
+
+        userJpaRepository.saveAll(List.of(admin, user1, user2));
+        log.info("  → 유저 3명 생성 완료 (ADMIN: {}, USER1: {}, USER2: {})", ADMIN_ID, USER1_ID, USER2_ID);
 
         // ==========================================
         // 2. 각 유저별 컬렉션 생성
         // ==========================================
-        if (closetCollectionJpaRepository.count() == 0) {
-            ClosetCollection adminCol1 = createCollection(ADMIN_ID, "관리자 컬렉션", "/uploads/images/sample/post_07.jpg", 0);
-            ClosetCollection user1Col1 = createCollection(USER1_ID, "출근룩", "/uploads/images/sample/post_01.jpg", 0);
-            ClosetCollection user1Col2 = createCollection(USER1_ID, "데이트룩", "/uploads/images/sample/post_02.jpg", 1);
-            ClosetCollection user2Col1 = createCollection(USER2_ID, "캐주얼", "/uploads/images/sample/post_04.jpg", 0);
-            ClosetCollection user2Col2 = createCollection(USER2_ID, "포멀", "/uploads/images/sample/post_05.jpg", 1);
+        ClosetCollection adminCol1 = createCollection(ADMIN_ID, "관리자 컬렉션", "/uploads/images/sample/post_07.jpg", 0);
+        ClosetCollection user1Col1 = createCollection(USER1_ID, "출근룩", "/uploads/images/sample/post_01.jpg", 0);
+        ClosetCollection user1Col2 = createCollection(USER1_ID, "데이트룩", "/uploads/images/sample/post_02.jpg", 1);
+        ClosetCollection user2Col1 = createCollection(USER2_ID, "캐주얼", "/uploads/images/sample/post_04.jpg", 0);
+        ClosetCollection user2Col2 = createCollection(USER2_ID, "포멀", "/uploads/images/sample/post_05.jpg", 1);
 
-            closetCollectionJpaRepository.saveAll(List.of(adminCol1, user1Col1, user1Col2, user2Col1, user2Col2));
-            log.info("  → 컬렉션 5개 생성 완료");
-        }
+        closetCollectionJpaRepository.saveAll(List.of(adminCol1, user1Col1, user1Col2, user2Col1, user2Col2));
+        log.info("  → 컬렉션 5개 생성 완료");
 
         // ==========================================
-        // 3. 각 유저별 옷장 아이템 생성 (옷장이 비어있을 경우에만)
+        // 3. 각 유저별 옷장 아이템 10개 생성
         // ==========================================
-        if (closetItemJpaRepository.count() == 0) {
-            List<ClothingImage> allImages = new ArrayList<>();
-            List<ClosetItem> allItems = new ArrayList<>();
+        List<ClothingImage> allImages = new ArrayList<>();
+        List<ClosetItem> allItems = new ArrayList<>();
 
-            String[][] itemData = {
-                    {"TOP",       "화이트 오버핏 티셔츠"},
-                    {"TOP",       "네이비 스트라이프 셔츠"},
-                    {"TOP",       "블랙 크루넥 니트"},
-                    {"BOTTOM",    "워싱 데님 팬츠"},
-                    {"BOTTOM",    "블랙 슬랙스"},
-                    {"OUTER",     "베이지 트렌치코트"},
-                    {"OUTER",     "블랙 레더 자켓"},
-                    {"SHOES",     "화이트 캔버스 스니커즈"},
-                    {"ACCESSORY", "실버 체인 목걸이"},
-                    {"ACCESSORY", "블랙 버킷햇"}
-            };
+        String[][] itemData = {
+                {"TOP",       "화이트 오버핏 티셔츠"},
+                {"TOP",       "네이비 스트라이프 셔츠"},
+                {"TOP",       "블랙 크루넥 니트"},
+                {"BOTTOM",    "워싱 데님 팬츠"},
+                {"BOTTOM",    "블랙 슬랙스"},
+                {"OUTER",     "베이지 트렌치코트"},
+                {"OUTER",     "블랙 레더 자켓"},
+                {"SHOES",     "화이트 캔버스 스니커즈"},
+                {"ACCESSORY", "실버 체인 목걸이"},
+                {"ACCESSORY", "블랙 버킷햇"}
+        };
 
-            createItemsForUser(ADMIN_ID, closetCollectionJpaRepository.findAllByUserId(ADMIN_ID).get(0), itemData, "admin", allImages, allItems);
-            createItemsForUser(USER1_ID, closetCollectionJpaRepository.findAllByUserId(USER1_ID).get(0), itemData, "user1", allImages, allItems);
-            createItemsForUser(USER2_ID, closetCollectionJpaRepository.findAllByUserId(USER2_ID).get(0), itemData, "user2", allImages, allItems);
+        createItemsForUser(ADMIN_ID, adminCol1, itemData, "admin", allImages, allItems);
+        createItemsForUser(USER1_ID, user1Col1, itemData, "user1", allImages, allItems);
+        createItemsForUser(USER2_ID, user2Col1, itemData, "user2", allImages, allItems);
 
-            clothingImageJpaRepository.saveAll(allImages);
-            closetItemJpaRepository.saveAll(allItems);
-            log.info("  → 옷장 아이템 총 {}개 생성 완료", allItems.size());
-        }
+        clothingImageJpaRepository.saveAll(allImages);
+        closetItemJpaRepository.saveAll(allItems);
+        log.info("  → 옷장 아이템 총 {}개 생성 완료 (유저당 10개)", allItems.size());
 
         // ==========================================
         // 4. 게시물 생성 (공개 게시물)
@@ -129,7 +121,6 @@ public class DataInitializer implements CommandLineRunner {
         List<Post> posts = new ArrayList<>();
 
         String[][] postData = {
-                // {userId index, caption, imageUrl}
                 {"1", "오늘의 출근룩 #OOTD 🌸", "/uploads/images/sample/post_01.jpg"},
                 {"1", "주말 카페 나들이 ☕️", "/uploads/images/sample/post_02.jpg"},
                 {"1", "봄맞이 새 자켓 득템!", "/uploads/images/sample/post_03.jpg"},
@@ -152,11 +143,10 @@ public class DataInitializer implements CommandLineRunner {
                     .status(PostStatus.COMPLETED)
                     .caption(caption)
                     .isPublic(true)
-                    .likeCount(0) // 실제 PostLike 수량에 따라 증가
+                    .likeCount(0)
                     .viewCount((int) (Math.random() * 200))
                     .build();
 
-            // 각 게시물에 이미지 2장씩 추가
             PostImage img1 = PostImage.builder()
                     .post(post)
                     .imageUrl(imageUrl)
@@ -181,19 +171,15 @@ public class DataInitializer implements CommandLineRunner {
         // ==========================================
         List<PostLike> likes = new ArrayList<>();
         
-        // USER1(정찬우)은 모든 게시물에 좋아요
-        // USER2(이우석)는 홀수 번째 게시물에만 좋아요
         for (int i = 0; i < posts.size(); i++) {
             Post post = posts.get(i);
             
-            // USER1 좋아요 추가
             likes.add(PostLike.builder()
                     .postId(post.getPostId())
                     .userId(USER1_ID)
                     .build());
             post.incrementLikeCount();
             
-            // USER2 좋아요 추가
             if (i % 2 != 0) {
                 likes.add(PostLike.builder()
                         .postId(post.getPostId())
@@ -204,7 +190,7 @@ public class DataInitializer implements CommandLineRunner {
         }
         
         postLikeJpaRepository.saveAll(likes);
-        postJpaRepository.saveAll(posts); // likeCount가 변경되었으므로 다시 반영
+        postJpaRepository.saveAll(posts);
         log.info("  → 게시물 좋아요(Like) {}개 생성 완료", likes.size());
 
         // ==========================================
