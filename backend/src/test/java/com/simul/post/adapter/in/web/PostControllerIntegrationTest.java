@@ -62,7 +62,7 @@ public class PostControllerIntegrationTest {
                 "images", "test2.jpg", MediaType.IMAGE_JPEG_VALUE, "dummy image content 2".getBytes());
 
         // when
-        mockMvc.perform(multipart(HttpMethod.POST, "/api/posts")
+        mockMvc.perform(multipart(HttpMethod.POST, "/posts")
                         .file(image1)
                         .file(image2)
                         .param("caption", "테스트 캡션입니다.")
@@ -97,7 +97,7 @@ public class PostControllerIntegrationTest {
                 "images", "test1.jpg", MediaType.IMAGE_JPEG_VALUE, "dummy".getBytes());
 
         // when & then
-        mockMvc.perform(multipart(HttpMethod.POST, "/api/posts")
+        mockMvc.perform(multipart(HttpMethod.POST, "/posts")
                         .file(image1)
                         .with(csrf()))
                 .andDo(print())
