@@ -22,7 +22,7 @@ export default function PostDetailPage() {
   useEffect(() => {
     async function loadPost() {
       try {
-        const data = await getPostDetail(postId);
+        const data = await getPostDetail(postId) as any;
         setPost(data);
         setIsLiked(data.isLiked);
         setLikeCount(data.likeCount);
