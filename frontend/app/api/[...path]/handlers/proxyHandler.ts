@@ -12,10 +12,14 @@ export async function proxyHandler(req: NextRequest, path: string[]) {
   const targetUrl = BACKEND_URL + '/' + path.join('/') + req.nextUrl.search;
   
   try {
+    const incomingHeaders = Object.fromEntries(req.headers.entries());
+    // content-type 중복 방지: 원본에서 제거 후 명시적으로 설정
+    delete incomingHeaders['content-type'];
+
     const fetchOptions: RequestInit = {
       method: req.method,
       headers: {
-        ...Object.fromEntries(req.headers.entries()),
+        ...incomingHeaders,
         host: new URL(BACKEND_URL).host,
         'Content-Type': req.headers.get('Content-Type') || 'application/json',
       },
