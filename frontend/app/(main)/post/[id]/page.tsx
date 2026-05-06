@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toggleLike, getPostDetail } from '../../../../lib/api/feedAPI';
 import { useAuthStore } from '../../../../lib/stores/useAuthStore';
@@ -16,8 +16,10 @@ export default function PostDetailPage() {
   const [likeCount, setLikeCount] = useState(0);
   
   const params = useParams();
+  const router = useRouter();
   const postId = params.id as string;
   const { isAuthenticated } = useAuthStore();
+  const [currentImgIndex, setCurrentImgIndex] = useState(0);
 
   useEffect(() => {
     async function loadPost() {
@@ -78,17 +80,48 @@ export default function PostDetailPage() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <Link href="/" className={styles.iconBtn} aria-label="뒤로가기">
+        <button onClick={() => router.back()} className={styles.iconBtn} aria-label="뒤로가기">
           <img src="/icons/arrow-left.png" alt="Back" className={styles.icon} />
-        </Link>
+        </button>
         <button className={styles.iconBtn} aria-label="공유하기">
           <img src="/icons/square.and.arrow.up.png" alt="Share" className={styles.icon} />
         </button>
       </div>
 
       <div className={styles.postDetail}>
-        <div className={styles.postImage}>
-          <img src={post.images && post.images.length > 0 ? post.images[0] : "/dummy.jpg"} alt="게시물 이미지" className={styles.image} />
+        <div className={styles.imageCarouselContainer}>
+          <div 
+            className={styles.imageCarousel}
+            onScroll={(e) => {
+              const scrollLeft = e.currentTarget.scrollLeft;
+              const width = e.currentTarget.clientWidth;
+              if (width > 0) {
+                setCurrentImgIndex(Math.round(scrollLeft / width));
+              }
+            }}
+          >
+            {post.images && post.images.length > 0 ? (
+              post.images.map((url: string, idx: number) => (
+                <div key={idx} className={styles.imageSlide}>
+                  <img src={url} alt={`게시물 이미지 ${idx + 1}`} className={styles.image} />
+                </div>
+              ))
+            ) : (
+              <div className={styles.imageSlide}>
+                <img src="/dummy.jpg" alt="기본 이미지" className={styles.image} />
+              </div>
+            )}
+          </div>
+          {post.images && post.images.length > 1 && (
+            <div className={styles.carouselIndicators}>
+              {post.images.map((_: any, idx: number) => (
+                <div 
+                  key={idx} 
+                  className={`${styles.indicator} ${currentImgIndex === idx ? styles.indicatorActive : ''}`} 
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         <div className={styles.contentSection}>
