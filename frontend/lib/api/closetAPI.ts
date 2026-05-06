@@ -86,8 +86,8 @@ export interface ClosetCollectionListResponse {
 }
 
 /** 컬렉션(폴더) 추가 */
-export async function addClosetCollection(formData: FormData) {
-  return apiClient('/closet/collections', {
+export async function addClosetCollection(formData: FormData): Promise<string> {
+  return apiClient<string>('/closet/collections', {
     method: 'POST',
     body: formData,
   });
