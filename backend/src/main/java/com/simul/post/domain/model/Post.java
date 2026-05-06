@@ -91,4 +91,8 @@ public class Post extends BaseJpaEntity {
             this.likeCount--;
         }
     }
+
+    public void incrementViewCount() {
+        this.viewCount++;
+    }
 }
