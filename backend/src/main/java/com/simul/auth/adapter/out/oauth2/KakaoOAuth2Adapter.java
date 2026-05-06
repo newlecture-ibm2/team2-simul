@@ -51,9 +51,12 @@ public class KakaoOAuth2Adapter implements OAuth2ProviderPort {
 
             // 2단계: Access Token → 사용자 정보
             return fetchUserProfile(accessToken);
-        } catch (BusinessException e) {
-            throw e;
+        } catch (org.springframework.web.client.RestClientResponseException e) {
+            System.err.println("[카카오 에러 응답] " + e.getResponseBodyAsString());
+            throw new BusinessException(ErrorCode.OAUTH2_FAILED,
+                "카카오 로그인 처리 중 오류: " + e.getResponseBodyAsString());
         } catch (Exception e) {
+            e.printStackTrace();
             throw new BusinessException(ErrorCode.OAUTH2_FAILED,
                 "카카오 로그인 처리 중 오류: " + e.getMessage());
         }
