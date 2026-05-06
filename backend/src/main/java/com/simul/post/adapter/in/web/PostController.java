@@ -2,8 +2,10 @@ package com.simul.post.adapter.in.web;
 
 import com.simul.post.application.dto.CreatePostCommand;
 import com.simul.post.application.dto.FeedPostResponse;
+import com.simul.post.application.dto.ToggleLikeResponse;
 import com.simul.post.application.port.in.CreatePostUseCase;
 import com.simul.post.application.port.in.GetFeedPostsUseCase;
+import com.simul.post.application.port.in.TogglePostLikeUseCase;
 import com.simul.post.domain.model.Post;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,12 +22,13 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/posts")
+@RequestMapping("/posts")
 @RequiredArgsConstructor
 public class PostController {
 
     private final CreatePostUseCase createPostUseCase;
     private final GetFeedPostsUseCase getFeedPostsUseCase;
+    private final TogglePostLikeUseCase togglePostLikeUseCase;
 
     @PostMapping
     public ResponseEntity<?> createPost(
@@ -73,4 +76,27 @@ public class PostController {
         Page<FeedPostResponse> posts = getFeedPostsUseCase.getFeedPosts(userId, tab, sort, pageable);
         return ResponseEntity.ok(posts);
     }
+
+    /**
+     * 좋아요 토글 (POST /posts/{postId}/likes)
+     * - 로그인 필수 (비로그인 시 ERR-304-A)
+     * - 좋아요 ↔ 취소 토글 동작
+     */
+    @PostMapping("/{postId}/likes")
+    public ResponseEntity<?> toggleLike(
+            @AuthenticationPrincipal UUID userId,
+            @PathVariable UUID postId
+    ) {
+        // 비로그인 사용자 차단 (ERR-304-A)
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "error_code", "ERR-304-A",
+                    "message", "좋아요를 누르려면 로그인이 필요합니다."
+            ));
+        }
+
+        ToggleLikeResponse response = togglePostLikeUseCase.toggleLike(postId, userId);
+        return ResponseEntity.ok(response);
+    }
 }
+

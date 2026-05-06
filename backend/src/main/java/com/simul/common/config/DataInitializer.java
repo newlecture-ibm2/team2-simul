@@ -8,8 +8,10 @@ import com.simul.closet.domain.model.ClosetCollection;
 import com.simul.closet.domain.model.ClosetItem;
 import com.simul.closet.domain.model.ClothingImage;
 import com.simul.post.adapter.out.persistence.PostJpaRepository;
+import com.simul.post.adapter.out.persistence.PostLikeJpaRepository;
 import com.simul.post.domain.model.Post;
 import com.simul.post.domain.model.PostImage;
+import com.simul.post.domain.model.PostLike;
 import com.simul.post.domain.model.PostStatus;
 import com.simul.user.adapter.out.persistence.UserJpaEntity;
 import com.simul.user.adapter.out.persistence.UserJpaRepository;
@@ -44,6 +46,7 @@ public class DataInitializer implements CommandLineRunner {
     private final ClosetItemJpaRepository closetItemJpaRepository;
     private final ClosetCollectionJpaRepository closetCollectionJpaRepository;
     private final PostJpaRepository postJpaRepository;
+    private final PostLikeJpaRepository postLikeJpaRepository;
 
     // 고정 UUID (개발 시 참조 편의용)
     private static final UUID ADMIN_ID  = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -143,7 +146,7 @@ public class DataInitializer implements CommandLineRunner {
                     .status(PostStatus.COMPLETED)
                     .caption(caption)
                     .isPublic(true)
-                    .likeCount((int) (Math.random() * 50))
+                    .likeCount(0) // 실제 PostLike 수량에 따라 증가
                     .viewCount((int) (Math.random() * 200))
                     .build();
 
@@ -166,6 +169,37 @@ public class DataInitializer implements CommandLineRunner {
 
         postJpaRepository.saveAll(posts);
         log.info("  → 게시물 {}개 생성 완료 (각 2장 이미지 포함)", posts.size());
+
+        // ==========================================
+        // 5. 좋아요(PostLike) 생성
+        // ==========================================
+        List<PostLike> likes = new ArrayList<>();
+        
+        // USER1(정찬우)은 모든 게시물에 좋아요
+        // USER2(이우석)는 홀수 번째 게시물에만 좋아요
+        for (int i = 0; i < posts.size(); i++) {
+            Post post = posts.get(i);
+            
+            // USER1 좋아요 추가
+            likes.add(PostLike.builder()
+                    .postId(post.getPostId())
+                    .userId(USER1_ID)
+                    .build());
+            post.incrementLikeCount();
+            
+            // USER2 좋아요 추가
+            if (i % 2 != 0) {
+                likes.add(PostLike.builder()
+                        .postId(post.getPostId())
+                        .userId(USER2_ID)
+                        .build());
+                post.incrementLikeCount();
+            }
+        }
+        
+        postLikeJpaRepository.saveAll(likes);
+        postJpaRepository.saveAll(posts); // likeCount가 변경되었으므로 다시 반영
+        log.info("  → 게시물 좋아요(Like) {}개 생성 완료", likes.size());
 
         // ==========================================
         // 완료 로그

@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { toggleLike } from '../../../../lib/api/feedAPI';
+import { useAuthStore } from '../../../../lib/stores/useAuthStore';
 import styles from './PostCard.module.css';
 
 interface PostCardProps {
@@ -27,14 +29,33 @@ export default function PostCard({
 }: PostCardProps) {
   const [isLiked, setIsLiked] = useState(initialLiked);
   const [currentLikeCount, setCurrentLikeCount] = useState(likeCount);
+  const { isAuthenticated } = useAuthStore();
   const displayImage = imageUrl || '/dummy.jpg';
 
-  const handleLike = (e: React.MouseEvent) => {
+  const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
+
+    if (!isAuthenticated) {
+      // TODO: 추후 바텀시트 UI로 변경
+      alert('좋아요를 누르려면 로그인이 필요합니다.');
+      return;
+    }
+
+    const previousIsLiked = isLiked;
+    const previousLikeCount = currentLikeCount;
+
     // 낙관적 업데이트
-    setIsLiked(!isLiked);
-    setCurrentLikeCount(prev => isLiked ? prev - 1 : prev + 1);
-    // TODO: toggleLike API 호출 + 실패 시 롤백
+    setIsLiked(!previousIsLiked);
+    setCurrentLikeCount(prev => previousIsLiked ? prev - 1 : prev + 1);
+    
+    try {
+      await toggleLike(postId);
+    } catch (error) {
+      // 실패 시 롤백
+      setIsLiked(previousIsLiked);
+      setCurrentLikeCount(previousLikeCount);
+      console.error('좋아요 토글 실패:', error);
+    }
   };
   
   return (
