@@ -75,8 +75,8 @@ function ClosetPageContent() {
 
   const addCollectionMutation = useMutation({
     mutationFn: (formData: FormData) => addClosetCollection(formData),
-    onSuccess: (data: any) => {
-      const collectionId = typeof data === 'string' ? data : data?.id;
+    onSuccess: (data: string) => {
+      const collectionId = data;
       console.log('Collection created with ID:', collectionId);
       queryClient.invalidateQueries({ queryKey: ['closetCollections'] });
       if (collectionId) setEditingFolderId(collectionId);
@@ -107,7 +107,7 @@ function ClosetPageContent() {
     addCollectionMutation.mutate(formData);
   };
 
-  const handleRenameFolder = (id: string, newTitle: string) => {
+  const handleRenameFolder = (_id: string, _newTitle: string) => {
     // TODO: 폴더 이름 변경 PATCH API 호출 필요
     setEditingFolderId(null);
   };
