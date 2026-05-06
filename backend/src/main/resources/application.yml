@@ -37,3 +37,10 @@ springdoc:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+# === 커스텀 저장소 설정 ===
+simul:
+  storage:
+    local:
+      path: ./uploads/images/
+      url-prefix: /uploads/images/
