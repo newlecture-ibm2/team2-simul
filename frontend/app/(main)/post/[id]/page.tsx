@@ -1,8 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useParams } from 'next/navigation';
 import Button from '@/components/Button';
 import Link from 'next/link';
+import { toggleLike } from '../../../../lib/api/feedAPI';
+import { useAuthStore } from '../../../../lib/stores/useAuthStore';
 import styles from './page.module.css';
 
 const DUMMY_COMMENTS = [
@@ -14,10 +17,31 @@ const DUMMY_COMMENTS = [
 export default function PostDetailPage() {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(24);
+  const params = useParams();
+  const postId = params.id as string;
+  const { isAuthenticated } = useAuthStore();
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+  const handleLike = async () => {
+    if (!isAuthenticated) {
+      alert('좋아요를 누르려면 로그인이 필요합니다.');
+      return;
+    }
+
+    const previousIsLiked = isLiked;
+    const previousLikeCount = likeCount;
+
+    setIsLiked(!previousIsLiked);
+    setLikeCount(prev => previousIsLiked ? prev - 1 : prev + 1);
+
+    try {
+      if (postId !== 'dummy' && !postId.startsWith('dummy')) {
+         await toggleLike(postId);
+      }
+    } catch (error) {
+      setIsLiked(previousIsLiked);
+      setLikeCount(previousLikeCount);
+      console.error('좋아요 토글 실패:', error);
+    }
   };
 
   return (
