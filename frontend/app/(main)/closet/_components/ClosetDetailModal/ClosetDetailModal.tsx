@@ -6,6 +6,8 @@ import Button from '@/components/Button';
 import Link from 'next/link';
 import DeleteConfirmModal from '../DeleteConfirmModal/DeleteConfirmModal';
 import FolderMoveModal from '../FolderMoveModal/FolderMoveModal';
+import { useQuery } from '@tanstack/react-query';
+import { getClosetItem } from '@/lib/api/closetAPI';
 
 const DUMMY_FOLDERS = [
   { id: 1, title: 'shirts outfit' },
@@ -23,12 +25,28 @@ export default function ClosetDetailModal({ isOpen, onClose, itemId }: ClosetDet
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMoveModal, setShowMoveModal] = useState(false);
 
+  const { data: item, isLoading } = useQuery({
+    queryKey: ['closetItem', itemId],
+    queryFn: () => getClosetItem(itemId as string),
+    enabled: !!itemId && isOpen,
+  });
+
   if (!isOpen || itemId === null) return null;
 
   // We only show the detail modal's internal content if move/delete modals aren't active
-  // or if we want them to overlay. But the user said "modal should close".
-  // To "close" and "open" another, we need to keep the component mounted if the other modal is a child.
   const showMainContent = !showMoveModal && !showDeleteConfirm;
+
+  if (isLoading) {
+    return (
+      <div className={styles.overlay} onClick={onClose}>
+        <div className={styles.modal}>
+          <div className={styles.loading}>불러오는 중...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!item) return null;
 
   return (
     <>
@@ -42,7 +60,7 @@ export default function ClosetDetailModal({ isOpen, onClose, itemId }: ClosetDet
 
               <div className={styles.content}>
                 <div className={styles.imageSection}>
-                  <img src="/clothes.png" alt="Clothes" className={styles.detailImage} />
+                  <img src={item.imageUrl} alt="Item" className={styles.detailImage} />
                 </div>
 
                 <div className={styles.metaSection}>
@@ -50,7 +68,7 @@ export default function ClosetDetailModal({ isOpen, onClose, itemId }: ClosetDet
                     <img src="/icons/pencil.png" alt="Edit" className={styles.editIcon} />
                   </button>
                   <p className={styles.memo}>
-                    봄에 입기 좋은 화이트 티셔츠. 데일리로 자주 입는 아이템.
+                    {item.memo || '등록된 메모가 없습니다.'}
                   </p>
                 </div>
 
