@@ -11,7 +11,6 @@ spring:
 
 server:
   port: 8080
-  forward-headers-strategy: framework
 
 # === JWT 설정 ===
 # Google Vision API 인증경로는 환경변수 GOOGLE_APPLICATION_CREDENTIALS로 설정
