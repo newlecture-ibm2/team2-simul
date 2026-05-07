@@ -102,3 +102,16 @@ export async function getClosetCollections(params?: { sort?: string; page?: numb
 
   return apiClient<ClosetCollectionListResponse>('/closet/collections', { params: queryParams });
 }
+
+/** 컬렉션(폴더) 수정 */
+export async function updateClosetCollection(id: string, formData: FormData) {
+  return apiClient(`/closet/collections/${id}`, {
+    method: 'PATCH',
+    body: formData,
+  });
+}
+
+/** 컬렉션(폴더) 삭제 */
+export async function deleteClosetCollection(id: string) {
+  return apiClient(`/closet/collections/${id}`, { method: 'DELETE' });
+}

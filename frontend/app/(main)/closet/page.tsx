@@ -12,7 +12,7 @@ import ClosetAddModal from './_components/ClosetAddModal/ClosetAddModal';
 import { useClosetItems } from './_components/useClosetItems';
 import styles from './page.module.css';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { addClosetItem, addClosetCollection, getClosetCollections } from '@/lib/api/closetAPI';
+import { addClosetItem, addClosetCollection, getClosetCollections, updateClosetCollection, deleteClosetCollection } from '@/lib/api/closetAPI';
 
 // const DUMMY_FOLDERS_DATA = [
 //   { id: 1, title: 'shirts outfit', itemCount: 3, lastUpdated: '2주 전', images: [] },
@@ -107,9 +107,35 @@ function ClosetPageContent() {
     addCollectionMutation.mutate(formData);
   };
 
-  const handleRenameFolder = (_id: string, _newTitle: string) => {
-    // TODO: 폴더 이름 변경 PATCH API 호출 필요
+  const updateCollectionMutation = useMutation({
+    mutationFn: ({ id, title }: { id: string; title: string }) => {
+      const formData = new FormData();
+      formData.append('name', title);
+      return updateClosetCollection(id, formData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['closetCollections'] });
+    },
+  });
+
+  const deleteCollectionMutation = useMutation({
+    mutationFn: (id: string) => deleteClosetCollection(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['closetCollections'] });
+    },
+  });
+
+  const handleRenameFolder = (id: string | number, newTitle: string) => {
+    if (newTitle.trim()) {
+      updateCollectionMutation.mutate({ id: String(id), title: newTitle.trim() });
+    }
     setEditingFolderId(null);
+  };
+
+  const handleDeleteFolder = (id: string | number) => {
+    if (confirm('이 폴더를 삭제하시겠습니까?')) {
+      deleteCollectionMutation.mutate(String(id));
+    }
   };
 
   const handleCardClick = (id: string) => {
@@ -215,7 +241,8 @@ function ClosetPageContent() {
                       images={folder.images}
                       onClick={(id) => router.push(`/closet/folders/${id}`)}
                       isEditing={editingFolderId === folder.id}
-                      onRename={(id, title) => handleRenameFolder(String(id), title)}
+                      onRename={handleRenameFolder}
+                      onDelete={handleDeleteFolder}
                     />
                   ))}
                 </div>
