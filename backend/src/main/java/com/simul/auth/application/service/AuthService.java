@@ -32,19 +32,24 @@ import java.util.stream.Collectors;
  * 4. 신규면 자동 가입, 기존이면 기존 정보 사용
  * 5. JWT Access + Refresh Token 발급
  */
+import com.simul.auth.application.port.in.EmailAuthUseCase;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 @Service
-public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase {
+public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, EmailAuthUseCase {
 
     private final Map<String, OAuth2ProviderPort> providerMap;
     private final UserPersistencePort userPersistencePort;
     private final RegisterUserUseCase registerUserUseCase;
     private final JwtTokenProvider jwtTokenProvider;
+    private final PasswordEncoder passwordEncoder;
 
     public AuthService(
         List<OAuth2ProviderPort> providers,
         UserPersistencePort userPersistencePort,
         RegisterUserUseCase registerUserUseCase,
-        JwtTokenProvider jwtTokenProvider
+        JwtTokenProvider jwtTokenProvider,
+        PasswordEncoder passwordEncoder
     ) {
         // 제공자 이름으로 빠르게 찾을 수 있도록 Map으로 변환
         // { "kakao": KakaoAdapter, "naver": NaverAdapter, "google": GoogleAdapter }
@@ -53,6 +58,7 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase {
         this.userPersistencePort = userPersistencePort;
         this.registerUserUseCase = registerUserUseCase;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -131,5 +137,41 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase {
                 .role(AuthRole.valueOf(user.getRole().name()))
                 .isActive(user.isActive())
                 .build();
+    }
+
+    @Override
+    public TokenResponse emailSignup(String email, String password, String name, String nickname, com.simul.user.domain.model.Gender gender) {
+        // 비밀번호 암호화
+        String encodedPassword = passwordEncoder.encode(password);
+        
+        // 회원가입
+        User user = registerUserUseCase.registerEmailUser(email, encodedPassword, nickname, name, gender);
+        
+        // JWT 발급
+        AuthUser authUser = mapToAuthUser(user);
+        String accessToken = jwtTokenProvider.createAccessToken(authUser.getUserId(), authUser.getRole().name());
+        String refreshToken = jwtTokenProvider.createRefreshToken(authUser.getUserId());
+        
+        return new TokenResponse(accessToken, refreshToken, true);
+    }
+
+    @Override
+    public TokenResponse emailLogin(String email, String password) {
+        User user = userPersistencePort.findByProviderAndProviderId("email", email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND, "가입되지 않은 이메일입니다."));
+                
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "비밀번호가 일치하지 않습니다.");
+        }
+        
+        AuthUser authUser = mapToAuthUser(user);
+        if (!authUser.canLogin()) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND, "정지 또는 탈퇴된 계정입니다.");
+        }
+        
+        String accessToken = jwtTokenProvider.createAccessToken(authUser.getUserId(), authUser.getRole().name());
+        String refreshToken = jwtTokenProvider.createRefreshToken(authUser.getUserId());
+        
+        return new TokenResponse(accessToken, refreshToken, false);
     }
 }

@@ -27,7 +27,11 @@ export async function proxyHandler(req: NextRequest, path: string[]) {
       cache: 'no-store',
     };
 
-    // TODO: iron-session 도입 시 여기서 JWT 추출하여 Authorization 헤더 주입
+    // 🔑 쿠키에서 accessToken 추출하여 Authorization 헤더 주입 (AUTH-011)
+    const accessToken = req.cookies.get('accessToken')?.value;
+    if (accessToken) {
+      headers.set('Authorization', `Bearer ${accessToken}`);
+    }
 
     if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) {
       fetchOptions.body = req.body;

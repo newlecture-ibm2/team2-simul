@@ -4,6 +4,9 @@ import com.simul.auth.application.dto.SocialLoginCommand;
 import com.simul.auth.application.dto.TokenResponse;
 import com.simul.auth.application.port.in.RefreshTokenUseCase;
 import com.simul.auth.application.port.in.SocialLoginUseCase;
+import com.simul.auth.application.dto.EmailLoginCommand;
+import com.simul.auth.application.dto.EmailSignupCommand;
+import com.simul.auth.application.port.in.EmailAuthUseCase;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,13 +26,16 @@ public class AuthController {
 
     private final SocialLoginUseCase socialLoginUseCase;
     private final RefreshTokenUseCase refreshTokenUseCase;
+    private final EmailAuthUseCase emailAuthUseCase;
 
     public AuthController(
         SocialLoginUseCase socialLoginUseCase,
-        RefreshTokenUseCase refreshTokenUseCase
+        RefreshTokenUseCase refreshTokenUseCase,
+        EmailAuthUseCase emailAuthUseCase
     ) {
         this.socialLoginUseCase = socialLoginUseCase;
         this.refreshTokenUseCase = refreshTokenUseCase;
+        this.emailAuthUseCase = emailAuthUseCase;
     }
 
     /**
@@ -56,6 +62,20 @@ public class AuthController {
     ) {
         TokenResponse tokenResponse = socialLoginUseCase.socialLogin(command);
         return ResponseEntity.ok(tokenResponse);
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<TokenResponse> emailSignup(@RequestBody EmailSignupCommand command) {
+        TokenResponse response = emailAuthUseCase.emailSignup(
+            command.email(), command.password(), command.name(), command.nickname(), command.gender()
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/login/email")
+    public ResponseEntity<TokenResponse> emailLogin(@RequestBody EmailLoginCommand command) {
+        TokenResponse response = emailAuthUseCase.emailLogin(command.email(), command.password());
+        return ResponseEntity.ok(response);
     }
 
     /**
