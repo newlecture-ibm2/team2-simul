@@ -29,6 +29,7 @@ public class PostController {
     private final CreatePostUseCase createPostUseCase;
     private final GetFeedPostsUseCase getFeedPostsUseCase;
     private final TogglePostLikeUseCase togglePostLikeUseCase;
+    private final com.simul.post.application.port.in.GetPostDetailUseCase getPostDetailUseCase;
 
     @PostMapping
     public ResponseEntity<?> createPost(
@@ -97,6 +98,34 @@ public class PostController {
 
         ToggleLikeResponse response = togglePostLikeUseCase.toggleLike(postId, userId);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 게시물 상세 조회 (GET /posts/{postId})
+     * - 공개 게시물: 누구나 열람 가능 (비로그인 포함)
+     * - 비공개 게시물: 작성자 본인만 열람 가능
+     */
+    @GetMapping("/{postId}")
+    public ResponseEntity<?> getPostDetail(
+            @AuthenticationPrincipal UUID userId,
+            @PathVariable UUID postId
+    ) {
+        try {
+            com.simul.post.application.dto.PostDetailResponse response = 
+                getPostDetailUseCase.getPostDetail(postId, userId);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage().contains("ERR-002")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                        "error_code", "ERR-002",
+                        "message", e.getMessage()
+                ));
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "error_code", "ERR-003",
+                    "message", e.getMessage()
+            ));
+        }
     }
 }
 

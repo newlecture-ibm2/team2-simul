@@ -47,6 +47,7 @@ services:
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
     volumes:
       - ./vision-key.json:/app/vision-key.json:ro
+      - simul-uploads:/app/uploads
     depends_on:
       - db
     networks:
@@ -72,6 +73,8 @@ services:
 volumes:
   simul-db-data:
     name: simul-db-data
+  simul-uploads:
+    name: simul-uploads
 
 networks:
   simul-network:
