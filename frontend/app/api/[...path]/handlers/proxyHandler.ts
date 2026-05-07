@@ -1,4 +1,6 @@
 import { NextRequest } from 'next/server';
+import { getIronSession } from 'iron-session';
+import { sessionOptions, SessionData } from '@/lib/session';
 
 /**
  * BFF 프록시 핸들러
@@ -27,7 +29,12 @@ export async function proxyHandler(req: NextRequest, path: string[]) {
       cache: 'no-store',
     };
 
-    // TODO: iron-session 도입 시 여기서 JWT 추출하여 Authorization 헤더 주입
+    // iron-session을 통해 세션의 JWT 추출 후 Authorization 헤더 주입
+    const res = new Response();
+    const session = await getIronSession<SessionData>(req, res, sessionOptions);
+    if (session.user?.token) {
+      headers.set('Authorization', `Bearer ${session.user.token}`);
+    }
 
     if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) {
       fetchOptions.body = req.body;
