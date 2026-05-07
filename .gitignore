@@ -4,4 +4,4 @@ backend/build/
 docker-compose.override.yml
 *-key.json
 *credentials*.json
-backend/uploads/
+backend/uploads/*`n!backend/uploads/images/`nbackend/uploads/images/*`n!backend/uploads/images/sample/
