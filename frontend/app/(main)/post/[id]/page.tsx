@@ -7,8 +7,22 @@ import { toggleLike, getPostDetail } from '../../../../lib/api/feedAPI';
 import { useAuthStore } from '../../../../lib/stores/useAuthStore';
 import styles from './page.module.css';
 
+export interface PostDetailData {
+  postId: string;
+  userId: string;
+  nickname: string;
+  profileImageUrl: string | null;
+  images: string[];
+  tags: string[];
+  caption: string;
+  likeCount: number;
+  viewCount: number;
+  isLiked: boolean;
+  createdAt: string;
+}
+
 export default function PostDetailPage() {
-  const [post, setPost] = useState<any>(null);
+  const [post, setPost] = useState<PostDetailData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -24,12 +38,13 @@ export default function PostDetailPage() {
   useEffect(() => {
     async function loadPost() {
       try {
-        const data = await getPostDetail(postId) as any;
+        const data = await getPostDetail(postId) as PostDetailData;
         setPost(data);
         setIsLiked(data.isLiked);
         setLikeCount(data.likeCount);
-      } catch (err: any) {
-        if (err.message.includes('403') || err.message.includes('404') || err.message.includes('ERR-002') || err.message.includes('ERR-003')) {
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        if (errorMsg.includes('403') || errorMsg.includes('404') || errorMsg.includes('ERR-002') || errorMsg.includes('ERR-003')) {
            setError('접근할 수 없거나 삭제된 게시물입니다.');
         } else {
            setError('게시물을 불러오는데 실패했습니다.');
@@ -114,7 +129,7 @@ export default function PostDetailPage() {
           </div>
           {post.images && post.images.length > 1 && (
             <div className={styles.carouselIndicators}>
-              {post.images.map((_: any, idx: number) => (
+              {post.images.map((_: string, idx: number) => (
                 <div 
                   key={idx} 
                   className={`${styles.indicator} ${currentImgIndex === idx ? styles.indicatorActive : ''}`} 
