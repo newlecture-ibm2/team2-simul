@@ -19,6 +19,8 @@ public class ClosetCollectionController {
 
     private final AddCollectionUseCase addCollectionUseCase;
     private final GetCollectionsUseCase getCollectionsUseCase;
+    private final com.simul.closet.application.port.in.UpdateCollectionUseCase updateCollectionUseCase;
+    private final com.simul.closet.application.port.in.DeleteCollectionUseCase deleteCollectionUseCase;
 
     @PostMapping
     public ResponseEntity<UUID> addCollection(
@@ -60,5 +62,43 @@ public class ClosetCollectionController {
 
         ClosetCollectionListResponse response = getCollectionsUseCase.getCollections(query);
         return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{collectionId}")
+    public ResponseEntity<Void> updateCollection(
+            @PathVariable UUID collectionId,
+            @RequestParam("name") String name,
+            @RequestParam(value = "coverImageFile", required = false) MultipartFile coverImageFile
+    ) {
+        log.info("Received request to update collection: id={}, name={}", collectionId, name);
+
+        // TODO: SecurityContext에서 실제 로그인한 유저의 ID를 가져와야 함
+        UUID mockUserId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+        com.simul.closet.application.port.in.UpdateCollectionUseCase.UpdateCollectionCommand command = com.simul.closet.application.port.in.UpdateCollectionUseCase.UpdateCollectionCommand.builder()
+                .userId(mockUserId)
+                .collectionId(collectionId)
+                .name(name)
+                .coverImageFile(coverImageFile)
+                .build();
+
+        updateCollectionUseCase.updateCollection(command);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{collectionId}")
+    public ResponseEntity<Void> deleteCollection(@PathVariable UUID collectionId) {
+        log.info("Received request to delete collection: id={}", collectionId);
+
+        // TODO: SecurityContext에서 실제 로그인한 유저의 ID를 가져와야 함
+        UUID mockUserId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+        com.simul.closet.application.port.in.DeleteCollectionUseCase.DeleteCollectionCommand command = com.simul.closet.application.port.in.DeleteCollectionUseCase.DeleteCollectionCommand.builder()
+                .userId(mockUserId)
+                .collectionId(collectionId)
+                .build();
+
+        deleteCollectionUseCase.deleteCollection(command);
+        return ResponseEntity.noContent().build();
     }
 }
