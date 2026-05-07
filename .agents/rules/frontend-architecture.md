@@ -89,6 +89,20 @@ trigger: always_on
 - **추가 버튼 프레임**: 마지막 칸은 `--color-surface-sand` 배경 + 중앙 `+` 아이콘
 - **캡션 입력창**: 글자 수 카운터(`0/300`)를 textarea 내부 우측 하단에 `position: absolute`로 배치. `pointer-events: none` 적용
 
+### 11. 모바일 뷰포트(Viewport) 최적화
+- **앱 감성 UI**: Next.js 14+ 기준 `app/layout.tsx`에 반드시 명시적인 Viewport 설정을 추가할 것
+- **필수 설정**:
+  ```typescript
+  export const viewport: Viewport = {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: 'cover',
+  };
+  ```
+- 줌(Zoom)을 방지하여 모바일 앱과 같은 조작감을 유지하고, 노치 디자인(viewportFit: 'cover')에 완벽히 대응해야 함
+
 ---
 
 ## 기술 스택
