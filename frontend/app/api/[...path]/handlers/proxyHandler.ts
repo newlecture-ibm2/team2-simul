@@ -5,9 +5,8 @@ import { NextRequest } from 'next/server';
  * 브라우저 → /api/... → Spring Boot 백엔드로 프록시
  */
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080';
-
 export async function proxyHandler(req: NextRequest, path: string[]) {
+  const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080';
   // 타겟 URL 구성 (백엔드는 /api 접두사 없음)
   const targetUrl = BACKEND_URL + '/' + path.join('/') + req.nextUrl.search;
   
