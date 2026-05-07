@@ -4,14 +4,14 @@ import { useState } from 'react';
 import styles from './FolderCard.module.css';
 
 interface FolderCardProps {
-  id: number;
+  id: string | number;
   title: string;
   itemCount: number;
   lastUpdated: string;
   images: string[];
-  onClick?: (id: number) => void;
+  onClick?: (id: string | number) => void;
   isEditing?: boolean;
-  onRename?: (id: number, newTitle: string) => void;
+  onRename?: (id: string | number, newTitle: string) => void;
 }
 
 export default function FolderCard({

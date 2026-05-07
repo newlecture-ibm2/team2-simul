@@ -28,6 +28,15 @@ export function useAuth() {
       window.location.href = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}`;
       return;
     }
+
+    if (provider === 'google') {
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      const redirectUri = encodeURIComponent(`${window.location.origin}/auth/callback/google`);
+      
+      // Google 인증 페이지로 이동
+      window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=email%20profile`;
+      return;
+    }
   };
 
   return { login, isLoading };

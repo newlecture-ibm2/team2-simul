@@ -23,4 +23,14 @@ public class ClosetCollectionPersistenceAdapter implements ClosetCollectionPersi
     public ClosetCollection findById(UUID id) {
         return closetCollectionJpaRepository.findById(id).orElse(null);
     }
+
+    @Override
+    public ClosetCollection save(ClosetCollection collection) {
+        return closetCollectionJpaRepository.save(collection);
+    }
+
+    @Override
+    public org.springframework.data.domain.Page<CollectionWithCountDto> findCollectionsWithItemCount(UUID userId, org.springframework.data.domain.Pageable pageable) {
+        return closetCollectionJpaRepository.findCollectionsWithItemCount(userId, pageable);
+    }
 }

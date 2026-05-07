@@ -79,11 +79,11 @@ public class DataInitializer implements CommandLineRunner {
         // ==========================================
         // 2. 각 유저별 컬렉션 생성
         // ==========================================
-        ClosetCollection adminCol1 = createCollection(ADMIN_ID, "관리자 컬렉션", 0);
-        ClosetCollection user1Col1 = createCollection(USER1_ID, "출근룩", 0);
-        ClosetCollection user1Col2 = createCollection(USER1_ID, "데이트룩", 1);
-        ClosetCollection user2Col1 = createCollection(USER2_ID, "캐주얼", 0);
-        ClosetCollection user2Col2 = createCollection(USER2_ID, "포멀", 1);
+        ClosetCollection adminCol1 = createCollection(ADMIN_ID, "관리자 컬렉션", "/uploads/images/sample/post_07.jpg", 0);
+        ClosetCollection user1Col1 = createCollection(USER1_ID, "출근룩", "/uploads/images/sample/post_01.jpg", 0);
+        ClosetCollection user1Col2 = createCollection(USER1_ID, "데이트룩", "/uploads/images/sample/post_02.jpg", 1);
+        ClosetCollection user2Col1 = createCollection(USER2_ID, "캐주얼", "/uploads/images/sample/post_04.jpg", 0);
+        ClosetCollection user2Col2 = createCollection(USER2_ID, "포멀", "/uploads/images/sample/post_05.jpg", 1);
 
         closetCollectionJpaRepository.saveAll(List.of(adminCol1, user1Col1, user1Col2, user2Col1, user2Col2));
         log.info("  → 컬렉션 5개 생성 완료");
@@ -94,9 +94,7 @@ public class DataInitializer implements CommandLineRunner {
         List<ClothingImage> allImages = new ArrayList<>();
         List<ClosetItem> allItems = new ArrayList<>();
 
-        // 아이템 카테고리 및 메모 데이터
         String[][] itemData = {
-                // {카테고리, 메모}
                 {"TOP",       "화이트 오버핏 티셔츠"},
                 {"TOP",       "네이비 스트라이프 셔츠"},
                 {"TOP",       "블랙 크루넥 니트"},
@@ -123,7 +121,6 @@ public class DataInitializer implements CommandLineRunner {
         List<Post> posts = new ArrayList<>();
 
         String[][] postData = {
-                // {userId index, caption, imageUrl}
                 {"1", "오늘의 출근룩 #OOTD 🌸", "/uploads/images/sample/post_01.jpg"},
                 {"1", "주말 카페 나들이 ☕️", "/uploads/images/sample/post_02.jpg"},
                 {"1", "봄맞이 새 자켓 득템!", "/uploads/images/sample/post_03.jpg"},
@@ -146,11 +143,10 @@ public class DataInitializer implements CommandLineRunner {
                     .status(PostStatus.COMPLETED)
                     .caption(caption)
                     .isPublic(true)
-                    .likeCount(0) // 실제 PostLike 수량에 따라 증가
+                    .likeCount(0)
                     .viewCount((int) (Math.random() * 200))
                     .build();
 
-            // 각 게시물에 이미지 2장씩 추가
             PostImage img1 = PostImage.builder()
                     .post(post)
                     .imageUrl(imageUrl)
@@ -175,19 +171,15 @@ public class DataInitializer implements CommandLineRunner {
         // ==========================================
         List<PostLike> likes = new ArrayList<>();
         
-        // USER1(정찬우)은 모든 게시물에 좋아요
-        // USER2(이우석)는 홀수 번째 게시물에만 좋아요
         for (int i = 0; i < posts.size(); i++) {
             Post post = posts.get(i);
             
-            // USER1 좋아요 추가
             likes.add(PostLike.builder()
                     .postId(post.getPostId())
                     .userId(USER1_ID)
                     .build());
             post.incrementLikeCount();
             
-            // USER2 좋아요 추가
             if (i % 2 != 0) {
                 likes.add(PostLike.builder()
                         .postId(post.getPostId())
@@ -198,7 +190,7 @@ public class DataInitializer implements CommandLineRunner {
         }
         
         postLikeJpaRepository.saveAll(likes);
-        postJpaRepository.saveAll(posts); // likeCount가 변경되었으므로 다시 반영
+        postJpaRepository.saveAll(posts);
         log.info("  → 게시물 좋아요(Like) {}개 생성 완료", likes.size());
 
         // ==========================================
@@ -232,10 +224,11 @@ public class DataInitializer implements CommandLineRunner {
                 .build();
     }
 
-    private ClosetCollection createCollection(UUID userId, String name, int sortOrder) {
+    private ClosetCollection createCollection(UUID userId, String name, String coverImageUrl, int sortOrder) {
         return ClosetCollection.builder()
                 .userId(userId)
                 .name(name)
+                .coverImageUrl(coverImageUrl)
                 .sortOrder(sortOrder)
                 .build();
     }
