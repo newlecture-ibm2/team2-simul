@@ -15,8 +15,15 @@ const DUMMY_POSTS = [
   { id: 105, imageUrl: '/hero-5.jpg', authorName: '사나', authorAvatar: '/recent.jpg' },
 ];
 
+interface SwipePost {
+  id: string | number;
+  imageUrl: string;
+  authorName: string;
+  authorAvatar: string;
+}
+
 export default function SwipeDeck() {
-  const [posts, setPosts] = useState<any[]>(DUMMY_POSTS);
+  const [posts, setPosts] = useState<SwipePost[]>(DUMMY_POSTS);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
