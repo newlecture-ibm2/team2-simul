@@ -12,20 +12,15 @@ export async function proxyHandler(req: NextRequest, path: string[]) {
   const targetUrl = BACKEND_URL + '/' + path.join('/') + req.nextUrl.search;
   
   try {
-    // 원본 헤더를 복사하되, 프록시에서 문제를 일으키는 헤더는 제거
+    // 원본 헤더를 복사하되, host 헤더는 백엔드에 맞게 변경
     const headers = new Headers(req.headers);
     headers.set('host', new URL(BACKEND_URL).host);
-    // content-length는 body를 arrayBuffer로 변환하면 달라질 수 있으므로 제거
-    headers.delete('content-length');
-    // transfer-encoding도 프록시 환경에서 충돌 가능
-    headers.delete('transfer-encoding');
 
     // ⚠️ Content-Type을 절대 덮어쓰지 않음!
     // multipart/form-data의 경우 브라우저가 생성한 boundary가 포함되어 있어야 함
     // 예: "multipart/form-data; boundary=----WebKitFormBoundary..."
-    // 이걸 임의로 바꾸면 백엔드가 파일 데이터를 파싱할 수 없음
 
-    const fetchOptions: RequestInit = {
+    const fetchOptions: RequestInit & { duplex?: 'half' } = {
       method: req.method,
       headers,
       redirect: 'manual',
@@ -34,11 +29,9 @@ export async function proxyHandler(req: NextRequest, path: string[]) {
 
     // TODO: iron-session 도입 시 여기서 JWT 추출하여 Authorization 헤더 주입
 
-    if (req.method !== 'GET' && req.method !== 'HEAD') {
-      const body = await req.arrayBuffer();
-      if (body.byteLength > 0) {
-        fetchOptions.body = body;
-      }
+    if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) {
+      fetchOptions.body = req.body;
+      fetchOptions.duplex = 'half'; // Node.js 18+ fetch에서 ReadableStream을 body로 보낼 때 필수
     }
 
     const response = await fetch(targetUrl, fetchOptions);

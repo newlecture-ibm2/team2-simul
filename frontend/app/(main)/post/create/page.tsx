@@ -221,6 +221,10 @@ export default function PostCreatePage() {
 
       {/* Public Toggle */}
       <div className={styles.publicToggleRow}>
+        <div className={styles.toggleTextContainer}>
+          <span className={styles.toggleLabel}>커뮤니티 피드에 공유하기</span>
+          <span className={styles.toggleSubLabel}>(체크 해제 시 내 프로필에서 나만 보기)</span>
+        </div>
         <label className={styles.toggleSwitch}>
           <input
             type="checkbox"
@@ -229,7 +233,6 @@ export default function PostCreatePage() {
           />
           <span className={styles.toggleSlider} />
         </label>
-        <span className={styles.toggleLabel}>전체 공개</span>
       </div>
 
       {/* Submit */}

@@ -25,9 +25,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 
+import com.simul.post.application.port.in.GetPostDetailUseCase;
+import com.simul.post.application.dto.PostDetailResponse;
+// ... imports handled below by inserting at class declaration
+
 @Service
 @RequiredArgsConstructor
-public class PostService implements CreatePostUseCase, GetFeedPostsUseCase {
+public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetPostDetailUseCase {
 
     private final PostRepositoryPort postRepositoryPort;
     private final PostLikePersistencePort postLikePersistencePort;
@@ -36,6 +40,7 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase {
     private final LoadUserUseCase loadUserUseCase;
     private final LoadTagsUseCase loadTagsUseCase;
 
+    // ... existing createPost method ...
     @Override
     @Transactional
     public Post createPost(CreatePostCommand command) {
@@ -141,5 +146,69 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase {
                     post.getCreatedAt()
             );
         });
+    }
+
+    @Override
+    @Transactional
+    public PostDetailResponse getPostDetail(UUID postId, UUID currentUserId) {
+        Post post = postRepositoryPort.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("ERR-003: 찾을 수 없는 콘텐츠입니다."));
+
+        // 1. 블라인드된 게시물 접근 차단
+        if (Boolean.TRUE.equals(post.getIsBlinded())) {
+            throw new IllegalArgumentException("ERR-003: 찾을 수 없는 콘텐츠입니다."); // 보안상 404와 동일하게 처리
+        }
+
+        // 2. 비공개 게시물 접근 권한 검증
+        if (Boolean.FALSE.equals(post.getIsPublic())) {
+            if (currentUserId == null || !currentUserId.equals(post.getUserId())) {
+                throw new IllegalArgumentException("ERR-002: 비공개 게시물은 작성자만 볼 수 있습니다.");
+            }
+        }
+
+        // 3. 조회수 증가 (Transaction 안에서 관리됨)
+        post.incrementViewCount();
+        postRepositoryPort.save(post); // JPA 더티 체킹으로 업데이트 되지만 명시적 호출
+
+        // 4. 작성자 정보 조회 (존재하지 않는 사용자일 경우 예외 처리하여 알 수 없음으로 표시)
+        String nickname = "알 수 없음";
+        String profileImageUrl = null;
+        try {
+            UserResponse author = loadUserUseCase.loadUser(post.getUserId());
+            nickname = author.nickname();
+            profileImageUrl = author.profileImageUrl();
+        } catch (com.simul.common.exception.BusinessException e) {
+            // 사용자가 삭제되었거나 더미 데이터인 경우
+        }
+
+        // 5. 이미지 URL 목록 추출 (sortOrder 기준으로 정렬)
+        List<String> imageUrls = post.getImages().stream()
+                .sorted(Comparator.comparing(PostImage::getSortOrder))
+                .map(PostImage::getImageUrl)
+                .toList();
+
+        // 6. 태그 조회
+        List<String> tags = loadTagsUseCase.loadTagsByPostIds(List.of(postId))
+                .getOrDefault(postId, Collections.emptyList());
+
+        // 7. 좋아요 여부 확인
+        boolean isLiked = false;
+        if (currentUserId != null) {
+            isLiked = postLikePersistencePort.findByPostIdAndUserId(postId, currentUserId).isPresent();
+        }
+
+        return new PostDetailResponse(
+                post.getPostId(),
+                post.getUserId(),
+                nickname,
+                profileImageUrl,
+                imageUrls,
+                tags,
+                post.getCaption(),
+                post.getLikeCount(),
+                post.getViewCount(),
+                isLiked,
+                post.getCreatedAt()
+        );
     }
 }

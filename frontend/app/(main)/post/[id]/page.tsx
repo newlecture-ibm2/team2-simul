@@ -1,19 +1,50 @@
 'use client';
 
-import { useState } from 'react';
-import { useParams } from 'next/navigation';
-import Button from '@/components/Button';
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { toggleLike } from '../../../../lib/api/feedAPI';
+import { toggleLike, getPostDetail } from '../../../../lib/api/feedAPI';
 import { useAuthStore } from '../../../../lib/stores/useAuthStore';
 import styles from './page.module.css';
 
 export default function PostDetailPage() {
+  const [post, setPost] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(24);
+  const [likeCount, setLikeCount] = useState(0);
+  
   const params = useParams();
+  const router = useRouter();
   const postId = params.id as string;
   const { isAuthenticated } = useAuthStore();
+  const [currentImgIndex, setCurrentImgIndex] = useState(0);
+
+  useEffect(() => {
+    async function loadPost() {
+      try {
+        const data = await getPostDetail(postId) as any;
+        setPost(data);
+        setIsLiked(data.isLiked);
+        setLikeCount(data.likeCount);
+      } catch (err: any) {
+        if (err.message.includes('403') || err.message.includes('404') || err.message.includes('ERR-002') || err.message.includes('ERR-003')) {
+           setError('접근할 수 없거나 삭제된 게시물입니다.');
+        } else {
+           setError('게시물을 불러오는데 실패했습니다.');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    if (postId && postId !== 'dummy') {
+      loadPost();
+    } else {
+      setIsLoading(false);
+    }
+  }, [postId]);
 
   const handleLike = async () => {
     if (!isAuthenticated) {
@@ -31,44 +62,93 @@ export default function PostDetailPage() {
       if (postId !== 'dummy' && !postId.startsWith('dummy')) {
          await toggleLike(postId);
       }
-    } catch (error) {
+    } catch (err) {
       setIsLiked(previousIsLiked);
       setLikeCount(previousLikeCount);
-      console.error('좋아요 토글 실패:', error);
+      console.error('좋아요 토글 실패:', err);
     }
   };
 
+  if (isLoading) return <div className={styles.container}><div style={{padding: '20px', textAlign: 'center'}}>로딩 중...</div></div>;
+  if (error) return <div className={styles.container}><div style={{padding: '20px', textAlign: 'center', color: 'red'}}>{error}</div></div>;
+  if (!post) return null;
+
+  // format date roughly
+  const dateObj = new Date(post.createdAt);
+  const dateStr = `${dateObj.getFullYear()}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
+
   return (
     <div className={styles.container}>
-      {/* Top Header Icons Overlay */}
       <div className={styles.header}>
-        <Link href="/" className={styles.iconBtn} aria-label="뒤로가기">
+        <button onClick={() => router.back()} className={styles.iconBtn} aria-label="뒤로가기">
           <img src="/icons/arrow-left.png" alt="Back" className={styles.icon} />
-        </Link>
+        </button>
         <button className={styles.iconBtn} aria-label="공유하기">
           <img src="/icons/square.and.arrow.up.png" alt="Share" className={styles.icon} />
         </button>
       </div>
 
       <div className={styles.postDetail}>
-        <div className={styles.postImage}>
-          <img src="/dummy.jpg" alt="게시물 이미지" className={styles.image} />
+        <div className={styles.imageCarouselContainer}>
+          <div 
+            className={styles.imageCarousel}
+            onScroll={(e) => {
+              const scrollLeft = e.currentTarget.scrollLeft;
+              const width = e.currentTarget.clientWidth;
+              if (width > 0) {
+                setCurrentImgIndex(Math.round(scrollLeft / width));
+              }
+            }}
+          >
+            {post.images && post.images.length > 0 ? (
+              post.images.map((url: string, idx: number) => (
+                <div key={idx} className={styles.imageSlide}>
+                  <img src={url} alt={`게시물 이미지 ${idx + 1}`} className={styles.image} />
+                </div>
+              ))
+            ) : (
+              <div className={styles.imageSlide}>
+                <img src="/dummy.jpg" alt="기본 이미지" className={styles.image} />
+              </div>
+            )}
+          </div>
+          {post.images && post.images.length > 1 && (
+            <div className={styles.carouselIndicators}>
+              {post.images.map((_: any, idx: number) => (
+                <div 
+                  key={idx} 
+                  className={`${styles.indicator} ${currentImgIndex === idx ? styles.indicatorActive : ''}`} 
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         <div className={styles.contentSection}>
           <div className={styles.authorRow}>
-            <span className={styles.authorAvatar}>🧑</span>
+            {post.profileImageUrl ? (
+               <img src={post.profileImageUrl} alt="아바타" className={styles.authorAvatarImg} style={{width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover'}} />
+            ) : (
+               <span className={styles.authorAvatar}>🧑</span>
+            )}
             <div className={styles.authorInfo}>
-              <div className={styles.authorName}>지수</div>
-              <div className={styles.authorMeta}>2시간 전</div>
+              <div className={styles.authorName}>{post.nickname}</div>
+              <div className={styles.authorMeta}>{dateStr}</div>
             </div>
             <button className={styles.followBtn}>팔로우</button>
           </div>
 
           <p className={styles.caption}>
-            오늘 시착해본 봄 코디! 🌸 데님 자켓에 화이트 티 조합이 깔끔하게 떨어지네요.
-            AI 시착으로 미리 확인해보니 구매 고민이 줄었어요. 마음에 쏙 드는 실루엣입니다.
+            {post.caption}
           </p>
+          
+          {post.tags && post.tags.length > 0 && (
+             <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px'}}>
+                {post.tags.map((tag: string) => (
+                   <span key={tag} style={{color: 'var(--color-primary)', fontSize: '14px', fontWeight: '500'}}>#{tag}</span>
+                ))}
+             </div>
+          )}
 
           <div className={styles.stats}>
             <button className={styles.statItem} onClick={handleLike}>
@@ -77,7 +157,6 @@ export default function PostDetailPage() {
                 alt="Like" 
                 className={styles.statIcon} 
                 onError={(e) => {
-                   // Fallback if heart-filled doesn't exist
                    (e.target as HTMLImageElement).src = "/icons/heart.png";
                 }}
               />
@@ -87,12 +166,10 @@ export default function PostDetailPage() {
               <img src="/icons/bubble.png" alt="Comment" className={styles.statIcon} />
               <span>0</span>
             </div>
-            <button className={styles.statItem}>
-              <img src="/icons/paperplane.png" alt="Share" className={styles.statIcon} />
-            </button>
+            <div className={styles.statItem} style={{marginLeft: 'auto', color: '#999', fontSize: '13px'}}>
+               조회 {post.viewCount}
+            </div>
           </div>
-          
-          {/* 댓글 기능은 추후 백엔드 API 연동 시 구현될 예정입니다. */}
           
           <button className={styles.reportBtn}>🚨 게시물 신고하기</button>
         </div>
