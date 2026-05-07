@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { toggleLike, getPostDetail } from '../../../../lib/api/feedAPI';
+import { toggleLike, getPostDetail, deletePost } from '../../../../lib/api/feedAPI';
 import { useAuthStore } from '../../../../lib/stores/useAuthStore';
 import styles from './page.module.css';
 
@@ -32,7 +32,7 @@ export default function PostDetailPage() {
   const params = useParams();
   const router = useRouter();
   const postId = params.id as string;
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
 
   useEffect(() => {
@@ -84,6 +84,18 @@ export default function PostDetailPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirm('정말로 이 게시물을 삭제하시겠습니까?')) return;
+    try {
+      await deletePost(postId);
+      alert('게시물이 삭제되었습니다.');
+      router.push('/');
+    } catch (err) {
+      console.error('삭제 실패:', err);
+      alert('삭제에 실패했습니다.');
+    }
+  };
+
   if (isLoading) return <div className={styles.container}><div style={{padding: '20px', textAlign: 'center'}}>로딩 중...</div></div>;
   if (error) return <div className={styles.container}><div style={{padding: '20px', textAlign: 'center', color: 'red'}}>{error}</div></div>;
   if (!post) return null;
@@ -98,9 +110,16 @@ export default function PostDetailPage() {
         <button onClick={() => router.back()} className={styles.iconBtn} aria-label="뒤로가기">
           <img src="/icons/arrow-left.png" alt="Back" className={styles.icon} />
         </button>
-        <button className={styles.iconBtn} aria-label="공유하기">
-          <img src="/icons/square.and.arrow.up.png" alt="Share" className={styles.icon} />
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {isAuthenticated && user && String(user.id) === post.userId && (
+             <button onClick={handleDelete} className={styles.iconBtn} aria-label="삭제하기">
+               <span style={{ fontSize: '14px', color: 'var(--color-primary)' }}>삭제</span>
+             </button>
+          )}
+          <button className={styles.iconBtn} aria-label="공유하기">
+            <img src="/icons/square.and.arrow.up.png" alt="Share" className={styles.icon} />
+          </button>
+        </div>
       </div>
 
       <div className={styles.postDetail}>
