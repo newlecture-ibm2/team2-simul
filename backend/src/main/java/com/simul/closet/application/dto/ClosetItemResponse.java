@@ -15,9 +15,11 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ClosetItemResponse {
     private UUID itemId;
+    private UUID imageId;
     private String imageUrl;
     private Category category;
     private String memo;
     private Integer tryCount;
+    private UUID collectionId;
     private LocalDateTime createdAt;
 }

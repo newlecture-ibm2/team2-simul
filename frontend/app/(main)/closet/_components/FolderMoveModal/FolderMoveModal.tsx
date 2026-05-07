@@ -3,31 +3,57 @@
 import { useState } from 'react';
 import styles from './FolderMoveModal.module.css';
 
-interface Folder {
-  id: string | number;
-  title: string;
-}
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getClosetCollections, updateItemCollection } from '@/lib/api/closetAPI';
 
 interface FolderMoveModalProps {
   isOpen: boolean;
-  folders: Folder[];
-  currentFolderId?: string | number;
-  onConfirm: (targetFolderId: string | number) => void;
+  itemIds: string[];
+  currentFolderId?: string | null;
+  onSuccess?: () => void;
   onCancel: () => void;
   variant?: 'popover' | 'fullScreen';
 }
 
 export default function FolderMoveModal({
   isOpen,
-  folders,
-  currentFolderId = '',
-  onConfirm,
+  itemIds,
+  currentFolderId = null,
+  onSuccess,
   onCancel,
   variant = 'popover',
 }: FolderMoveModalProps) {
-  const [selectedId, setSelectedId] = useState<string | number>(currentFolderId);
+  const queryClient = useQueryClient();
+  const [selectedId, setSelectedId] = useState<string | null>(
+    currentFolderId ? String(currentFolderId) : null
+  );
+
+  const { data: collectionsData, isLoading } = useQuery({
+    queryKey: ['closetCollections'],
+    queryFn: () => getClosetCollections({ sort: 'recent', page: 0, size: 50 }),
+    enabled: isOpen,
+  });
+
+  const moveMutation = useMutation({
+    mutationFn: async (targetFolderId: string | null) => {
+      // Move all itemIds to the targetFolderId
+      const promises = itemIds.map(id => updateItemCollection(id, targetFolderId));
+      await Promise.all(promises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['closetItems'] });
+      queryClient.invalidateQueries({ queryKey: ['closetCollections'] });
+      onSuccess?.();
+    },
+    onError: (err) => {
+      console.error('Failed to move items:', err);
+      alert('이동에 실패했습니다.');
+    }
+  });
 
   if (!isOpen) return null;
+
+  const folders = collectionsData?.collections || [];
 
   return (
     <div className={`${styles.overlay} ${variant === 'fullScreen' ? styles.fullScreenOverlay : ''}`} onClick={onCancel}>
@@ -38,21 +64,42 @@ export default function FolderMoveModal({
         <h2 className={styles.title}>이동할 폴더 선택</h2>
         
         <div className={styles.folderList}>
-          {folders.map((folder) => (
-            <div
-              key={folder.id}
-              className={`${styles.folderItem} ${selectedId === folder.id ? styles.selected : ''}`}
-              onClick={() => setSelectedId(folder.id)}
-            >
-              <div className={styles.folderInfo}>
-                <img src="/icons/folder.png" alt="" className={styles.folderIcon} />
-                <span className={styles.folderName}>{folder.title}</span>
+          {isLoading ? (
+            <p className={styles.loadingText}>불러오는 중...</p>
+          ) : (
+            <>
+              {/* 폴더 지정 안함 (기본 옷장) 옵션 */}
+              <div
+                className={`${styles.folderItem} ${selectedId === null ? styles.selected : ''}`}
+                onClick={() => setSelectedId(null)}
+              >
+                <div className={styles.folderInfo}>
+                  <img src="/icons/folder.png" alt="" className={styles.folderIcon} />
+                  <span className={styles.folderName}>폴더 지정 안함 (기본)</span>
+                </div>
+                <div className={styles.radioCircle}>
+                  <div className={styles.radioInner} />
+                </div>
               </div>
-              <div className={styles.radioCircle}>
-                <div className={styles.radioInner} />
-              </div>
-            </div>
-          ))}
+
+              {/* 실제 폴더 목록 */}
+              {folders.map((folder) => (
+                <div
+                  key={folder.collectionId}
+                  className={`${styles.folderItem} ${selectedId === folder.collectionId ? styles.selected : ''}`}
+                  onClick={() => setSelectedId(folder.collectionId)}
+                >
+                  <div className={styles.folderInfo}>
+                    <img src="/icons/folder.png" alt="" className={styles.folderIcon} />
+                    <span className={styles.folderName}>{folder.name}</span>
+                  </div>
+                  <div className={styles.radioCircle}>
+                    <div className={styles.radioInner} />
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
         </div>
 
         <div className={styles.actions}>
@@ -61,10 +108,10 @@ export default function FolderMoveModal({
           </button>
           <button
             className={`${styles.btn} ${styles.confirmBtn}`}
-            onClick={() => selectedId && onConfirm(selectedId)}
-            disabled={!selectedId}
+            onClick={() => moveMutation.mutate(selectedId)}
+            disabled={moveMutation.isPending}
           >
-            이동
+            {moveMutation.isPending ? '이동 중...' : '이동'}
           </button>
         </div>
       </div>

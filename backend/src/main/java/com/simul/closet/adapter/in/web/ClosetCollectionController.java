@@ -19,8 +19,20 @@ public class ClosetCollectionController {
 
     private final AddCollectionUseCase addCollectionUseCase;
     private final GetCollectionsUseCase getCollectionsUseCase;
+    private final com.simul.closet.application.port.in.GetCollectionUseCase getCollectionUseCase;
     private final com.simul.closet.application.port.in.UpdateCollectionUseCase updateCollectionUseCase;
     private final com.simul.closet.application.port.in.DeleteCollectionUseCase deleteCollectionUseCase;
+
+    @GetMapping("/{collectionId}")
+    public ResponseEntity<com.simul.closet.application.dto.ClosetCollectionResponse> getCollection(@PathVariable UUID collectionId) {
+        log.info("Received request to get collection detail: id={}", collectionId);
+
+        // TODO: SecurityContext에서 실제 로그인한 유저의 ID를 가져와야 함
+        UUID mockUserId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+        com.simul.closet.application.dto.ClosetCollectionResponse response = getCollectionUseCase.getCollection(collectionId, mockUserId);
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping
     public ResponseEntity<UUID> addCollection(

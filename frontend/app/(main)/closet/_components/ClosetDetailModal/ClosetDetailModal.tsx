@@ -183,12 +183,10 @@ export default function ClosetDetailModal({ isOpen, onClose, itemId }: ClosetDet
 
       <FolderMoveModal
         isOpen={showMoveModal}
-        folders={DUMMY_FOLDERS}
-        currentFolderId=""
+        itemIds={itemId ? [itemId] : []}
+        currentFolderId={null} // Wait, we don't know the current folder here easily without item detail. We can pass null.
         variant="fullScreen"
-        onConfirm={(targetId) => {
-          console.log(`Moving item ${itemId} to folder ${targetId}`);
-          setShowMoveModal(true); // User might want to stay in move modal or close all
+        onSuccess={() => {
           setShowMoveModal(false);
           onClose();
         }}
