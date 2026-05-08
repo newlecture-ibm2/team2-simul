@@ -3,10 +3,12 @@
 import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { socialLogin } from '@/lib/api/authAPI';
+import { useAuthStore, User } from '@/lib/stores/useAuthStore';
 
 function CallbackHandler() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const setUser = useAuthStore((state) => state.setUser);
 
   useEffect(() => {
     const code = searchParams.get('code');
@@ -16,9 +18,19 @@ function CallbackHandler() {
 
       const redirectUri = `${window.location.origin}/auth/callback/naver`;
       socialLogin('naver', code, redirectUri)
-        .then((data) => {
-          console.log('로그인 성공!', data);
-          router.push('/');
+        .then((data: unknown) => {
+          const res = data as { user: User; isNewUser: boolean };
+          console.log('로그인 성공!', res);
+          
+          if (res.user) {
+            setUser(res.user);
+          }
+
+          if (res.isNewUser) {
+            router.push('/profile/edit');
+          } else {
+            router.push('/');
+          }
         })
         .catch((err) => {
           console.error('로그인 중 오류 발생:', err);
@@ -26,7 +38,7 @@ function CallbackHandler() {
           router.push('/login');
         });
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, setUser]);
 
   return (
     <div style={{ 

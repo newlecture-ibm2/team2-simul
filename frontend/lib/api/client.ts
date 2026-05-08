@@ -13,10 +13,31 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    // TODO: 다른 팀원이 토큰 만료(401) 시 자동 갱신(Refresh) 로직을 구현할 곳
-    if (error.response?.status === 401) {
-      console.warn('토큰이 만료되었습니다. (갱신 로직 구현 예정)');
-      // 예: /auth/refresh 호출 후 원래 요청(error.config) 재시도
+    const originalRequest = error.config;
+
+    // 401 Unauthorized 발생 시 토큰 갱신 시도 (동료의 코드 반영)
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      originalRequest.url !== '/auth/refresh' &&
+      originalRequest.url !== '/auth/login/email' &&
+      // 무한 루프 방지용 커스텀 플래그
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      !(originalRequest as any)._retry
+    ) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (originalRequest as any)._retry = true;
+
+      try {
+        const refreshResponse = await fetch(`${API_BASE}/auth/refresh`, { method: 'POST' });
+        
+        if (refreshResponse.ok) {
+          // 갱신 성공 시 원래 요청 재시도 (BFF가 세션을 업데이트했으므로 새 요청은 새 토큰 사용)
+          return axiosInstance(originalRequest);
+        }
+      } catch (e) {
+        console.error('Token refresh failed:', e);
+      }
     }
 
     // 공통 에러 메시지 추출
