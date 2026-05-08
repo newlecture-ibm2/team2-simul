@@ -9,6 +9,7 @@ services:
         NEXT_PUBLIC_KAKAO_CLIENT_ID: ${NEXT_PUBLIC_KAKAO_CLIENT_ID}
         NEXT_PUBLIC_NAVER_CLIENT_ID: ${NEXT_PUBLIC_NAVER_CLIENT_ID}
         NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
+        BACKEND_URL: http://backend:8080
     container_name: simul-frontend
     # 프론트엔드만 외부망으로 포트 개방 (변수를 통해 제어하며, 기본값은 3222)
     ports:
