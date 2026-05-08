@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { getClosetCollection } from '@/lib/api/closetAPI';
+import { getClosetCollection, ClosetItemResponse } from '@/lib/api/closetAPI';
 import { useClosetItems } from '../../_components/useClosetItems';
 import ClosetCard from '../../_components/ClosetCard/ClosetCard';
 import ClosetDetailModal from '../../_components/ClosetDetailModal/ClosetDetailModal';
@@ -46,7 +46,7 @@ export default function FolderDetailPage() {
   const [viewMode, setViewMode] = useState<'view' | 'edit'>('view');
   const [folderTitle, setFolderTitle] = useState('');
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-  const [items, setItems] = useState<any[]>([]); // For local manipulation/display
+  const [items, setItems] = useState<ClosetItemResponse[]>([]); // For local manipulation/display
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
