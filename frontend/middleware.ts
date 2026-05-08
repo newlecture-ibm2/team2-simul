@@ -4,7 +4,7 @@ import { getIronSession } from 'iron-session';
 import { sessionOptions, SessionData } from '@/lib/session';
 
 const ADMIN_ROUTES = ['/admin'];
-const AUTH_REQUIRED_ROUTES = ['/closet', '/profile/edit', '/tryon'];
+const AUTH_REQUIRED_ROUTES = ['/closet', '/profile/edit', '/tryon', '/post/create'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
