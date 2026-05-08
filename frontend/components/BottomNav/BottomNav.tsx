@@ -31,6 +31,11 @@ export default function BottomNav() {
             key={tab.href}
             href={tab.href}
             className={`${styles.navItem} ${active ? styles.navItemActive : ''}`}
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                (window as any).isNavigatingFromBottomNav = true;
+              }
+            }}
           >
             <img src={iconSrc} alt={`${tab.iconName} 탭`} className={styles.navIcon} />
           </Link>

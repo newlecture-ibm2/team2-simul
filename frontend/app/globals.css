@@ -191,3 +191,64 @@ ul, ol {
   padding-right: max(var(--space-page-x), env(safe-area-inset-right));
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* ============================================
+   Page Transition Animations
+   ============================================ */
+
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-in {
+  /* Use a smooth easing function for a natural, premium feel */
+  animation: pageFadeIn 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes pageSlideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: pageSlideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes pageSlideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: pageSlideInLeft 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* Respect user's accessibility settings for motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-in,
+  .animate-slide-in-right,
+  .animate-slide-in-left {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
