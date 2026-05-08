@@ -4,14 +4,15 @@ import { useState } from 'react';
 import styles from './FolderCard.module.css';
 
 interface FolderCardProps {
-  id: number;
+  id: string | number;
   title: string;
   itemCount: number;
   lastUpdated: string;
   images: string[];
-  onClick?: (id: number) => void;
+  onClick?: (id: string | number) => void;
   isEditing?: boolean;
-  onRename?: (id: number, newTitle: string) => void;
+  onRename?: (id: string | number, newTitle: string) => void;
+  onDelete?: (id: string | number) => void;
 }
 
 export default function FolderCard({
@@ -22,7 +23,8 @@ export default function FolderCard({
   images,
   onClick,
   isEditing = false,
-  onRename
+  onRename,
+  onDelete
 }: FolderCardProps) {
   // Use dummy fallbacks if images are missing
   const mainImage = images[0] || '/clothes.png';
@@ -33,6 +35,15 @@ export default function FolderCard({
 
   return (
     <div className={styles.folderCard} onClick={() => !isEditing && onClick?.(id)}>
+      {onDelete && (
+        <button 
+          className={styles.deleteBtn} 
+          onClick={(e) => { e.stopPropagation(); onDelete(id); }}
+          aria-label="폴더 삭제"
+        >
+          ×
+        </button>
+      )}
       <div className={styles.imageGrid}>
         <div className={styles.mainImageWrapper}>
           <img src={mainImage} alt={`${title} 메인`} className={styles.image} />

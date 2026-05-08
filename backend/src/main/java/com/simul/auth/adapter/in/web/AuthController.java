@@ -2,8 +2,12 @@ package com.simul.auth.adapter.in.web;
 
 import com.simul.auth.application.dto.SocialLoginCommand;
 import com.simul.auth.application.dto.TokenResponse;
+import com.simul.auth.application.port.in.LogoutUseCase;
 import com.simul.auth.application.port.in.RefreshTokenUseCase;
 import com.simul.auth.application.port.in.SocialLoginUseCase;
+import com.simul.auth.application.dto.EmailLoginCommand;
+import com.simul.auth.application.dto.EmailSignupCommand;
+import com.simul.auth.application.port.in.EmailAuthUseCase;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,13 +27,19 @@ public class AuthController {
 
     private final SocialLoginUseCase socialLoginUseCase;
     private final RefreshTokenUseCase refreshTokenUseCase;
+    private final EmailAuthUseCase emailAuthUseCase;
+    private final LogoutUseCase logoutUseCase;
 
     public AuthController(
         SocialLoginUseCase socialLoginUseCase,
-        RefreshTokenUseCase refreshTokenUseCase
+        RefreshTokenUseCase refreshTokenUseCase,
+        EmailAuthUseCase emailAuthUseCase,
+        LogoutUseCase logoutUseCase
     ) {
         this.socialLoginUseCase = socialLoginUseCase;
         this.refreshTokenUseCase = refreshTokenUseCase;
+        this.emailAuthUseCase = emailAuthUseCase;
+        this.logoutUseCase = logoutUseCase;
     }
 
     /**
@@ -58,6 +68,20 @@ public class AuthController {
         return ResponseEntity.ok(tokenResponse);
     }
 
+    @PostMapping("/signup")
+    public ResponseEntity<TokenResponse> emailSignup(@RequestBody EmailSignupCommand command) {
+        TokenResponse response = emailAuthUseCase.emailSignup(
+            command.email(), command.password(), command.name(), command.nickname(), command.gender()
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/login/email")
+    public ResponseEntity<TokenResponse> emailLogin(@RequestBody EmailLoginCommand command) {
+        TokenResponse response = emailAuthUseCase.emailLogin(command.email(), command.password());
+        return ResponseEntity.ok(response);
+    }
+
     /**
      * 토큰 갱신
      * POST /auth/refresh
@@ -78,13 +102,18 @@ public class AuthController {
      * 로그아웃
      * DELETE /auth/logout
      *
-     * MVP에서는 Stateless JWT이므로 서버 측 별도 처리 없음
-     * 프론트엔드에서 httpOnly 쿠키 삭제로 처리
+     * Redis에서 리프레시 토큰을 삭제하여 재사용을 차단
+     * 프론트엔드에서는 추가로 httpOnly 쿠키(세션) 삭제 처리
+     *
+     * Request Body:
+     * { "refreshToken": "jwt..." }
      */
     @DeleteMapping("/logout")
-    public ResponseEntity<Void> logout() {
-        // Stateless JWT: 서버 측 별도 처리 없음
-        // 향후 토큰 블랙리스트 구현 시 여기에 로직 추가
+    public ResponseEntity<Void> logout(@RequestBody Map<String, String> request) {
+        String refreshToken = request.get("refreshToken");
+        if (refreshToken != null) {
+            logoutUseCase.logout(refreshToken);
+        }
         return ResponseEntity.noContent().build();
     }
 }

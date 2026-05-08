@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { getFeedPosts, FeedPost } from '../../../../lib/api/feedAPI';
+import { useRouter } from 'next/navigation';
 import styles from './SwipeDeck.module.css';
 
 // Dummy data using the specified images
@@ -13,7 +15,15 @@ const DUMMY_POSTS = [
   { id: 105, imageUrl: '/hero-5.jpg', authorName: '사나', authorAvatar: '/recent.jpg' },
 ];
 
+interface SwipePost {
+  id: string | number;
+  imageUrl: string;
+  authorName: string;
+  authorAvatar: string;
+}
+
 export default function SwipeDeck() {
+  const [posts, setPosts] = useState<SwipePost[]>(DUMMY_POSTS);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -21,6 +31,28 @@ export default function SwipeDeck() {
   const [exitDirection, setExitDirection] = useState<'left' | 'right' | 'up' | 'down' | null>(null);
 
   const cardRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    async function loadPopularPosts() {
+      try {
+        const res = await getFeedPosts({ sort: 'popular', size: 10 });
+        if (res && res.content && res.content.length > 0) {
+          const mappedPosts = res.content.map(p => ({
+            id: p.postId,
+            imageUrl: p.imageUrl || '/dummy.jpg',
+            authorName: p.nickname || '알 수 없음',
+            authorAvatar: p.profileImageUrl || '/dummy.jpg'
+          }));
+          // 백엔드 데이터가 적을 수 있으므로, 기존의 예시 이미지(DUMMY_POSTS)를 뒤에 합쳐서 양을 늘립니다.
+          setPosts([...mappedPosts, ...DUMMY_POSTS]);
+        }
+      } catch (err) {
+        console.error('인기 게시물 불러오기 실패:', err);
+      }
+    }
+    loadPopularPosts();
+  }, []);
 
   // Constants for swipe logic
   const SWIPE_THRESHOLD = 80;
@@ -144,9 +176,10 @@ export default function SwipeDeck() {
 
       <div className={styles.deckWrapper}>
         {[-2, -1, 0, 1, 2].map((offset) => {
+          if (posts.length === 0) return null;
           const virtualIndex = currentIndex + offset;
-          const dataIndex = ((virtualIndex % DUMMY_POSTS.length) + DUMMY_POSTS.length) % DUMMY_POSTS.length;
-          const post = DUMMY_POSTS[dataIndex];
+          const dataIndex = ((virtualIndex % posts.length) + posts.length) % posts.length;
+          const post = posts[dataIndex];
           const isTopCard = offset === 0;
 
           return (
@@ -158,10 +191,17 @@ export default function SwipeDeck() {
               onPointerDown={isTopCard ? handlePointerDown : undefined}
               onPointerMove={isTopCard ? handlePointerMove : undefined}
               onPointerUp={isTopCard ? handlePointerUp : undefined}
-              onPointerLeave={isTopCard ? handlePointerUp : undefined}
               onDragStart={handleDragStart}
+              onClick={(e) => {
+                 // 드래그 중이 아닐 때만 상세 페이지 이동 (단일 클릭)
+                 if (isTopCard && !isDragging && Math.abs(dragOffset.x) < 5 && Math.abs(dragOffset.y) < 5) {
+                    if (typeof post.id === 'string') {
+                       router.push(`/post/${post.id}`);
+                    }
+                 }
+              }}
             >
-              <div className={styles.imageWrapper}>
+              <div className={styles.imageWrapper} style={{ cursor: 'pointer' }}>
                 <img src={post.imageUrl} alt="게시물 이미지" className={styles.image} />
 
                 <div className={styles.authorInfo}>

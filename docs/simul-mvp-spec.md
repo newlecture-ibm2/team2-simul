@@ -36,7 +36,6 @@
 | **Framework** | Spring Boot | 3.3 | 헥사고날 아키텍처에 적합한 DI/IoC, Java 21 호환, 풍부한 레퍼런스 |
 | **ORM** | Spring Data JPA + Hibernate | — | 도메인 모델 중심 개발, 복잡한 관계 매핑 지원 |
 | **DB** | PostgreSQL | 17+ | UUID 네이티브 지원, JSON 타입, 태그 검색 인덱싱, ENUM 지원, pgvector 확장 대비 |
-| **Migration** | Flyway | — | 버전 관리 기반 DB 스키마 마이그레이션 |
 | **Security** | Spring Security + OAuth2 Client | — | 카카오/네이버/구글 소셜 로그인, JWT 필터 체인 |
 | **JWT** | jjwt (io.jsonwebtoken) | 0.12+ | Access/Refresh Token 발급 및 검증 |
 | **Validation** | Jakarta Bean Validation | — | DTO 입력 유효성 검증 |

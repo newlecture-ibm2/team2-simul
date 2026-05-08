@@ -21,6 +21,7 @@ WORKDIR /app
 
 # 빌더에서 생성된 jar 파일 복사
 COPY --from=builder /app/build/libs/*SNAPSHOT.jar app.jar
+COPY uploads /app/uploads
 
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

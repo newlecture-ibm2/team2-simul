@@ -10,6 +10,14 @@ export default function SocialLoginButtons() {
     <>
       <div className={styles.socialButtons}>
         <button 
+          className={`${styles.socialBtn} ${styles.google}`}
+          onClick={() => login('google')}
+          disabled={isLoading}
+        >
+          <span className={styles.socialIcon}>G</span>
+          {isLoading ? '연결 중...' : 'Google로 시작하기'}
+        </button>
+        <button 
           className={`${styles.socialBtn} ${styles.kakao}`}
           onClick={() => login('kakao')}
           disabled={isLoading}
@@ -24,14 +32,6 @@ export default function SocialLoginButtons() {
         >
           <span className={styles.socialIcon}>N</span>
           {isLoading ? '연결 중...' : '네이버로 시작하기'}
-        </button>
-        <button 
-          className={`${styles.socialBtn} ${styles.google}`}
-          onClick={() => login('google')}
-          disabled={isLoading}
-        >
-          <span className={styles.socialIcon}>G</span>
-          {isLoading ? '연결 중...' : 'Google로 시작하기'}
         </button>
       </div>
 

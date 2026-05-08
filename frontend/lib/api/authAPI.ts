@@ -1,10 +1,24 @@
 import { apiClient } from './client';
 
 /** 소셜 로그인 */
-export async function socialLogin(provider: string, code: string) {
-  return apiClient('/auth/login', {
+export async function socialLogin(provider: string, code: string, redirectUri: string) {
+  return apiClient('/auth/social', {
     method: 'POST',
-    body: JSON.stringify({ provider, code }),
+    body: JSON.stringify({ provider, code, redirectUri }),
+  });
+}
+
+export async function emailSignup(data: Record<string, unknown>) {
+  return apiClient('/auth/email', {
+    method: 'POST',
+    body: JSON.stringify({ ...data, type: 'signup' }),
+  });
+}
+
+export async function emailLogin(data: Record<string, unknown>) {
+  return apiClient('/auth/email', {
+    method: 'POST',
+    body: JSON.stringify({ ...data, type: 'login' }),
   });
 }
 

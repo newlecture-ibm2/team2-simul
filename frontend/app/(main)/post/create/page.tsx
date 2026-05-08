@@ -82,8 +82,11 @@ export default function PostCreatePage() {
         if (extractedTags && Array.isArray(extractedTags)) {
           setSuggestedTags(prev => Array.from(new Set([...prev, ...extractedTags])));
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('태그 분석 실패:', err);
+        if (err instanceof Error && err.message.includes('429')) {
+          alert('사진을 너무 빠르게 많이 올리셨네요! 😅\n잠시만 기다렸다가 다시 올려주시면 자동 태그가 추출됩니다.');
+        }
       } finally {
         setIsAnalyzing(false);
       }
@@ -221,6 +224,10 @@ export default function PostCreatePage() {
 
       {/* Public Toggle */}
       <div className={styles.publicToggleRow}>
+        <div className={styles.toggleTextContainer}>
+          <span className={styles.toggleLabel}>커뮤니티 피드에 공유하기</span>
+          <span className={styles.toggleSubLabel}>(체크 해제 시 내 프로필에서 나만 보기)</span>
+        </div>
         <label className={styles.toggleSwitch}>
           <input
             type="checkbox"
@@ -229,7 +236,6 @@ export default function PostCreatePage() {
           />
           <span className={styles.toggleSlider} />
         </label>
-        <span className={styles.toggleLabel}>전체 공개</span>
       </div>
 
       {/* Submit */}

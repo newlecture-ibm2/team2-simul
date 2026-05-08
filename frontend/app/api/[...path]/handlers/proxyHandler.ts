@@ -1,44 +1,43 @@
 import { NextRequest } from 'next/server';
+import { getIronSession } from 'iron-session';
+import { sessionOptions, SessionData } from '@/lib/session';
 
 /**
  * BFF 프록시 핸들러
  * 브라우저 → /api/... → Spring Boot 백엔드로 프록시
  */
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080';
-
 export async function proxyHandler(req: NextRequest, path: string[]) {
+  // 함수 내부에 두어야 Next.js가 빌드 타임에 상수로 치환(하드코딩)하지 않고 런타임 환경변수를 읽어옵니다.
+  const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080';
   // 타겟 URL 구성 (백엔드는 /api 접두사 없음)
   const targetUrl = BACKEND_URL + '/' + path.join('/') + req.nextUrl.search;
-  
+
   try {
-    // 원본 헤더를 복사하되, 프록시에서 문제를 일으키는 헤더는 제거
+    // 원본 헤더를 복사하되, host 헤더는 백엔드에 맞게 변경
     const headers = new Headers(req.headers);
     headers.set('host', new URL(BACKEND_URL).host);
-    // content-length는 body를 arrayBuffer로 변환하면 달라질 수 있으므로 제거
-    headers.delete('content-length');
-    // transfer-encoding도 프록시 환경에서 충돌 가능
-    headers.delete('transfer-encoding');
 
     // ⚠️ Content-Type을 절대 덮어쓰지 않음!
     // multipart/form-data의 경우 브라우저가 생성한 boundary가 포함되어 있어야 함
     // 예: "multipart/form-data; boundary=----WebKitFormBoundary..."
-    // 이걸 임의로 바꾸면 백엔드가 파일 데이터를 파싱할 수 없음
 
-    const fetchOptions: RequestInit = {
+    const fetchOptions: RequestInit & { duplex?: 'half' } = {
       method: req.method,
       headers,
       redirect: 'manual',
       cache: 'no-store',
     };
 
-    // TODO: iron-session 도입 시 여기서 JWT 추출하여 Authorization 헤더 주입
+    // iron-session을 통해 세션의 JWT 추출 후 Authorization 헤더 주입
+    const session = await getIronSession<SessionData>(req, new Response(), sessionOptions);
+    if (session.user?.token) {
+      headers.set('Authorization', `Bearer ${session.user.token}`);
+    }
 
-    if (req.method !== 'GET' && req.method !== 'HEAD') {
-      const body = await req.arrayBuffer();
-      if (body.byteLength > 0) {
-        fetchOptions.body = body;
-      }
+    if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) {
+      fetchOptions.body = req.body;
+      fetchOptions.duplex = 'half'; // Node.js 18+ fetch에서 ReadableStream을 body로 보낼 때 필수
     }
 
     const response = await fetch(targetUrl, fetchOptions);
@@ -59,9 +58,9 @@ export async function proxyHandler(req: NextRequest, path: string[]) {
         message: '백엔드 서버 연결 실패',
         detail: error instanceof Error ? error.message : 'Unknown error'
       }),
-      { 
-        status: 502, 
-        headers: { 'Content-Type': 'application/json' } 
+      {
+        status: 502,
+        headers: { 'Content-Type': 'application/json' }
       }
     );
   }

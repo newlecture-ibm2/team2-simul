@@ -1,4 +1,5 @@
 import styles from './page.module.css';
+import LogoutButton from './_components/LogoutButton';
 
 export const metadata = {
   title: '설정 — SIMUL',
@@ -75,7 +76,7 @@ export default function SettingsPage() {
       </div>
 
       <div className={styles.dangerSection}>
-        <button className={styles.dangerBtn}>로그아웃</button>
+        <LogoutButton />
         <br />
         <button className={styles.dangerBtn}>계정 삭제</button>
       </div>

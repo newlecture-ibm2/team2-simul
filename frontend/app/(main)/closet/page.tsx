@@ -11,14 +11,14 @@ import FloatingAddButton from './_components/FloatingAddButton';
 import ClosetAddModal from './_components/ClosetAddModal/ClosetAddModal';
 import { useClosetItems } from './_components/useClosetItems';
 import styles from './page.module.css';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { addClosetItem } from '@/lib/api/closetAPI';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { addClosetItem, addClosetCollection, getClosetCollections, updateClosetCollection, deleteClosetCollection } from '@/lib/api/closetAPI';
 
-const DUMMY_FOLDERS_DATA = [
-  { id: 1, title: 'shirts outfit', itemCount: 3, lastUpdated: '2주 전', images: [] },
-  { id: 2, title: 'spring vibes', itemCount: 8, lastUpdated: '1달 전', images: [] },
-  { id: 3, title: 'wishlist', itemCount: 12, lastUpdated: '어제', images: [] },
-];
+// const DUMMY_FOLDERS_DATA = [
+//   { id: 1, title: 'shirts outfit', itemCount: 3, lastUpdated: '2주 전', images: [] },
+//   { id: 2, title: 'spring vibes', itemCount: 8, lastUpdated: '1달 전', images: [] },
+//   { id: 3, title: 'wishlist', itemCount: 12, lastUpdated: '어제', images: [] },
+// ];
 
 const PAGE_SIZE = 10;
 
@@ -32,8 +32,7 @@ function ClosetPageContent() {
   const [currentPage, setCurrentPage] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [folders, setFolders] = useState(DUMMY_FOLDERS_DATA);
-  const [editingFolderId, setEditingFolderId] = useState<number | null>(null);
+  const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // API 호출: 옷장 아이템 목록
@@ -45,6 +44,23 @@ function ClosetPageContent() {
 
   const { items, isLoading, error, totalCount, refetch } = useClosetItems(apiParams);
 
+  // API 호출: 컬렉션 목록
+  const { data: collectionsData, isLoading: isLoadingCollections } = useQuery({
+    queryKey: ['closetCollections'],
+    queryFn: () => getClosetCollections({ sort: 'recent', page: 0, size: 50 }),
+  });
+
+  const displayCollections = useMemo(() => {
+    if (!collectionsData) return [];
+    return collectionsData.collections.map(c => ({
+      id: c.collectionId,
+      title: c.name,
+      itemCount: c.itemCount,
+      lastUpdated: new Date(c.createdAt).toLocaleDateString(),
+      images: c.coverImageUrl ? [c.coverImageUrl] : []
+    }));
+  }, [collectionsData]);
+
   const addMutation = useMutation({
     mutationFn: (formData: FormData) => addClosetItem(formData),
     onSuccess: () => {
@@ -54,6 +70,20 @@ function ClosetPageContent() {
     onError: (error) => {
       console.error('Failed to add item:', error);
       alert('아이템 추가에 실패했습니다.');
+    }
+  });
+
+  const addCollectionMutation = useMutation({
+    mutationFn: (formData: FormData) => addClosetCollection(formData),
+    onSuccess: (data: string) => {
+      const collectionId = data;
+      console.log('Collection created with ID:', collectionId);
+      queryClient.invalidateQueries({ queryKey: ['closetCollections'] });
+      if (collectionId) setEditingFolderId(collectionId);
+    },
+    onError: (error) => {
+      console.error('Failed to create collection:', error);
+      alert('폴더 생성에 실패했습니다.');
     }
   });
 
@@ -71,21 +101,41 @@ function ClosetPageContent() {
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   const handleAddFolder = () => {
-    const newId = Date.now();
-    const newFolder = {
-      id: newId,
-      title: '새 폴더',
-      itemCount: 0,
-      lastUpdated: '방금 전',
-      images: []
-    };
-    setFolders([...folders, newFolder]);
-    setEditingFolderId(newId);
+    // 1. API 호출: 기본 이름 '새 폴더'로 생성
+    const formData = new FormData();
+    formData.append('name', '새 폴더');
+    addCollectionMutation.mutate(formData);
   };
 
-  const handleRenameFolder = (id: number, newTitle: string) => {
-    setFolders(prev => prev.map(f => f.id === id ? { ...f, title: newTitle || '제목 없음' } : f));
+  const updateCollectionMutation = useMutation({
+    mutationFn: ({ id, title }: { id: string; title: string }) => {
+      const formData = new FormData();
+      formData.append('name', title);
+      return updateClosetCollection(id, formData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['closetCollections'] });
+    },
+  });
+
+  const deleteCollectionMutation = useMutation({
+    mutationFn: (id: string) => deleteClosetCollection(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['closetCollections'] });
+    },
+  });
+
+  const handleRenameFolder = (id: string | number, newTitle: string) => {
+    if (newTitle.trim()) {
+      updateCollectionMutation.mutate({ id: String(id), title: newTitle.trim() });
+    }
     setEditingFolderId(null);
+  };
+
+  const handleDeleteFolder = (id: string | number) => {
+    if (confirm('이 폴더를 삭제하시겠습니까?')) {
+      deleteCollectionMutation.mutate(String(id));
+    }
   };
 
   const handleCardClick = (id: string) => {
@@ -110,79 +160,93 @@ function ClosetPageContent() {
         />
       </header>
 
-      {/* Loading & Error States */}
-      {isLoading && (
-        <div className={styles.loadingWrapper}>
-          <p>아이템을 불러오는 중...</p>
-        </div>
-      )}
-
-      {error && (
-        <div className={styles.errorWrapper}>
-          <p>⚠️ {error}</p>
-          <button onClick={refetch}>다시 시도</button>
-        </div>
-      )}
-
       {/* Main Content */}
-      {!isLoading && !error && (
-        <>
-          {activeTab === 'stack' && (
-            <VerticalDeck 
-              items={displayItems} 
-              onItemClick={handleCardClick} 
-            />
-          )}
-          {activeTab === 'grid' && (
-            <>
-              {/* Grid */}
-              <div className={styles.grid}>
-                {displayItems.map(item => (
-                  <ClosetCard 
-                    key={item.id} 
-                    id={item.id} 
-                    imageUrl={item.imageUrl}
-                    onClick={handleCardClick}
-                  />
-                ))}
+      <div className={styles.content}>
+        {/* Stack Tab */}
+        {activeTab === 'stack' && (
+          <>
+            {isLoading ? (
+              <div className={styles.loadingWrapper}><p>아이템을 불러오는 중...</p></div>
+            ) : error ? (
+              <div className={styles.errorWrapper}>
+                <p>⚠️ {error}</p>
+                <button onClick={refetch}>다시 시도</button>
               </div>
+            ) : (
+              <VerticalDeck 
+                items={displayItems} 
+                onItemClick={handleCardClick} 
+              />
+            )}
+          </>
+        )}
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className={styles.paginationWrapper}>
-                  <div className={styles.paginationTrack}>
-                    {Array.from({ length: totalPages }, (_, i) => i).map((page) => (
-                      <button
-                        key={page}
-                        className={`${styles.pageBtn} ${currentPage === page ? styles.activePage : ''}`}
-                        onClick={() => setCurrentPage(page)}
-                      >
-                        {page + 1}
-                      </button>
-                    ))}
+        {/* Grid Tab */}
+        {activeTab === 'grid' && (
+          <>
+            {isLoading ? (
+              <div className={styles.loadingWrapper}><p>아이템을 불러오는 중...</p></div>
+            ) : error ? (
+              <div className={styles.errorWrapper}>
+                <p>⚠️ {error}</p>
+                <button onClick={refetch}>다시 시도</button>
+              </div>
+            ) : (
+              <>
+                <div className={styles.grid}>
+                  {displayItems.map(item => (
+                    <ClosetCard 
+                      key={item.id} 
+                      id={item.id} 
+                      imageUrl={item.imageUrl}
+                      onClick={handleCardClick}
+                    />
+                  ))}
+                </div>
+
+                {totalPages > 1 && (
+                  <div className={styles.paginationWrapper}>
+                    <div className={styles.paginationTrack}>
+                      {Array.from({ length: totalPages }, (_, i) => i).map((page) => (
+                        <button
+                          key={page}
+                          className={`${styles.pageBtn} ${currentPage === page ? styles.activePage : ''}`}
+                          onClick={() => setCurrentPage(page)}
+                        >
+                          {page + 1}
+                        </button>
+                      ))}
+                    </div>
                   </div>
+                )}
+              </>
+            )}
+          </>
+        )}
+        
+        {/* Folder Tab */}
+        {activeTab === 'folder' && (
+            <>
+              {isLoadingCollections ? (
+                <div className={styles.loadingWrapper}><p>폴더를 불러오는 중...</p></div>
+              ) : (
+                <div className={styles.folderGrid}>
+                  {displayCollections.map(folder => (
+                    <FolderCard 
+                      key={folder.id}
+                      id={folder.id}
+                      title={folder.title}
+                      itemCount={folder.itemCount}
+                      lastUpdated={folder.lastUpdated}
+                      images={folder.images}
+                      onClick={(id) => router.push(`/closet/folders/${id}`)}
+                      isEditing={editingFolderId === folder.id}
+                      onRename={handleRenameFolder}
+                      onDelete={handleDeleteFolder}
+                    />
+                  ))}
                 </div>
               )}
-            </>
-          )}
-          
-          {activeTab === 'folder' && (
-            <>
-              <div className={styles.folderGrid}>
-                {folders.map(folder => (
-                  <FolderCard 
-                    key={folder.id}
-                    id={folder.id}
-                    title={folder.title}
-                    itemCount={folder.itemCount}
-                    lastUpdated={folder.lastUpdated}
-                    images={folder.images}
-                    onClick={(id) => router.push(`/closet/folders/${id}`)}
-                    isEditing={editingFolderId === folder.id}
-                    onRename={handleRenameFolder}
-                  />
-                ))}
-              </div>
 
               {/* Bottom Add Button (Folder Tab End) */}
               <div className={styles.bottomAddBtnWrapper}>
@@ -196,8 +260,7 @@ function ClosetPageContent() {
               </div>
             </>
           )}
-        </>
-      )}
+        </div>
 
       {/* Floating Add Button */}
       <FloatingAddButton 

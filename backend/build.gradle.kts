@@ -20,12 +20,11 @@ repositories {
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.flywaydb:flyway-core")
-	implementation("org.flywaydb:flyway-database-postgresql")
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 	runtimeOnly("org.postgresql:postgresql")
 
 	// JWT
@@ -39,6 +38,9 @@ dependencies {
 	// Google Cloud Vision API
 	implementation(platform("com.google.cloud:libraries-bom:26.32.0"))
 	implementation("com.google.cloud:google-cloud-vision")
+
+	// Bucket4j Rate Limiting
+	implementation("com.bucket4j:bucket4j-core:8.10.1")
 
 	// Thumbnailator for Image Resizing
 	implementation("net.coobird:thumbnailator:0.4.20")

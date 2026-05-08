@@ -3,9 +3,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { emailLogin, emailSignup } from '../../../lib/api/authAPI';
+import { useAuthStore, User } from '../../../lib/stores/useAuthStore';
+
 export function useAuth() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const setUser = useAuthStore((state) => state.setUser);
 
   const login = async (provider: 'kakao' | 'naver' | 'google') => {
     setIsLoading(true);
@@ -28,7 +32,48 @@ export function useAuth() {
       window.location.href = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}`;
       return;
     }
+
+    if (provider === 'google') {
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      const redirectUri = encodeURIComponent(`${window.location.origin}/auth/callback/google`);
+      
+      // Google 인증 페이지로 이동
+      window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=email%20profile`;
+      return;
+    }
   };
 
-  return { login, isLoading };
+  const loginWithEmail = async (data: Record<string, unknown>) => {
+    setIsLoading(true);
+    try {
+      const res = await emailLogin(data) as Record<string, unknown>;
+      if (res.success || res.accessToken) { // DTO might not have success, but BFF returns success: true
+        setUser(res.user as User);
+        router.push('/');
+      }
+    } catch (error: unknown) {
+      const err = error as Error;
+      alert(err.message || '로그인에 실패했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signupWithEmail = async (data: Record<string, unknown>) => {
+    setIsLoading(true);
+    try {
+      const res = await emailSignup(data) as Record<string, unknown>;
+      if (res.success || res.accessToken) {
+        setUser(res.user as User);
+        router.push('/');
+      }
+    } catch (error: unknown) {
+      const err = error as Error;
+      alert(err.message || '회원가입에 실패했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { login, loginWithEmail, signupWithEmail, isLoading };
 }
