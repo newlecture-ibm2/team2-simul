@@ -57,7 +57,7 @@ function ClosetPageContent() {
       title: c.name,
       itemCount: c.itemCount,
       lastUpdated: new Date(c.createdAt).toLocaleDateString(),
-      images: c.coverImageUrl ? [c.coverImageUrl] : []
+      images: c.images && c.images.length > 0 ? c.images : (c.coverImageUrl ? [c.coverImageUrl] : [])
     }));
   }, [collectionsData]);
 

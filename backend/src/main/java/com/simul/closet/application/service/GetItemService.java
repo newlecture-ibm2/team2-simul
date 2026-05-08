@@ -26,10 +26,12 @@ public class GetItemService implements GetItemUseCase {
 
         return ClosetItemResponse.builder()
                 .itemId(item.getId())
+                .imageId(item.getClothingImage().getId())
                 .imageUrl(item.getClothingImage().getImageUrl())
                 .category(item.getCategory())
                 .memo(item.getMemo())
                 .tryCount(item.getTryCount())
+                .collectionId(item.getClosetCollection() != null ? item.getClosetCollection().getId() : null)
                 .createdAt(item.getCreatedAt())
                 .build();
     }

@@ -15,6 +15,7 @@ public interface GetItemsUseCase {
     class GetItemsQuery {
         private final UUID userId;
         private final Category category;
+        private final UUID collectionId;
         private final String sort;
         private final int page;
         private final int size;

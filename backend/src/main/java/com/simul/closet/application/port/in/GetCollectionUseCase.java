@@ -1,8 +1,8 @@
 package com.simul.closet.application.port.in;
 
-import com.simul.closet.domain.model.ClosetCollection;
+import com.simul.closet.application.dto.ClosetCollectionResponse;
 import java.util.UUID;
 
 public interface GetCollectionUseCase {
-    ClosetCollection getCollection(UUID collectionId, UUID userId);
+    ClosetCollectionResponse getCollection(UUID collectionId, UUID userId);
 }

@@ -26,10 +26,9 @@ export default function FolderCard({
   onRename,
   onDelete
 }: FolderCardProps) {
-  // Use dummy fallbacks if images are missing
-  const mainImage = images[0] || '/clothes.png';
-  const subImage1 = images[1] || '/clothes.png';
-  const subImage2 = images[2] || '/clothes.png';
+  const mainImage = images[0];
+  const subImage1 = images[1];
+  const subImage2 = images[2];
 
   const [tempTitle, setTempTitle] = useState(title);
 
@@ -46,14 +45,14 @@ export default function FolderCard({
       )}
       <div className={styles.imageGrid}>
         <div className={styles.mainImageWrapper}>
-          <img src={mainImage} alt={`${title} 메인`} className={styles.image} />
+          {mainImage && <img src={mainImage} alt={`${title} 메인`} className={styles.image} />}
         </div>
         <div className={styles.subImagesWrapper}>
           <div className={styles.subImageWrapper}>
-            <img src={subImage1} alt={`${title} 서브1`} className={styles.image} />
+            {subImage1 && <img src={subImage1} alt={`${title} 서브1`} className={styles.image} />}
           </div>
           <div className={styles.subImageWrapper}>
-            <img src={subImage2} alt={`${title} 서브2`} className={styles.image} />
+            {subImage2 && <img src={subImage2} alt={`${title} 서브2`} className={styles.image} />}
           </div>
         </div>
       </div>
