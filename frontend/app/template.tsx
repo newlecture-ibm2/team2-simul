@@ -17,6 +17,10 @@ function getDepth(pathname: string) {
   return segments.length + 1;
 }
 
+interface CustomWindow extends Window {
+  isNavigatingFromBottomNav?: boolean;
+}
+
 export default function Template({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const currentDepth = getDepth(pathname);
@@ -24,7 +28,7 @@ export default function Template({ children }: { children: React.ReactNode }) {
   let animationClass = ""; // 기본: 애니메이션 없음 (동등한 뎁스 이동 시)
 
   // 탭바 클릭을 통한 이동인지 확인 (Strict Mode 대응: 렌더링 중에는 읽기만 수행)
-  const isBottomNavClick = typeof window !== 'undefined' ? (window as any).isNavigatingFromBottomNav : false;
+  const isBottomNavClick = typeof window !== 'undefined' ? (window as CustomWindow).isNavigatingFromBottomNav : false;
 
   if (!isBottomNavClick && previousDepth > 0) {
     if (currentDepth > previousDepth) {
@@ -41,7 +45,7 @@ export default function Template({ children }: { children: React.ReactNode }) {
     previousDepth = currentDepth;
     // 마운트 완료 후 탭바 클릭 플래그 초기화
     if (typeof window !== 'undefined') {
-      (window as any).isNavigatingFromBottomNav = false;
+      (window as CustomWindow).isNavigatingFromBottomNav = false;
     }
   }, [currentDepth]);
 
