@@ -33,6 +33,7 @@ export default function BottomNav() {
             className={`${styles.navItem} ${active ? styles.navItemActive : ''}`}
             onClick={() => {
               if (typeof window !== 'undefined') {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (window as any).isNavigatingFromBottomNav = true;
               }
             }}
