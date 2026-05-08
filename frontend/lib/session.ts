@@ -3,7 +3,8 @@ import { SessionOptions } from 'iron-session';
 export interface UserSessionData {
   id: string;
   role: 'USER' | 'ADMIN';
-  token: string; // JWT token string for proxying to backend
+  token: string; // JWT access token string for proxying to backend
+  refreshToken?: string; // JWT refresh token for logout & token renewal
 }
 
 export interface SessionData {

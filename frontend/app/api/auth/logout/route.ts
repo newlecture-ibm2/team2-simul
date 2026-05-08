@@ -1,35 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getIronSession } from 'iron-session';
+import { sessionOptions, SessionData } from '@/lib/session';
 
 /**
  * 로그아웃 BFF 라우트
- * HttpOnly 쿠키(accessToken, refreshToken)를 삭제 처리합니다.
+ *
+ * 1. iron-session에서 refreshToken을 꺼냄
+ * 2. 백엔드 /auth/logout에 refreshToken을 보내서 Redis에서 삭제
+ * 3. iron-session 세션을 파괴 (암호화 쿠키 삭제)
  */
 export async function POST(request: NextRequest) {
   const backendUrl = process.env.BACKEND_URL || 'http://localhost:8080';
-  
-  // 백엔드 로그아웃 API 호출 (성공 여부 상관없이 쿠키는 삭제)
-  try {
-    await fetch(`${backendUrl}/auth/logout`, {
-      method: 'DELETE',
-    });
-  } catch (error) {
-    console.error('Backend logout call failed:', error);
+
+  // 1. iron-session에서 현재 세션 정보 가져오기
+  const response = NextResponse.json({ success: true });
+  const session = await getIronSession<SessionData>(request, response, sessionOptions);
+
+  // 2. 세션에 refreshToken이 있으면 백엔드에 보내서 Redis에서 삭제
+  const refreshToken = session.user?.refreshToken;
+  if (refreshToken) {
+    try {
+      await fetch(`${backendUrl}/auth/logout`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+    } catch (error) {
+      console.error('[Logout] Backend logout call failed:', error);
+    }
   }
 
-  const response = NextResponse.json({ success: true });
-
-  // 쿠키 만료 처리
-  response.cookies.set('accessToken', '', {
-    httpOnly: true,
-    path: '/',
-    maxAge: 0,
-  });
-
-  response.cookies.set('refreshToken', '', {
-    httpOnly: true,
-    path: '/',
-    maxAge: 0,
-  });
+  // 3. iron-session 세션 파괴 (브라우저의 암호화 쿠키도 자동 삭제)
+  session.destroy();
 
   return response;
 }

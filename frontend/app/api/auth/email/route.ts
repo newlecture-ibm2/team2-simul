@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getIronSession } from 'iron-session';
+import { sessionOptions, SessionData } from '@/lib/session';
 
+/**
+ * 이메일 인증 BFF 라우트
+ *
+ * 1. 브라우저에서 이메일/비밀번호를 받음
+ * 2. 백엔드(Spring Boot)에 전달하여 JWT 발급
+ * 3. 발급받은 토큰을 iron-session에 암호화 저장
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -29,28 +38,22 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await backendResponse.json();
-    const { accessToken, refreshToken } = data;
+    const { accessToken, refreshToken, isNewUser } = data;
 
+    // iron-session에 토큰을 암호화하여 저장
     const response = NextResponse.json({ 
       success: true,
-      user: data.user 
+      isNewUser,
     });
 
-    response.cookies.set('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 3600, 
-    });
-
-    response.cookies.set('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 14,
-    });
+    const session = await getIronSession<SessionData>(request, response, sessionOptions);
+    session.user = {
+      id: '', // 토큰에서 추출 가능하지만, 당장은 빈 값으로 설정
+      role: 'USER',
+      token: accessToken,
+      refreshToken: refreshToken,
+    };
+    await session.save();
 
     return response;
 
