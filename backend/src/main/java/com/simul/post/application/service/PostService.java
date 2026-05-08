@@ -27,12 +27,14 @@ import java.util.*;
 
 import com.simul.post.application.port.in.GetPostDetailUseCase;
 import com.simul.post.application.port.in.DeletePostUseCase;
+import com.simul.post.application.port.in.UpdatePostUseCase;
 import com.simul.post.application.dto.PostDetailResponse;
+import com.simul.post.application.dto.UpdatePostCommand;
 // ... imports handled below by inserting at class declaration
 
 @Service
 @RequiredArgsConstructor
-public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetPostDetailUseCase, DeletePostUseCase {
+public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetPostDetailUseCase, DeletePostUseCase, UpdatePostUseCase {
 
     private final PostRepositoryPort postRepositoryPort;
     private final PostLikePersistencePort postLikePersistencePort;
@@ -226,5 +228,29 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
 
         post.softDelete();
         postRepositoryPort.save(post);
+    }
+
+    @Override
+    @Transactional
+    public void updatePost(UpdatePostCommand command) {
+        Post post = postRepositoryPort.findById(command.getPostId())
+                .orElseThrow(() -> new IllegalArgumentException("게시물을 찾을 수 없습니다."));
+
+        if (!post.getUserId().equals(command.getUserId())) {
+            throw new IllegalArgumentException("ERR-002: 본인의 게시물만 수정할 수 있습니다.");
+        }
+
+        if (command.getTags() != null && command.getTags().size() > 10) {
+            throw new IllegalArgumentException("ERR-307-A: 태그는 최대 10개까지 등록 가능합니다.");
+        }
+
+        // 엔티티 업데이트 (caption, isPublic)
+        post.update(command.getCaption(), command.getIsPublic());
+        postRepositoryPort.save(post);
+
+        // 태그 업데이트
+        if (command.getTags() != null) {
+            attachTagsToPostUseCase.updateTags(command.getPostId(), command.getTags());
+        }
     }
 }

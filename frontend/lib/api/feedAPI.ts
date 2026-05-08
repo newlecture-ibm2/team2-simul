@@ -59,6 +59,14 @@ export async function toggleLike(postId: string) {
   return apiClient(`/posts/${postId}/likes`, { method: 'POST' });
 }
 
+/** 게시물 수정 */
+export async function updatePost(postId: string, data: { caption?: string; isPublic?: boolean; tags?: string[] }) {
+  return apiClient(`/posts/${postId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
 /** 게시물 삭제 */
 export async function deletePost(postId: string) {
   return apiClient(`/posts/${postId}`, { method: 'DELETE' });

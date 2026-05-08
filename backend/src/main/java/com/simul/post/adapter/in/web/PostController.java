@@ -1,11 +1,7 @@
 package com.simul.post.adapter.in.web;
 
-import com.simul.post.application.dto.CreatePostCommand;
-import com.simul.post.application.dto.FeedPostResponse;
-import com.simul.post.application.dto.ToggleLikeResponse;
-import com.simul.post.application.port.in.CreatePostUseCase;
-import com.simul.post.application.port.in.GetFeedPostsUseCase;
-import com.simul.post.application.port.in.TogglePostLikeUseCase;
+import com.simul.post.application.dto.*;
+import com.simul.post.application.port.in.*;
 import com.simul.post.domain.model.Post;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,8 +25,9 @@ public class PostController {
     private final CreatePostUseCase createPostUseCase;
     private final GetFeedPostsUseCase getFeedPostsUseCase;
     private final TogglePostLikeUseCase togglePostLikeUseCase;
-    private final com.simul.post.application.port.in.GetPostDetailUseCase getPostDetailUseCase;
-    private final com.simul.post.application.port.in.DeletePostUseCase deletePostUseCase;
+    private final GetPostDetailUseCase getPostDetailUseCase;
+    private final DeletePostUseCase deletePostUseCase;
+    private final UpdatePostUseCase updatePostUseCase;
 
     @PostMapping
     public ResponseEntity<?> createPost(
@@ -154,6 +151,54 @@ public class PostController {
             if (e.getMessage().contains("ERR-002")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
                         "error_code", "ERR-002",
+                        "message", e.getMessage()
+                ));
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "error_code", "ERR-003",
+                    "message", e.getMessage()
+            ));
+        }
+    }
+
+    /**
+     * 게시물 수정 (PATCH /posts/{postId})
+     * - 로그인 필수
+     * - 작성자 본인만 수정 가능
+     * - 이미지 제외 내용/공개여부/태그만 수정 지원
+     */
+    @PatchMapping("/{postId}")
+    public ResponseEntity<?> updatePost(
+            @AuthenticationPrincipal UUID userId,
+            @PathVariable UUID postId,
+            @RequestBody UpdatePostRequest request
+    ) {
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "error_code", "ERR-001",
+                    "message", "로그인이 필요한 서비스입니다."
+            ));
+        }
+
+        try {
+            UpdatePostCommand command = UpdatePostCommand.builder()
+                    .postId(postId)
+                    .userId(userId)
+                    .caption(request.getCaption())
+                    .isPublic(request.getIsPublic())
+                    .tags(request.getTags())
+                    .build();
+            updatePostUseCase.updatePost(command);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage().contains("ERR-002")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                        "error_code", "ERR-002",
+                        "message", e.getMessage()
+                ));
+            } else if (e.getMessage().contains("ERR-307")) {
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of(
+                        "error_code", "ERR-307-A",
                         "message", e.getMessage()
                 ));
             }

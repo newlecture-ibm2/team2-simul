@@ -2,6 +2,7 @@
 
 import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuthStore } from '@/lib/stores/useAuthStore';
 
 function CallbackHandler() {
   const searchParams = useSearchParams();
@@ -34,6 +35,12 @@ function CallbackHandler() {
       })
       .then((data) => {
         console.log('로그인 성공!', data);
+        if (data.user) {
+          useAuthStore.getState().setUser(data.user);
+        } else {
+          // data 자체에 user 정보가 담겨올 경우
+          useAuthStore.getState().setUser(data);
+        }
         // 성공 시 홈 피드로 이동
         router.push('/');
       })

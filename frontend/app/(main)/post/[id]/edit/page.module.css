@@ -1,0 +1,244 @@
+.container {
+  min-height: 100vh;
+  background: var(--color-surface-fog);
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: rgba(246, 246, 243, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 50;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-korean);
+}
+
+.cancelBtn {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  padding: 8px 0;
+  font-weight: 500;
+}
+
+.submitBtn {
+  font-size: 15px;
+  color: var(--color-primary);
+  font-weight: 700;
+  padding: 8px 0;
+}
+
+.main {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  max-width: 450px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.imageScrollContainer {
+  margin: 0 -20px;
+  padding: 0 20px;
+}
+
+.imageScroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.imageScroll::-webkit-scrollbar {
+  display: none;
+}
+
+.imageFrame {
+  flex: 0 0 calc(100% - 40px);
+  aspect-ratio: 4/6;
+  border-radius: var(--radius-standard);
+  overflow: hidden;
+  scroll-snap-align: center;
+  background: var(--color-surface-sand);
+}
+
+.previewImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.tagInputContainer {
+  display: flex;
+  gap: 8px;
+}
+
+.tagInput {
+  flex: 1;
+  background: var(--color-surface-white);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-standard);
+  padding: 12px 16px;
+  font-size: 15px;
+  color: var(--color-text-primary);
+}
+
+.tagInput:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+}
+
+.tagAddBtn {
+  background: var(--color-primary);
+  color: var(--color-text-black);
+  border-radius: var(--radius-standard);
+  padding: 0 20px;
+  font-weight: 600;
+}
+
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tagChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--color-surface-white);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  border-radius: 99px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.tagRemoveBtn {
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.textareaContainer {
+  position: relative;
+  background: var(--color-surface-white);
+  border-radius: var(--radius-standard);
+  padding: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 120px;
+  border: none;
+  resize: none;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  background: transparent;
+}
+
+.textarea:focus {
+  outline: none;
+}
+
+.charCount {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  font-size: 12px;
+  color: var(--color-text-disabled);
+}
+
+.charCountMax {
+  color: var(--color-error);
+}
+
+.visibilityToggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-surface-white);
+  padding: 16px;
+  border-radius: var(--radius-standard);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.visibilityDesc {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+.toggleBtn {
+  width: 50px;
+  height: 30px;
+  border-radius: 15px;
+  position: relative;
+  transition: background-color 0.3s ease;
+}
+
+.toggleOn {
+  background-color: var(--color-primary);
+}
+
+.toggleOff {
+  background-color: var(--color-border-disabled);
+}
+
+.toggleKnob {
+  width: 26px;
+  height: 26px;
+  background-color: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.toggleOn .toggleKnob {
+  transform: translateX(20px);
+}

@@ -95,4 +95,13 @@ public class Post extends BaseJpaEntity {
     public void incrementViewCount() {
         this.viewCount++;
     }
+
+    public void update(String caption, Boolean isPublic) {
+        if (caption != null) {
+            this.caption = caption;
+        }
+        if (isPublic != null) {
+            this.isPublic = isPublic;
+        }
+    }
 }

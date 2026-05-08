@@ -140,9 +140,14 @@ export default function PostDetailPage() {
         </button>
         <div style={{ display: 'flex', gap: '8px' }}>
           {isAuthenticated && user && String(user.id) === post.userId && (
-             <button onClick={handleDelete} className={styles.iconBtn} aria-label="삭제하기">
-               <span style={{ fontSize: '14px', color: 'var(--color-primary)' }}>삭제</span>
-             </button>
+            <>
+              <button onClick={() => router.push(`/post/${postId}/edit`)} className={styles.iconBtn} aria-label="수정하기">
+                <span style={{ fontSize: '14px', color: 'var(--color-primary)' }}>수정</span>
+              </button>
+              <button onClick={handleDelete} className={styles.iconBtn} aria-label="삭제하기">
+                <span style={{ fontSize: '14px', color: 'var(--color-error)' }}>삭제</span>
+              </button>
+            </>
           )}
           <button className={styles.iconBtn} aria-label="공유하기">
             <img src="/icons/square.and.arrow.up.png" alt="Share" className={styles.icon} />
