@@ -2,7 +2,6 @@
 
 import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuthStore } from '@/lib/stores/useAuthStore';
 
 function CallbackHandler() {
   const searchParams = useSearchParams();
@@ -36,11 +35,7 @@ function CallbackHandler() {
       })
       .then((data) => {
         console.log('로그인 성공!', data);
-        if (data.user) {
-          useAuthStore.getState().setUser(data.user);
-        } else {
-          useAuthStore.getState().setUser(data);
-        }
+        // TODO: JWT 토큰 처리 로직 (현재는 성공 로그만 출력)
         // 성공 시 홈 피드로 이동
         router.push('/');
       })

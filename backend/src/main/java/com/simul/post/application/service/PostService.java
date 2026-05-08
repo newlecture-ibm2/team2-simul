@@ -248,9 +248,6 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         post.update(command.getCaption(), command.getIsPublic());
         postRepositoryPort.save(post);
 
-        // 태그 업데이트
-        if (command.getTags() != null) {
-            attachTagsToPostUseCase.updateTags(command.getPostId(), command.getTags());
-        }
+        // 태그 업데이트 기능은 타 도메인 분리 정책으로 인해 임시 비활성화됨
     }
 }
