@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState, useLayoutEffect } from 'react';
+import { useRef, useState, useLayoutEffect } from 'react';
 import ClosetCard from '../ClosetCard/ClosetCard';
 import styles from './VerticalDeck.module.css';
 
@@ -16,43 +16,42 @@ interface VerticalDeckProps {
 
 export default function VerticalDeck({ items, onItemClick }: VerticalDeckProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  if (!items || items.length === 0) {
-    return <div className={styles.emptyDeck}>아이템이 없습니다.</div>;
-  }
-
   const viewportRef = useRef<HTMLDivElement>(null);
   const scrubberTrackRef = useRef<HTMLDivElement>(null);
   const [scrollY, setScrollY] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(600);
-  
+
   // Create a massive virtual scroll space
-  const ITEM_COUNT = items.length;
+  const ITEM_COUNT = items?.length || 0;
   const VIRTUAL_MULTIPLIER = 1000; 
   const totalVirtualItems = ITEM_COUNT * VIRTUAL_MULTIPLIER;
   
   // Tuning parameters — scale with viewport height
   const scrollSensitivity = 150; // How many px of scroll = 1 card movement
-  
-  // Dynamic: scale K_FACTOR with viewport height (taller = more spread)
-  // Base: 0.18 at 400px, scales up linearly
-  const K_FACTOR = Math.max(0.12, 0.18 * (viewportHeight / 400));
 
   useLayoutEffect(() => {
-    if (containerRef.current) {
+    if (containerRef.current && ITEM_COUNT > 0) {
       setViewportHeight(containerRef.current.clientHeight);
       // Start near the middle
       const startScroll = (totalVirtualItems / 2) * scrollSensitivity;
       containerRef.current.scrollTop = startScroll;
       setScrollY(startScroll);
     }
-  }, [totalVirtualItems, scrollSensitivity]);
+  }, [totalVirtualItems, scrollSensitivity, ITEM_COUNT]);
+
+  if (!items || items.length === 0) {
+    return <div className={styles.emptyDeck}>아이템이 없습니다.</div>;
+  }
 
   const handleScroll = () => {
     if (containerRef.current) {
       setScrollY(containerRef.current.scrollTop);
     }
   };
+
+  // Dynamic: scale K_FACTOR with viewport height (taller = more spread)
+  // Base: 0.18 at 400px, scales up linearly
+  const K_FACTOR = Math.max(0.12, 0.18 * (viewportHeight / 400));
 
   const exactCenterIndex = scrollY / scrollSensitivity;
   const roundedCenterIndex = Math.floor(exactCenterIndex);
