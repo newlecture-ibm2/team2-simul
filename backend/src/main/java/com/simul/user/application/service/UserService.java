@@ -63,4 +63,25 @@ public class UserService implements LoadUserUseCase, RegisterUserUseCase {
                 .build();
         return userPersistencePort.save(newUser);
     }
+
+    /**
+     * 이메일 회원가입으로 신규 사용자 등록
+     */
+    @Override
+    public User registerEmailUser(String email, String password, String nickname, String name, Gender gender) {
+        // 이미 가입된 이메일인지 확인
+        if (userPersistencePort.findByProviderAndProviderId("email", email).isPresent()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "이미 가입된 이메일입니다.");
+        }
+
+        User newUser = User.builder()
+                .provider("email")
+                .providerId(email)
+                .password(password)
+                .nickname(nickname)
+                .name(name)
+                .gender((gender != null) ? gender : Gender.UNKNOWN)
+                .build();
+        return userPersistencePort.save(newUser);
+    }
 }

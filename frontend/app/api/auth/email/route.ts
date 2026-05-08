@@ -3,33 +3,36 @@ import { getIronSession } from 'iron-session';
 import { sessionOptions, SessionData } from '@/lib/session';
 
 /**
- * 소셜 로그인 BFF 라우트
+ * 이메일 인증 BFF 라우트
  *
- * 1. 브라우저에서 provider, code, redirectUri를 받음
+ * 1. 브라우저에서 이메일/비밀번호를 받음
  * 2. 백엔드(Spring Boot)에 전달하여 JWT 발급
  * 3. 발급받은 토큰을 iron-session에 암호화 저장
  */
 export async function POST(request: NextRequest) {
   try {
-    // 1. 클라이언트(브라우저)로부터 전달받은 데이터 추출
     const body = await request.json();
-    const { provider, code, redirectUri } = body;
+    const { email, password, name, nickname, gender, type } = body;
+    const isSignup = type === 'signup';
 
-    // 2. 실제 백엔드(Spring Boot) 서버로 로그인 요청 전달
-    // 서버 간 통신이므로 브라우저의 CORS 제한을 받지 않습니다.
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:8080';
-    const backendResponse = await fetch(`${backendUrl}/auth/social`, {
+    const endpoint = isSignup ? '/auth/signup' : '/auth/login/email';
+    
+    const backendResponse = await fetch(`${backendUrl}${endpoint}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ provider, code, redirectUri }),
+      body: JSON.stringify(isSignup 
+        ? { email, password, name, nickname, gender }
+        : { email, password }
+      ),
     });
 
     if (!backendResponse.ok) {
       const errorData = await backendResponse.json();
       return NextResponse.json(
-        { message: errorData.message || '백엔드 인증 실패' },
+        { message: errorData.detail || errorData.message || '인증 실패' },
         { status: backendResponse.status }
       );
     }
@@ -37,7 +40,7 @@ export async function POST(request: NextRequest) {
     const data = await backendResponse.json();
     const { accessToken, refreshToken, isNewUser } = data;
 
-    // 3. iron-session에 토큰을 암호화하여 저장
+    // iron-session에 토큰을 암호화하여 저장
     const response = NextResponse.json({ 
       success: true,
       isNewUser,
@@ -55,7 +58,7 @@ export async function POST(request: NextRequest) {
     return response;
 
   } catch (error) {
-    console.error('BFF Social Auth Error:', error);
+    console.error('BFF Email Auth Error:', error);
     return NextResponse.json(
       { message: '내부 서버 오류가 발생했습니다.' },
       { status: 500 }
