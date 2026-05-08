@@ -6,6 +6,8 @@ import Footer from '@/components/Footer';
 import BottomNav from '@/components/BottomNav';
 import Providers from '@/components/Providers';
 
+import OfflineBanner from '@/components/OfflineBanner';
+
 export const metadata: Metadata = {
   title: 'SIMUL — AI 가상시착 패션 플랫폼',
   description:
@@ -29,6 +31,7 @@ export default function RootLayout({
     <html lang="ko">
       <body>
         <Providers>
+          <OfflineBanner />
           <div className={styles.appContainer}>
             <Header />
             <main className={styles.main}>{children}</main>
