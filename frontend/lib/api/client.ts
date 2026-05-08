@@ -34,6 +34,20 @@ export async function apiClient<T>(
     headers,
   });
 
+  // 401 Unauthorized 발생 시 토큰 갱신 시도
+  if (response.status === 401 && endpoint !== '/auth/refresh' && endpoint !== '/auth/login/email') {
+    try {
+      const refreshResponse = await fetch(`${API_BASE}/auth/refresh`, { method: 'POST' });
+      
+      if (refreshResponse.ok) {
+        // 갱신 성공 시 원래 요청 재시도 (BFF가 세션 업데이트했으므로 새 요청은 새 토큰 사용)
+        return apiClient(endpoint, options);
+      }
+    } catch (e) {
+      console.error('Token refresh failed:', e);
+    }
+  }
+
   if (!response.ok) {
     let errorMessage = `API Error: ${response.status} ${response.statusText}`;
     try {
@@ -41,7 +55,7 @@ export async function apiClient<T>(
       if (errorData.message) {
         errorMessage = errorData.message;
       }
-    } catch (e) {
+    } catch {
       // JSON 파싱 실패 시 기본 메시지 유지
     }
     throw new Error(errorMessage);

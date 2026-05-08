@@ -55,9 +55,13 @@ export async function createPost(data: FormData) {
   });
 }
 
-/** 좋아요 토글 */
 export async function toggleLike(postId: string) {
   return apiClient(`/posts/${postId}/likes`, { method: 'POST' });
+}
+
+/** 게시물 삭제 */
+export async function deletePost(postId: string) {
+  return apiClient(`/posts/${postId}`, { method: 'DELETE' });
 }
 
 /** 댓글 작성 */
