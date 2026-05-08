@@ -4,36 +4,41 @@ import { useState } from 'react';
 import styles from './AddItemModal.module.css';
 import Button from '@/components/Button';
 import ClosetCard from '../../../../_components/ClosetCard/ClosetCard';
-
-interface Item {
-  id: string;
-  imageUrl?: string;
-}
+import { useClosetItems } from '../../../../_components/useClosetItems';
+import { useParams } from 'next/navigation';
 
 interface AddItemModalProps {
   isOpen: boolean;
   onClose: () => void;
-  availableItems: Item[];
   onAdd: (selectedIds: string[]) => void;
+  existingImageIds: string[];
 }
 
 export default function AddItemModal({
   isOpen,
   onClose,
-  availableItems,
   onAdd,
+  existingImageIds,
 }: AddItemModalProps) {
+  const params = useParams();
+  const folderId = params.id as string;
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 9;
+  const [currentPage, setCurrentPage] = useState(0);
+  const ITEMS_PER_PAGE = 12;
+
+  const { items: allItems, totalCount } = useClosetItems({
+    page: currentPage,
+    size: ITEMS_PER_PAGE,
+    sort: 'recent'
+  });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const totalPages = Math.ceil(availableItems.length / ITEMS_PER_PAGE);
-  const currentItems = availableItems.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  // 현재 폴더에 이미 저장된 아이템(이미지 기준) 제외
+  const filteredItems = allItems.filter(item => !existingImageIds.includes(item.imageId!));
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   const toggleItem = (id: string) => {
     const newSelected = new Set(selectedIds);
@@ -45,6 +50,15 @@ export default function AddItemModal({
     setSelectedIds(newSelected);
   };
 
+  const handleConfirm = async () => {
+    setIsSubmitting(true);
+    try {
+      await onAdd(Array.from(selectedIds));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -54,35 +68,38 @@ export default function AddItemModal({
         </div>
 
         <div className={styles.content}>
-          <div className={styles.grid}>
-            {currentItems.map((item) => (
-              <div 
-                key={item.id} 
-                className={styles.cardWrapper}
-                onClick={() => toggleItem(item.id)}
-              >
-                <ClosetCard id={item.id} />
-                <div className={`${styles.selectionOverlay} ${selectedIds.has(item.id) ? styles.selected : ''}`}>
-                  <div className={styles.checkCircle}>
-                    {selectedIds.has(item.id) && <span className={styles.checkIcon}>✓</span>}
+          {filteredItems.length > 0 ? (
+            <div className={styles.grid}>
+              {filteredItems.map((item) => (
+                <div 
+                  key={item.itemId} 
+                  className={styles.cardWrapper}
+                  onClick={() => toggleItem(item.itemId)}
+                >
+                  <ClosetCard id={item.itemId} imageUrl={item.imageUrl} />
+                  <div className={`${styles.selectionOverlay} ${selectedIds.has(item.itemId) ? styles.selected : ''}`}>
+                    <div className={styles.checkCircle}>
+                      {selectedIds.has(item.itemId) && <span className={styles.checkIcon}>✓</span>}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-
+              ))}
+            </div>
+          ) : (
+            <div className={styles.emptyState}>이동할 수 있는 아이템이 없습니다</div>
+          )}
         </div>
 
         {totalPages > 1 && (
           <div className={styles.paginationWrapper}>
             <div className={styles.paginationTrack}>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              {Array.from({ length: totalPages }, (_, i) => i).map((page) => (
                 <button
                   key={page}
                   className={`${styles.pageBtn} ${currentPage === page ? styles.activePage : ''}`}
                   onClick={() => setCurrentPage(page)}
                 >
-                  {page}
+                  {page + 1}
                 </button>
               ))}
             </div>
@@ -90,17 +107,17 @@ export default function AddItemModal({
         )}
 
         <div className={styles.actions}>
-          <Button variant="secondary" size="lg" onClick={onClose} fullWidth>
+          <Button variant="secondary" size="lg" onClick={onClose} fullWidth disabled={isSubmitting}>
             취소
           </Button>
           <Button 
             variant="primary" 
             size="lg" 
-            onClick={() => onAdd(Array.from(selectedIds))}
+            onClick={handleConfirm}
             fullWidth
-            disabled={selectedIds.size === 0}
+            disabled={selectedIds.size === 0 || isSubmitting}
           >
-            확인 ({selectedIds.size})
+            {isSubmitting ? '처리 중...' : `확인 (${selectedIds.size})`}
           </Button>
         </div>
       </div>

@@ -13,7 +13,10 @@ public interface ClosetItemPersistencePort {
     ClosetItem save(ClosetItem closetItem);
     Optional<ClosetItem> findById(UUID id);
     List<ClosetItem> findByUserId(UUID userId);
-    Page<ClosetItem> findByUserIdWithFilter(UUID userId, Category category, Pageable pageable);
+    Page<ClosetItem> findByUserIdWithFilter(UUID userId, Category category, UUID collectionId, Pageable pageable);
     long countByUserId(UUID userId);
     void delete(ClosetItem closetItem);
+    List<String> findTopImageUrlsByCollectionId(UUID collectionId, int limit);
+    long countByCollectionId(UUID collectionId);
+    boolean existsInCollection(UUID imageId, UUID collectionId);
 }

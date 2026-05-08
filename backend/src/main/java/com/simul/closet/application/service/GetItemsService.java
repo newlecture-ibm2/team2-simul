@@ -38,6 +38,7 @@ public class GetItemsService implements GetItemsUseCase {
         Page<ClosetItem> itemsPage = closetItemPersistencePort.findByUserIdWithFilter(
                 query.getUserId(),
                 query.getCategory(),
+                query.getCollectionId(),
                 pageable
         );
 
@@ -45,10 +46,12 @@ public class GetItemsService implements GetItemsUseCase {
         List<ClosetItemResponse> itemResponses = itemsPage.getContent().stream()
                 .map(item -> ClosetItemResponse.builder()
                         .itemId(item.getId())
+                        .imageId(item.getClothingImage().getId())
                         .imageUrl(item.getClothingImage().getImageUrl())
                         .category(item.getCategory())
                         .memo(item.getMemo())
                         .tryCount(item.getTryCount())
+                        .collectionId(item.getClosetCollection() != null ? item.getClosetCollection().getId() : null)
                         .createdAt(item.getCreatedAt())
                         .build())
                 .collect(Collectors.toList());

@@ -28,6 +28,8 @@ public class ClosetItemController {
     private final GetItemUseCase getItemUseCase;
     private final UpdateItemUseCase updateItemUseCase;
     private final DeleteItemUseCase deleteItemUseCase;
+    private final com.simul.closet.application.port.in.UpdateItemCollectionUseCase updateItemCollectionUseCase;
+    private final com.simul.closet.application.port.in.CopyItemsToCollectionUseCase copyItemsToCollectionUseCase;
 
     @PostMapping
     public ResponseEntity<UUID> addItem(
@@ -57,12 +59,13 @@ public class ClosetItemController {
     @GetMapping
     public ResponseEntity<ClosetItemListResponse> getItems(
             @RequestParam(required = false) Category category,
+            @RequestParam(required = false) UUID collectionId,
             @RequestParam(defaultValue = "recent") String sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        log.info("Received request to get items: category={}, sort={}, page={}, size={}", 
-                 category, sort, page, size);
+        log.info("Received request to get items: category={}, collectionId={}, sort={}, page={}, size={}", 
+                 category, collectionId, sort, page, size);
 
         // TODO: SecurityContext에서 실제 로그인한 유저의 ID를 가져와야 함
         UUID mockUserId = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -70,6 +73,7 @@ public class ClosetItemController {
         GetItemsUseCase.GetItemsQuery query = GetItemsUseCase.GetItemsQuery.builder()
                 .userId(mockUserId)
                 .category(category)
+                .collectionId(collectionId)
                 .sort(sort)
                 .page(page)
                 .size(size)
@@ -122,5 +126,66 @@ public class ClosetItemController {
 
         deleteItemUseCase.deleteItem(command);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{itemId}/collection")
+    public ResponseEntity<Void> updateItemCollection(
+            @PathVariable UUID itemId,
+            @RequestBody com.simul.closet.adapter.in.web.dto.UpdateItemCollectionRequest request
+    ) {
+        log.info("Received request to update item collection: itemId={}, collectionId={}", 
+                 itemId, request.getCollectionId());
+
+        // TODO: SecurityContext에서 실제 로그인한 유저의 ID를 가져와야 함
+        UUID mockUserId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+        com.simul.closet.application.port.in.UpdateItemCollectionUseCase.UpdateItemCollectionCommand command = com.simul.closet.application.port.in.UpdateItemCollectionUseCase.UpdateItemCollectionCommand.builder()
+                .itemId(itemId)
+                .userId(mockUserId)
+                .collectionId(request.getCollectionId())
+                .build();
+
+        updateItemCollectionUseCase.updateItemCollection(command);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/collection/bulk")
+    public ResponseEntity<Void> bulkUpdateItemCollection(
+            @RequestBody com.simul.closet.adapter.in.web.dto.BulkUpdateItemCollectionRequest request
+    ) {
+        log.info("Received request to bulk update item collection: itemIds={}, collectionId={}", 
+                 request.getItemIds(), request.getCollectionId());
+
+        // TODO: SecurityContext에서 실제 로그인한 유저의 ID를 가져와야 함
+        UUID mockUserId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+        com.simul.closet.application.port.in.UpdateItemCollectionUseCase.BulkUpdateItemCollectionCommand command = com.simul.closet.application.port.in.UpdateItemCollectionUseCase.BulkUpdateItemCollectionCommand.builder()
+                .itemIds(request.getItemIds())
+                .userId(mockUserId)
+                .collectionId(request.getCollectionId())
+                .build();
+
+        updateItemCollectionUseCase.bulkUpdateItemCollection(command);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/copy")
+    public ResponseEntity<Void> copyItemsToCollection(
+            @RequestBody com.simul.closet.adapter.in.web.dto.BulkUpdateItemCollectionRequest request
+    ) {
+        log.info("Received request to copy items to collection: itemIds={}, targetCollectionId={}", 
+                 request.getItemIds(), request.getCollectionId());
+
+        // TODO: SecurityContext에서 실제 로그인한 유저의 ID를 가져와야 함
+        UUID mockUserId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+        com.simul.closet.application.port.in.CopyItemsToCollectionUseCase.CopyItemsToCollectionCommand command = com.simul.closet.application.port.in.CopyItemsToCollectionUseCase.CopyItemsToCollectionCommand.builder()
+                .sourceItemIds(request.getItemIds())
+                .userId(mockUserId)
+                .targetCollectionId(request.getCollectionId())
+                .build();
+
+        copyItemsToCollectionUseCase.copyItemsToCollection(command);
+        return ResponseEntity.ok().build();
     }
 }

@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 public class GetCollectionsService implements GetCollectionsUseCase {
 
     private final ClosetCollectionPersistencePort closetCollectionPersistencePort;
+    private final com.simul.closet.application.port.out.ClosetItemPersistencePort closetItemPersistencePort;
 
     @Override
     public ClosetCollectionListResponse getCollections(GetCollectionsQuery query) {
@@ -38,13 +39,17 @@ public class GetCollectionsService implements GetCollectionsUseCase {
         );
 
         List<ClosetCollectionResponse> collectionResponses = collectionsPage.getContent().stream()
-                .map(dto -> ClosetCollectionResponse.builder()
+                .map(dto -> {
+                    List<String> topImages = closetItemPersistencePort.findTopImageUrlsByCollectionId(dto.getCollection().getId(), 3);
+                    return ClosetCollectionResponse.builder()
                         .collectionId(dto.getCollection().getId())
                         .name(dto.getCollection().getName())
                         .coverImageUrl(dto.getCollection().getCoverImageUrl())
+                        .images(topImages)
                         .itemCount((int) dto.getItemCount())
                         .createdAt(dto.getCollection().getCreatedAt())
-                        .build())
+                        .build();
+                })
                 .collect(Collectors.toList());
 
         return ClosetCollectionListResponse.builder()
