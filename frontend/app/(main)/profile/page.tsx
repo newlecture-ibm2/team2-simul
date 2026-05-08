@@ -2,23 +2,33 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
+import { getCurrentUser } from '@/lib/api/authAPI';
+import { User } from '@/lib/stores/useAuthStore';
 import styles from './page.module.css';
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<'게시물' | '옷장'>('게시물');
+
+  const { data: user, isLoading } = useQuery<User>({
+    queryKey: ['me'],
+    queryFn: getCurrentUser,
+  });
+
+  if (isLoading) return <div className={styles.loading}>로딩 중...</div>;
 
   return (
     <div className={styles.profilePage}>
       <div className={styles.profileFrame}>
         {/* Immersive Hero Section */}
         <div className={styles.heroSection}>
-          <img src="/profile.jpg" alt="Profile Background" className={styles.heroBg} />
+          <img src={user?.profileImage || "/profile.jpg"} alt="Profile Background" className={styles.heroBg} />
           <div className={styles.heroOverlay}></div>
 
           {/* Hero Content (Bottom aligned) */}
           <div className={styles.heroContent}>
-            <h1 className={styles.heroName}>지수</h1>
-            <p className={styles.heroUsername}>@kikilee.ato</p>
+            <h1 className={styles.heroName}>{user?.nickname || '사용자'}</h1>
+            <p className={styles.heroUsername}>{user?.bio || '반갑습니다!'}</p>
 
             <div className={styles.heroActions}>
               <Link href="/profile/edit" className={styles.flexLink}>
@@ -31,15 +41,15 @@ export default function ProfilePage() {
 
             <div className={styles.heroStats}>
               <div className={styles.statItem}>
-                <span className={styles.statNum}>64</span>
+                <span className={styles.statNum}>0</span>
                 <span className={styles.statText}>팔로잉</span>
               </div>
               <div className={styles.statItem}>
-                <span className={styles.statNum}>128</span>
+                <span className={styles.statNum}>0</span>
                 <span className={styles.statText}>팔로워</span>
               </div>
               <div className={styles.statItem}>
-                <span className={styles.statNum}>12</span>
+                <span className={styles.statNum}>0</span>
                 <span className={styles.statText}>게시물</span>
               </div>
             </div>
