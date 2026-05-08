@@ -38,6 +38,9 @@ dependencies {
 	implementation(platform("com.google.cloud:libraries-bom:26.32.0"))
 	implementation("com.google.cloud:google-cloud-vision")
 
+	// Bucket4j Rate Limiting
+	implementation("com.bucket4j:bucket4j-core:8.10.1")
+
 	// Thumbnailator for Image Resizing
 	implementation("net.coobird:thumbnailator:0.4.20")
 

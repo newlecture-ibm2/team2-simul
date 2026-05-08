@@ -82,8 +82,11 @@ export default function PostCreatePage() {
         if (extractedTags && Array.isArray(extractedTags)) {
           setSuggestedTags(prev => Array.from(new Set([...prev, ...extractedTags])));
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('태그 분석 실패:', err);
+        if (err.message && err.message.includes('429')) {
+          alert('사진을 너무 빠르게 많이 올리셨네요! 😅\n잠시만 기다렸다가 다시 올려주시면 자동 태그가 추출됩니다.');
+        }
       } finally {
         setIsAnalyzing(false);
       }
