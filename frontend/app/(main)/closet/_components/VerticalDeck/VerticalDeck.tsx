@@ -16,6 +16,11 @@ interface VerticalDeckProps {
 
 export default function VerticalDeck({ items, onItemClick }: VerticalDeckProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  if (!items || items.length === 0) {
+    return <div className={styles.emptyDeck}>아이템이 없습니다.</div>;
+  }
+
   const viewportRef = useRef<HTMLDivElement>(null);
   const scrubberTrackRef = useRef<HTMLDivElement>(null);
   const [scrollY, setScrollY] = useState(0);

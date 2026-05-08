@@ -56,8 +56,8 @@ public class SecurityConfig {
                 .requestMatchers("/uploads/**").permitAll()
                 // 피드/게시물 상세는 비로그인 열람 허용
                 .requestMatchers("GET", "/posts", "/posts/**").permitAll()
-                // 옷장 아이템 조회 (개발용 임시 허용 — 추후 인증 필수로 전환)
-                .requestMatchers("GET", "/closet/**").permitAll()
+                // 옷장 아이템 조회 (로그인 필수)
+                .requestMatchers("/closet/**").authenticated()
                 // 관리자 전용
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 // 나머지는 인증 필요
