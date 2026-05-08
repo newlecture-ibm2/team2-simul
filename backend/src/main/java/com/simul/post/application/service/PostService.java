@@ -26,12 +26,13 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.*;
 
 import com.simul.post.application.port.in.GetPostDetailUseCase;
+import com.simul.post.application.port.in.DeletePostUseCase;
 import com.simul.post.application.dto.PostDetailResponse;
 // ... imports handled below by inserting at class declaration
 
 @Service
 @RequiredArgsConstructor
-public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetPostDetailUseCase {
+public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetPostDetailUseCase, DeletePostUseCase {
 
     private final PostRepositoryPort postRepositoryPort;
     private final PostLikePersistencePort postLikePersistencePort;
@@ -210,5 +211,20 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
                 isLiked,
                 post.getCreatedAt()
         );
+    }
+
+    @Override
+    @Transactional
+    public void deletePost(UUID postId, UUID currentUserId) {
+        Post post = postRepositoryPort.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("ERR-003: 찾을 수 없는 콘텐츠입니다."));
+
+        if (!post.getUserId().equals(currentUserId)) {
+            // Error Code ERR-002: 권한 없음
+            throw new IllegalArgumentException("ERR-002: 게시물 삭제 권한이 없습니다.");
+        }
+
+        post.softDelete();
+        postRepositoryPort.save(post);
     }
 }

@@ -30,6 +30,7 @@ public class PostController {
     private final GetFeedPostsUseCase getFeedPostsUseCase;
     private final TogglePostLikeUseCase togglePostLikeUseCase;
     private final com.simul.post.application.port.in.GetPostDetailUseCase getPostDetailUseCase;
+    private final com.simul.post.application.port.in.DeletePostUseCase deletePostUseCase;
 
     @PostMapping
     public ResponseEntity<?> createPost(
@@ -114,6 +115,41 @@ public class PostController {
             com.simul.post.application.dto.PostDetailResponse response = 
                 getPostDetailUseCase.getPostDetail(postId, userId);
             return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage().contains("ERR-002")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                        "error_code", "ERR-002",
+                        "message", e.getMessage()
+                ));
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "error_code", "ERR-003",
+                    "message", e.getMessage()
+            ));
+        }
+    }
+
+    /**
+     * 게시물 삭제 (DELETE /posts/{postId})
+     * - 로그인 필수
+     * - 작성자 본인만 삭제 가능
+     * - 물리 삭제가 아닌 Soft Delete 처리 (deleted_at 업데이트)
+     */
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<?> deletePost(
+            @AuthenticationPrincipal UUID userId,
+            @PathVariable UUID postId
+    ) {
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "error_code", "ERR-001",
+                    "message", "로그인이 필요한 서비스입니다."
+            ));
+        }
+
+        try {
+            deletePostUseCase.deletePost(postId, userId);
+            return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
             if (e.getMessage().contains("ERR-002")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
