@@ -1,10 +1,14 @@
 'use client';
 
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './DeleteConfirmModal.module.css';
 
 interface DeleteConfirmModalProps {
   isOpen: boolean;
   count: number;
+  title?: string;
+  description?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -12,19 +16,29 @@ interface DeleteConfirmModalProps {
 export default function DeleteConfirmModal({
   isOpen,
   count,
+  title = '삭제하시겠습니까?',
+  description,
   onConfirm,
   onCancel,
 }: DeleteConfirmModalProps) {
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
 
-  return (
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
+
+  const displayDescription = description || `선택한 ${count}개의 아이템이 영구적으로 삭제됩니다.`;
+
+  return createPortal(
     <div className={styles.overlay} onClick={onCancel}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
 
 
-        <h2 className={styles.title}>삭제하시겠습니까?</h2>
+        <h2 className={styles.title}>{title}</h2>
         <p className={styles.description}>
-          선택한 {count}개의 아이템이 영구적으로 삭제됩니다.
+          {displayDescription}
         </p>
 
         <div className={styles.actions}>
@@ -36,6 +50,7 @@ export default function DeleteConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

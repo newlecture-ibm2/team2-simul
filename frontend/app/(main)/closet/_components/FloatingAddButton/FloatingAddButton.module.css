@@ -1,7 +1,7 @@
 .floatingAddBtn {
   position: fixed;
-  top: 140px;
-  right: calc(max(16px, 50vw - 225px + 16px));
+  top: 140px; /* 탭 하단으로부터 약 40px 지점 */
+  right: calc(max(16px, 50% - 225px + 16px));
   width: 56px;
   height: 56px;
   border-radius: var(--radius-circle);
