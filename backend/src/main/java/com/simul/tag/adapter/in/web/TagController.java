@@ -8,6 +8,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.http.HttpStatus;
+import com.simul.tag.application.service.TagRateLimiterService;
+import io.github.bucket4j.Bucket;
 
 /**
  * [Hexagonal - Inbound Adapter (Web)]
@@ -20,6 +25,7 @@ import java.util.Map;
 public class TagController {
 
     private final AnalyzeImageTagsUseCase analyzeImageTagsUseCase;
+    private final TagRateLimiterService tagRateLimiterService;
 
     /**
      * 이미지를 분석하여 추천 태그를 반환합니다.
@@ -28,7 +34,18 @@ public class TagController {
      */
     @PostMapping("/analyze")
     public ResponseEntity<Map<String, Object>> analyzeImageTags(
-            @RequestParam("image") MultipartFile image) {
+            @RequestParam("image") MultipartFile image,
+            @AuthenticationPrincipal UUID userId) {
+
+        Bucket bucket = tagRateLimiterService.resolveBucket(userId);
+        if (!bucket.tryConsume(1)) {
+            // 429 Too Many Requests 반환
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of(
+                    "error_code", "ERR-307-C",
+                    "message", "너무 많은 요청이 발생했습니다. 잠시 후 다시 시도해주세요.",
+                    "detail", "Rate limit exceeded (max 30 requests per minute)"
+            ));
+        }
 
         try {
             List<String> tags = analyzeImageTagsUseCase.analyzeImageTags(image);

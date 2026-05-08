@@ -36,6 +36,9 @@ public class UserJpaEntity extends BaseJpaEntity {
     @Column(nullable = false, length = 30)
     private String nickname;
 
+    @Column(length = 255)
+    private String password;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
     private Gender gender;
@@ -58,13 +61,14 @@ public class UserJpaEntity extends BaseJpaEntity {
 
     @Builder
     public UserJpaEntity(UUID userId, String provider, String providerId, String name, String nickname,
-                         Gender gender, String bio, String profileImageUrl, boolean isPublic,
+                         String password, Gender gender, String bio, String profileImageUrl, boolean isPublic,
                          Role role, boolean isActive) {
         this.userId = userId;
         this.provider = provider;
         this.providerId = providerId;
         this.name = name;
         this.nickname = nickname;
+        this.password = password;
         this.gender = gender;
         this.bio = bio;
         this.profileImageUrl = profileImageUrl;

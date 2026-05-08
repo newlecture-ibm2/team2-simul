@@ -35,7 +35,16 @@ export async function apiClient<T>(
   });
 
   if (!response.ok) {
-    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    let errorMessage = `API Error: ${response.status} ${response.statusText}`;
+    try {
+      const errorData = await response.json();
+      if (errorData.message) {
+        errorMessage = errorData.message;
+      }
+    } catch (e) {
+      // JSON 파싱 실패 시 기본 메시지 유지
+    }
+    throw new Error(errorMessage);
   }
 
   // 204 No Content 등 빈 응답 처리

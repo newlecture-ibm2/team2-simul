@@ -79,13 +79,13 @@
 
 .privacyNote {
   font-size: var(--font-caption);
-  color: var(--color-text-disabled);
+  color: rgba(255, 255, 255, 0.7);
   text-align: center;
   line-height: 1.5;
   max-width: 360px;
 }
 
 .privacyNote a {
-  color: var(--color-text-secondary);
+  color: rgba(255, 255, 255, 0.9);
   text-decoration: underline;
 }
