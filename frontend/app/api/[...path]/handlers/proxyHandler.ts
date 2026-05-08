@@ -18,6 +18,10 @@ export async function proxyHandler(req: NextRequest, path: string[]) {
     const headers = new Headers(req.headers);
     headers.set('host', new URL(BACKEND_URL).host);
 
+    // Node 18+ fetch(undici)는 connection 관련 헤더를 직접 제어하려 하면 에러(UND_ERR_INVALID_ARG)를 뱉으므로 제거
+    headers.delete('connection');
+    headers.delete('keep-alive');
+
     // ⚠️ Content-Type을 절대 덮어쓰지 않음!
     // multipart/form-data의 경우 브라우저가 생성한 boundary가 포함되어 있어야 함
     // 예: "multipart/form-data; boundary=----WebKitFormBoundary..."
