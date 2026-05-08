@@ -3,17 +3,23 @@ package com.simul.auth.application.service;
 import com.simul.auth.application.dto.OAuth2UserInfo;
 import com.simul.auth.application.dto.SocialLoginCommand;
 import com.simul.auth.application.dto.TokenResponse;
+import com.simul.auth.application.port.in.EmailAuthUseCase;
+import com.simul.auth.application.port.in.LogoutUseCase;
 import com.simul.auth.application.port.in.RefreshTokenUseCase;
 import com.simul.auth.application.port.in.SocialLoginUseCase;
 import com.simul.auth.application.port.out.OAuth2ProviderPort;
+import com.simul.auth.application.port.out.RefreshTokenPort;
 import com.simul.auth.domain.model.AuthRole;
 import com.simul.auth.domain.model.AuthUser;
+import com.simul.auth.domain.model.RefreshToken;
 import com.simul.common.exception.BusinessException;
 import com.simul.common.exception.ErrorCode;
 import com.simul.common.security.JwtTokenProvider;
 import com.simul.user.application.port.in.RegisterUserUseCase;
 import com.simul.user.application.port.out.UserPersistencePort;
 import com.simul.user.domain.model.User;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,21 +36,27 @@ import java.util.stream.Collectors;
  * 2. 해당 제공자의 OAuth2Adapter를 통해 사용자 정보 조회
  * 3. DB에서 기존 회원 확인 (provider + providerId)
  * 4. 신규면 자동 가입, 기존이면 기존 정보 사용
- * 5. JWT Access + Refresh Token 발급
+ * 5. JWT Access + Refresh Token 발급 → Redis에 저장
  */
 @Service
-public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase {
+public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, EmailAuthUseCase, LogoutUseCase {
 
     private final Map<String, OAuth2ProviderPort> providerMap;
     private final UserPersistencePort userPersistencePort;
     private final RegisterUserUseCase registerUserUseCase;
     private final JwtTokenProvider jwtTokenProvider;
+    private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenPort refreshTokenPort;
+    private final long refreshTokenValiditySeconds;
 
     public AuthService(
         List<OAuth2ProviderPort> providers,
         UserPersistencePort userPersistencePort,
         RegisterUserUseCase registerUserUseCase,
-        JwtTokenProvider jwtTokenProvider
+        JwtTokenProvider jwtTokenProvider,
+        PasswordEncoder passwordEncoder,
+        RefreshTokenPort refreshTokenPort,
+        @Value("${jwt.refresh-token-validity-in-seconds}") long refreshTokenValiditySeconds
     ) {
         // 제공자 이름으로 빠르게 찾을 수 있도록 Map으로 변환
         // { "kakao": KakaoAdapter, "naver": NaverAdapter, "google": GoogleAdapter }
@@ -53,6 +65,9 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase {
         this.userPersistencePort = userPersistencePort;
         this.registerUserUseCase = registerUserUseCase;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.passwordEncoder = passwordEncoder;
+        this.refreshTokenPort = refreshTokenPort;
+        this.refreshTokenValiditySeconds = refreshTokenValiditySeconds;
     }
 
     @Override
@@ -91,40 +106,95 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND, "정지 또는 탈퇴된 계정입니다.");
         }
 
-        // 6. JWT 토큰 발급
-        String accessToken = jwtTokenProvider.createAccessToken(
-            authUser.getUserId(), authUser.getRole().name()
-        );
-        String refreshToken = jwtTokenProvider.createRefreshToken(authUser.getUserId());
-
-        return new TokenResponse(accessToken, refreshToken, isNewUser);
+        // 6. JWT 토큰 발급 + Redis에 리프레시 토큰 저장
+        return issueAndStoreTokens(authUser, isNewUser);
     }
 
     @Override
     public TokenResponse refreshToken(String refreshToken) {
-        // 1. Refresh Token 검증
+        // 1. Refresh Token JWT 서명 검증
         jwtTokenProvider.validateToken(refreshToken);
 
-        // 2. 사용자 ID 추출 및 사용자 조회
+        // 2. Redis에 해당 토큰이 존재하는지 확인 (강제 로그아웃 여부 체크)
+        refreshTokenPort.findByToken(refreshToken)
+            .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_TOKEN,
+                "만료되었거나 무효화된 리프레시 토큰입니다"));
+
+        // 3. 사용자 ID 추출 및 사용자 조회
         UUID userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
         User user = userPersistencePort.findById(userId)
             .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        // 3. Auth 도메인 모델로 매핑 및 검증
+        // 4. Auth 도메인 모델로 매핑 및 검증
         AuthUser authUser = mapToAuthUser(user);
         if (!authUser.canLogin()) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND, "정지 또는 탈퇴된 계정입니다.");
         }
 
-        // 4. 새로운 Access Token 발급
-        String newAccessToken = jwtTokenProvider.createAccessToken(
+        // 5. 기존 리프레시 토큰 삭제 후 새 토큰 발급 (Rotation)
+        refreshTokenPort.deleteByToken(refreshToken);
+        return issueAndStoreTokens(authUser, false);
+    }
+
+    @Override
+    public void logout(String refreshToken) {
+        // Redis에서 리프레시 토큰 삭제 → 해당 토큰으로 재발급 불가
+        refreshTokenPort.deleteByToken(refreshToken);
+    }
+
+    @Override
+    public TokenResponse emailSignup(String email, String password, String name, String nickname, com.simul.user.domain.model.Gender gender) {
+        // 비밀번호 암호화
+        String encodedPassword = passwordEncoder.encode(password);
+        
+        // 회원가입
+        User user = registerUserUseCase.registerEmailUser(email, encodedPassword, nickname, name, gender);
+        
+        // JWT 발급 + Redis 저장
+        AuthUser authUser = mapToAuthUser(user);
+        return issueAndStoreTokens(authUser, true);
+    }
+
+    @Override
+    public TokenResponse emailLogin(String email, String password) {
+        User user = userPersistencePort.findByProviderAndProviderId("email", email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND, "가입되지 않은 이메일입니다."));
+                
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "비밀번호가 일치하지 않습니다.");
+        }
+        
+        AuthUser authUser = mapToAuthUser(user);
+        if (!authUser.canLogin()) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND, "정지 또는 탈퇴된 계정입니다.");
+        }
+        
+        // JWT 발급 + Redis 저장
+        return issueAndStoreTokens(authUser, false);
+    }
+
+    // ========== Private Helper Methods ==========
+
+    /**
+     * JWT 토큰 쌍(Access + Refresh) 발급 및 Redis에 리프레시 토큰 저장
+     */
+    private TokenResponse issueAndStoreTokens(AuthUser authUser, boolean isNewUser) {
+        String accessToken = jwtTokenProvider.createAccessToken(
             authUser.getUserId(), authUser.getRole().name()
         );
-        String newRefreshToken = jwtTokenProvider.createRefreshToken(authUser.getUserId());
+        String refreshTokenStr = jwtTokenProvider.createRefreshToken(authUser.getUserId());
 
-        return new TokenResponse(newAccessToken, newRefreshToken, false);
+        // Redis에 리프레시 토큰 저장 (TTL 설정으로 자동 만료)
+        RefreshToken refreshTokenDomain = RefreshToken.builder()
+            .token(refreshTokenStr)
+            .userId(authUser.getUserId())
+            .timeToLive(refreshTokenValiditySeconds)
+            .build();
+        refreshTokenPort.save(refreshTokenDomain);
+
+        return new TokenResponse(accessToken, refreshTokenStr, isNewUser);
     }
-    
+
     private AuthUser mapToAuthUser(User user) {
         return AuthUser.builder()
                 .userId(user.getUserId())

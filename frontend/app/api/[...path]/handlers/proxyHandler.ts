@@ -30,8 +30,7 @@ export async function proxyHandler(req: NextRequest, path: string[]) {
     };
 
     // iron-session을 통해 세션의 JWT 추출 후 Authorization 헤더 주입
-    const res = new Response();
-    const session = await getIronSession<SessionData>(req, res, sessionOptions);
+    const session = await getIronSession<SessionData>(req, new Response(), sessionOptions);
     if (session.user?.token) {
       headers.set('Authorization', `Bearer ${session.user.token}`);
     }

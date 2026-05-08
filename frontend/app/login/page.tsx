@@ -13,7 +13,7 @@ export default function LoginPage() {
     <div className={styles.loginPage}>
       {/* 배경 이미지 레이어 */}
       <div className={styles.backgroundLayer} />
-      
+
       <div className={styles.loginContainer}>
         <div className={styles.loginCard}>
           <div className={styles.brandSection}>
@@ -23,15 +23,15 @@ export default function LoginPage() {
               AI 가상시착으로 나만의 스타일을 발견하세요
             </p>
           </div>
-          
+
           <div className={styles.tabSection}>
-            <button 
+            <button
               className={`${styles.tabBtn} ${authMode === 'social' ? styles.activeTab : ''}`}
               onClick={() => setAuthMode('social')}
             >
               소셜 계정
             </button>
-            <button 
+            <button
               className={`${styles.tabBtn} ${authMode === 'email' ? styles.activeTab : ''}`}
               onClick={() => setAuthMode('email')}
             >
@@ -48,7 +48,7 @@ export default function LoginPage() {
                   {authType === 'login' ? '이메일 로그인' : '이메일 회원가입'}
                 </h2>
                 <EmailAuthForm type={authType} />
-                <button 
+                <button
                   className={styles.switchTypeBtn}
                   onClick={() => setAuthType(authType === 'login' ? 'signup' : 'login')}
                 >
