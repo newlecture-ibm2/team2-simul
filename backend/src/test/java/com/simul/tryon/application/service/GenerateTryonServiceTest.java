@@ -5,6 +5,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.never;
 
 import com.simul.closet.application.port.out.ClosetItemPersistencePort;
 import com.simul.closet.domain.model.ClothingImage;
@@ -223,5 +226,143 @@ class GenerateTryonServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.INVALID_INPUT);
+    }
+
+    @Test
+    void generate_retriesOnceOnAiTimeout_thenSucceeds() {
+        BaseImagePersistencePort baseImagePort = mock(BaseImagePersistencePort.class);
+        ClosetItemPersistencePort itemPort = mock(ClosetItemPersistencePort.class);
+        PostRepositoryPort postPort = mock(PostRepositoryPort.class);
+        TryonCreditPersistencePort creditPort = mock(TryonCreditPersistencePort.class);
+        ImageReadPort imageReadPort = mock(ImageReadPort.class);
+        TryonAiGenerationPort aiPort = mock(TryonAiGenerationPort.class);
+        BinaryImageStoragePort binaryImageStoragePort = mock(BinaryImageStoragePort.class);
+        DeductTryonCreditUseCase deductTryonCreditUseCase = mock(DeductTryonCreditUseCase.class);
+        Clock clock = Clock.fixed(Instant.parse("2026-05-11T01:00:00Z"), KST);
+
+        UUID userId = UUID.randomUUID();
+        UUID baseImageId = UUID.randomUUID();
+        UUID itemId = UUID.randomUUID();
+        UUID jobId = UUID.randomUUID();
+
+        when(creditPort.countByUserIdAndUsedAtBetween(any(), any(), any())).thenReturn(0L);
+
+        BaseImage baseImage = mock(BaseImage.class);
+        when(baseImage.getId()).thenReturn(baseImageId);
+        when(baseImage.getUserId()).thenReturn(userId);
+        when(baseImage.getImageUrl()).thenReturn("/uploads/images/tryon/user.png");
+        when(baseImagePort.findById(baseImageId)).thenReturn(Optional.of(baseImage));
+
+        ClosetItem item = mock(ClosetItem.class);
+        when(item.getId()).thenReturn(itemId);
+        when(item.getUserId()).thenReturn(userId);
+        ClothingImage clothingImage = mock(ClothingImage.class);
+        when(clothingImage.getImageUrl()).thenReturn("/uploads/images/closet/dummy.png");
+        when(item.getClothingImage()).thenReturn(clothingImage);
+        when(itemPort.findById(itemId)).thenReturn(Optional.of(item));
+
+        Post saved = mock(Post.class);
+        when(saved.getPostId()).thenReturn(jobId);
+        when(saved.getUserId()).thenReturn(userId);
+        when(postPort.save(any(Post.class))).thenReturn(saved);
+
+        when(imageReadPort.read(any())).thenReturn(new ImageReadPort.ImageReadResult(new byte[] {1}, "image/png"));
+
+        when(aiPort.generate(any()))
+                .thenThrow(new BusinessException(ErrorCode.AI_TIMEOUT))
+                .thenReturn(new TryonAiGenerationPort.TryonAiGenerationResult(new byte[] {2}, "image/png"));
+
+        when(binaryImageStoragePort.upload(any(), any(), any())).thenReturn("/uploads/images/tryon/result.png");
+
+        GenerateTryonService service =
+                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase);
+
+        setGeminiEnabled(service, true);
+
+        var command = GenerateTryonUseCase.GenerateTryonCommand.builder()
+                .userId(userId)
+                .baseImageId(baseImageId)
+                .itemId(itemId)
+                .build();
+
+        var response = service.generate(command);
+        assertThat(response.jobId()).isEqualTo(jobId);
+
+        verify(aiPort, times(2)).generate(any());
+        verify(deductTryonCreditUseCase, times(1)).deductOnSuccess(any());
+    }
+
+    @Test
+    void generate_retriesOnceOnAiFailure_thenFailsAndPreservesCredit() {
+        BaseImagePersistencePort baseImagePort = mock(BaseImagePersistencePort.class);
+        ClosetItemPersistencePort itemPort = mock(ClosetItemPersistencePort.class);
+        PostRepositoryPort postPort = mock(PostRepositoryPort.class);
+        TryonCreditPersistencePort creditPort = mock(TryonCreditPersistencePort.class);
+        ImageReadPort imageReadPort = mock(ImageReadPort.class);
+        TryonAiGenerationPort aiPort = mock(TryonAiGenerationPort.class);
+        BinaryImageStoragePort binaryImageStoragePort = mock(BinaryImageStoragePort.class);
+        DeductTryonCreditUseCase deductTryonCreditUseCase = mock(DeductTryonCreditUseCase.class);
+        Clock clock = Clock.fixed(Instant.parse("2026-05-11T01:00:00Z"), KST);
+
+        UUID userId = UUID.randomUUID();
+        UUID baseImageId = UUID.randomUUID();
+        UUID itemId = UUID.randomUUID();
+        UUID jobId = UUID.randomUUID();
+
+        when(creditPort.countByUserIdAndUsedAtBetween(any(), any(), any())).thenReturn(0L);
+
+        BaseImage baseImage = mock(BaseImage.class);
+        when(baseImage.getId()).thenReturn(baseImageId);
+        when(baseImage.getUserId()).thenReturn(userId);
+        when(baseImage.getImageUrl()).thenReturn("/uploads/images/tryon/user.png");
+        when(baseImagePort.findById(baseImageId)).thenReturn(Optional.of(baseImage));
+
+        ClosetItem item = mock(ClosetItem.class);
+        when(item.getId()).thenReturn(itemId);
+        when(item.getUserId()).thenReturn(userId);
+        ClothingImage clothingImage = mock(ClothingImage.class);
+        when(clothingImage.getImageUrl()).thenReturn("/uploads/images/closet/dummy.png");
+        when(item.getClothingImage()).thenReturn(clothingImage);
+        when(itemPort.findById(itemId)).thenReturn(Optional.of(item));
+
+        Post saved = mock(Post.class);
+        when(saved.getPostId()).thenReturn(jobId);
+        when(saved.getUserId()).thenReturn(userId);
+        when(postPort.save(any(Post.class))).thenReturn(saved);
+
+        when(imageReadPort.read(any())).thenReturn(new ImageReadPort.ImageReadResult(new byte[] {1}, "image/png"));
+
+        when(aiPort.generate(any()))
+                .thenThrow(new BusinessException(ErrorCode.AI_GENERATION_FAILED))
+                .thenThrow(new BusinessException(ErrorCode.AI_GENERATION_FAILED));
+
+        GenerateTryonService service =
+                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase);
+
+        setGeminiEnabled(service, true);
+
+        var command = GenerateTryonUseCase.GenerateTryonCommand.builder()
+                .userId(userId)
+                .baseImageId(baseImageId)
+                .itemId(itemId)
+                .build();
+
+        assertThatThrownBy(() -> service.generate(command))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.AI_GENERATION_FAILED);
+
+        verify(aiPort, times(2)).generate(any());
+        verify(deductTryonCreditUseCase, never()).deductOnSuccess(any());
+    }
+
+    private static void setGeminiEnabled(GenerateTryonService service, boolean enabled) {
+        try {
+            var field = GenerateTryonService.class.getDeclaredField("geminiEnabled");
+            field.setAccessible(true);
+            field.set(service, enabled);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
