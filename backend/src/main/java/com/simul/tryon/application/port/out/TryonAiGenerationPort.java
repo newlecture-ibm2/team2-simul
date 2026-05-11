@@ -6,9 +6,14 @@ public interface TryonAiGenerationPort {
     record TryonAiGenerationCommand(
             byte[] userImageBytes,
             String userImageMimeType,
-            byte[] clothingImageBytes,
-            String clothingImageMimeType,
+            java.util.List<ImagePart> clothingImages,
             String prompt
+    ) {
+    }
+
+    record ImagePart(
+            byte[] bytes,
+            String mimeType
     ) {
     }
 
@@ -18,4 +23,3 @@ public interface TryonAiGenerationPort {
     ) {
     }
 }
-

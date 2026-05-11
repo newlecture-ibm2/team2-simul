@@ -16,6 +16,7 @@ import com.simul.tryon.domain.model.BaseImage;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ public class GenerateTryonService implements GenerateTryonUseCase {
 
     private static final int TOTAL_DAILY = 5;
     private static final int ESTIMATED_SECONDS = 20;
+    private static final int MAX_ITEM_IDS = 3;
 
     private final BaseImagePersistencePort baseImagePersistencePort;
     private final ClosetItemPersistencePort closetItemPersistencePort;
@@ -47,18 +49,29 @@ public class GenerateTryonService implements GenerateTryonUseCase {
         if (command.getUserId() == null) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
-        if (command.getBaseImageId() == null || command.getItemId() == null) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "base_image_id와 item_id는 필수입니다.");
+        if (command.getBaseImageId() == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "base_image_id는 필수입니다.");
+        }
+
+        List<UUID> itemIds = normalizeItemIds(command);
+        if (itemIds.isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "item_ids(또는 item_id)는 최소 1개 필요합니다.");
+        }
+        if (itemIds.size() > MAX_ITEM_IDS) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "item_ids는 최대 3개까지 지원합니다.");
         }
 
         ensureCreditsRemaining(command.getUserId());
         BaseImage baseImage = loadAndValidateBaseImage(command.getUserId(), command.getBaseImageId());
-        ClosetItem item = loadAndValidateItem(command.getUserId(), command.getItemId());
+        List<ClosetItem> items = itemIds.stream()
+                .map(itemId -> loadAndValidateItem(command.getUserId(), itemId))
+                .toList();
 
         Post saved = postRepositoryPort.save(Post.builder()
                 .userId(command.getUserId())
                 .baseImageId(baseImage.getId())
-                .itemId(item.getId())
+                // For now, link the first item as the primary clothing source.
+                .itemId(items.getFirst().getId())
                 .status(PostStatus.PROCESSING)
                 .isPublic(false)
                 .build());
@@ -66,45 +79,70 @@ public class GenerateTryonService implements GenerateTryonUseCase {
         // NOTE: In current phase, we call Gemini synchronously for a single-step generation.
         // This will be evolved into async pipeline + SSE in subsequent tasks.
         if (geminiEnabled) {
-            runAiGenerationAndUpdatePost(saved, baseImage, item);
+            runAiGenerationAndUpdatePost(saved, baseImage, items);
         }
 
         return new TryonGenerateResponse(saved.getPostId(), "processing", ESTIMATED_SECONDS);
     }
 
-    private void runAiGenerationAndUpdatePost(Post post, BaseImage baseImage, ClosetItem item) {
+    private List<UUID> normalizeItemIds(GenerateTryonCommand command) {
+        if (command.getItemIds() != null && !command.getItemIds().isEmpty()) {
+            return command.getItemIds();
+        }
+        if (command.getItemId() != null) {
+            return List.of(command.getItemId());
+        }
+        return List.of();
+    }
+
+    private void runAiGenerationAndUpdatePost(Post post, BaseImage baseImage, List<ClosetItem> items) {
         // Lazily loaded, but within transactional boundary
         String userImageUrl = baseImage.getImageUrl();
-        String clothingImageUrl = item.getClothingImage().getImageUrl();
 
         ImageReadPort.ImageReadResult userImage = imageReadPort.read(userImageUrl);
-        ImageReadPort.ImageReadResult clothingImage = imageReadPort.read(clothingImageUrl);
+        List<ImageReadPort.ImageReadResult> clothingImages = items.stream()
+                .map(it -> imageReadPort.read(it.getClothingImage().getImageUrl()))
+                .toList();
 
-        String prompt = """
-                You are a virtual try-on image generator.
-                - The first image is a photo of a person.
-                - The second image is a clothing item image.
-                Task:
-                - Generate a realistic image of the person wearing the clothing item.
-                Constraints:
-                - Preserve the person’s identity and pose as much as possible.
-                - Keep the background natural (do not add text).
-                Output:
-                - Return only the generated image.
-                """;
+        String prompt = buildPromptForOrderedItems(clothingImages.size());
+
+        List<TryonAiGenerationPort.ImagePart> clothingParts = clothingImages.stream()
+                .map(img -> new TryonAiGenerationPort.ImagePart(img.bytes(), img.mimeType()))
+                .toList();
 
         TryonAiGenerationPort.TryonAiGenerationResult result = tryonAiGenerationPort.generate(
                 new TryonAiGenerationPort.TryonAiGenerationCommand(
                         userImage.bytes(),
                         userImage.mimeType(),
-                        clothingImage.bytes(),
-                        clothingImage.mimeType(),
+                        clothingParts,
                         prompt
                 )
         );
 
         // TODO: persist result image into storage and set post.imageUrl + status=COMPLETED
         // That will be added once image output persistence path is finalized.
+    }
+
+    private String buildPromptForOrderedItems(int clothingCount) {
+        String base = """
+                You are a virtual try-on image generator.
+                Inputs:
+                - The first image is a photo of a person.
+                - The next images are clothing item images in the given order.
+                Task:
+                - Generate a realistic image of the person wearing the clothing items.
+                Constraints:
+                - Preserve the person’s identity and pose as much as possible.
+                - Keep the background natural (do not add text).
+                Output:
+                - Return only the generated image.
+                """;
+        return switch (clothingCount) {
+            case 1 -> base + "\nOrder: 2nd image = clothing item.\n";
+            case 2 -> base + "\nOrder: 2nd image = top, 3rd image = bottom.\n";
+            case 3 -> base + "\nOrder: 2nd image = top, 3rd image = bottom, 4th image = accessory.\n";
+            default -> base;
+        };
     }
 
     private void ensureCreditsRemaining(UUID userId) {

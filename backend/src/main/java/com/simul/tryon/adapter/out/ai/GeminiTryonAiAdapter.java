@@ -4,6 +4,7 @@ import com.simul.common.exception.BusinessException;
 import com.simul.common.exception.ErrorCode;
 import com.simul.tryon.application.port.out.TryonAiGenerationPort;
 import java.util.Base64;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -34,21 +35,24 @@ public class GeminiTryonAiAdapter implements TryonAiGenerationPort {
 
         String url = "/v1beta/models/" + model + ":generateContent";
 
+        List<Map<String, Object>> parts = new ArrayList<>();
+        parts.add(Map.of("text", command.prompt()));
+        parts.add(Map.of("inline_data", Map.of(
+                "mime_type", command.userImageMimeType(),
+                "data", Base64.getEncoder().encodeToString(command.userImageBytes())
+        )));
+        for (TryonAiGenerationPort.ImagePart imagePart : command.clothingImages()) {
+            parts.add(Map.of("inline_data", Map.of(
+                    "mime_type", imagePart.mimeType(),
+                    "data", Base64.getEncoder().encodeToString(imagePart.bytes())
+            )));
+        }
+
         Map<String, Object> body = Map.of(
                 "contents", List.of(
                         Map.of(
                                 "role", "user",
-                                "parts", List.of(
-                                        Map.of("text", command.prompt()),
-                                        Map.of("inline_data", Map.of(
-                                                "mime_type", command.userImageMimeType(),
-                                                "data", Base64.getEncoder().encodeToString(command.userImageBytes())
-                                        )),
-                                        Map.of("inline_data", Map.of(
-                                                "mime_type", command.clothingImageMimeType(),
-                                                "data", Base64.getEncoder().encodeToString(command.clothingImageBytes())
-                                        ))
-                                )
+                                "parts", parts
                         )
                 )
         );
@@ -64,9 +68,9 @@ public class GeminiTryonAiAdapter implements TryonAiGenerationPort {
         try {
             List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.get("candidates");
             Map<String, Object> content = (Map<String, Object>) candidates.getFirst().get("content");
-            List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
+            List<Map<String, Object>> responseParts = (List<Map<String, Object>>) content.get("parts");
 
-            for (Map<String, Object> part : parts) {
+            for (Map<String, Object> part : responseParts) {
                 if (part.containsKey("inline_data")) {
                     Map<String, Object> inlineData = (Map<String, Object>) part.get("inline_data");
                     String mimeType = (String) inlineData.get("mime_type");
@@ -81,4 +85,3 @@ public class GeminiTryonAiAdapter implements TryonAiGenerationPort {
         throw new BusinessException(ErrorCode.AI_GENERATION_FAILED, "Gemini returned no inline image data");
     }
 }
-
