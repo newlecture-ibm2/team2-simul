@@ -42,6 +42,81 @@
   object-fit: contain;
 }
 
+/* ── 더보기 드롭다운 메뉴 ── */
+.menuWrapper {
+  position: relative;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 160px;
+  padding: 6px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  animation: menuFadeIn 0.18s ease-out;
+  z-index: 100;
+}
+
+@keyframes menuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.menuItem:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.menuItemDanger {
+  color: #e74c3c;
+}
+
+.menuItemDanger:hover {
+  background: rgba(231, 76, 60, 0.08);
+}
+
+.menuIcon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  opacity: 0.75;
+}
+
+.menuDivider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.06);
+  margin: 2px 8px;
+}
+
 .postDetail {
   max-width: 450px;
   margin: 0 auto;
@@ -67,6 +142,10 @@
 
 .imageCarousel::-webkit-scrollbar {
   display: none;
+}
+
+.dragging {
+  cursor: grabbing !important;
 }
 
 .imageSlide {
@@ -236,6 +315,25 @@
   font-family: var(--font-family-korean);
 }
 
+/* ── 태그 칩 ── */
+.tagRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.tagChip {
+  display: inline-block;
+  padding: 4px 12px;
+  background: color-mix(in srgb, var(--color-green) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-green) 30%, transparent);
+  border-radius: 99px;
+  color: var(--color-green-hover);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .stats {
   display: flex;
   align-items: center;
@@ -354,3 +452,4 @@
 .reportBtn:hover {
   color: var(--color-error);
 }
+

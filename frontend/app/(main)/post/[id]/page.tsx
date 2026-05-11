@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { toggleLike, getPostDetail, deletePost } from '../../../../lib/api/feedAPI';
 import { useAuthStore } from '../../../../lib/stores/useAuthStore';
 import styles from './page.module.css';
@@ -28,6 +27,7 @@ export default function PostDetailPage() {
   
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  const [showMenu, setShowMenu] = useState(false);
   
   const params = useParams();
   const router = useRouter();
@@ -36,9 +36,25 @@ export default function PostDetailPage() {
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+
+  const isOwner = isAuthenticated && user && String(user.id).trim().toLowerCase() === post?.userId?.trim().toLowerCase();
+
+  // 메뉴 외부 클릭 시 닫기
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    }
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMenu]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!scrollRef.current) return;
@@ -113,6 +129,7 @@ export default function PostDetailPage() {
   };
 
   const handleDelete = async () => {
+    setShowMenu(false);
     if (!confirm('정말로 이 게시물을 삭제하시겠습니까?')) return;
     try {
       await deletePost(postId);
@@ -138,20 +155,40 @@ export default function PostDetailPage() {
         <button onClick={() => router.back()} className={styles.iconBtn} aria-label="뒤로가기">
           <img src="/icons/arrow-left.png" alt="Back" className={styles.icon} />
         </button>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {isAuthenticated && user && String(user.id) === post.userId && (
-            <>
-              <button onClick={() => router.push(`/post/${postId}/edit`)} className={styles.iconBtn} aria-label="수정하기">
-                <span style={{ fontSize: '14px', color: 'var(--color-primary)' }}>수정</span>
-              </button>
-              <button onClick={handleDelete} className={styles.iconBtn} aria-label="삭제하기">
-                <span style={{ fontSize: '14px', color: 'var(--color-error)' }}>삭제</span>
-              </button>
-            </>
-          )}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <button className={styles.iconBtn} aria-label="공유하기">
             <img src="/icons/square.and.arrow.up.png" alt="Share" className={styles.icon} />
           </button>
+          {isOwner && (
+            <div className={styles.menuWrapper} ref={menuRef}>
+              <button 
+                className={styles.iconBtn} 
+                onClick={() => setShowMenu(!showMenu)}
+                aria-label="더보기"
+              >
+                <img src="/icons/ellipsis.png" alt="More" className={styles.icon} />
+              </button>
+              {showMenu && (
+                <div className={styles.dropdownMenu}>
+                  <button 
+                    className={styles.menuItem} 
+                    onClick={() => { setShowMenu(false); router.push(`/post/${postId}/edit`); }}
+                  >
+                    <img src="/icons/pencil.png" alt="" className={styles.menuIcon} />
+                    <span>수정하기</span>
+                  </button>
+                  <div className={styles.menuDivider} />
+                  <button 
+                    className={`${styles.menuItem} ${styles.menuItemDanger}`} 
+                    onClick={handleDelete}
+                  >
+                    <img src="/icons/trash.png" alt="" className={styles.menuIcon} />
+                    <span>삭제하기</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -207,7 +244,9 @@ export default function PostDetailPage() {
               <div className={styles.authorName}>{post.nickname}</div>
               <div className={styles.authorMeta}>{dateStr}</div>
             </div>
-            <button className={styles.followBtn}>팔로우</button>
+            {!isOwner && (
+              <button className={styles.followBtn}>팔로우</button>
+            )}
           </div>
 
           <p className={styles.caption}>
@@ -215,9 +254,9 @@ export default function PostDetailPage() {
           </p>
           
           {post.tags && post.tags.length > 0 && (
-             <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px'}}>
+             <div className={styles.tagRow}>
                 {post.tags.map((tag: string) => (
-                   <span key={tag} style={{color: 'var(--color-primary)', fontSize: '14px', fontWeight: '500'}}>#{tag}</span>
+                   <span key={tag} className={styles.tagChip}>#{tag}</span>
                 ))}
              </div>
           )}
@@ -249,3 +288,4 @@ export default function PostDetailPage() {
     </div>
   );
 }
+

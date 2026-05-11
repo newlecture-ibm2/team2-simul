@@ -15,7 +15,7 @@ export default function PostCreatePage() {
   const [tags, setTags] = useState<string[]>([]);
   const [caption, setCaption] = useState('');
   const [isPublic, setIsPublic] = useState(false);
-  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
+  const [customTag, setCustomTag] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -80,7 +80,11 @@ export default function PostCreatePage() {
         const result = await analyzeTags(file);
         const extractedTags = result?.recommended_tags;
         if (extractedTags && Array.isArray(extractedTags)) {
-          setSuggestedTags(prev => Array.from(new Set([...prev, ...extractedTags])));
+          setTags(prev => {
+            const newTags = extractedTags.filter((tag: string) => !prev.includes(tag));
+            const combined = [...prev, ...newTags];
+            return combined.slice(0, 10);
+          });
         }
       } catch (err: unknown) {
         console.error('태그 분석 실패:', err);
@@ -101,15 +105,28 @@ export default function PostCreatePage() {
     setImageUrls(imageUrls.filter((_, i) => i !== index));
   };
 
-  const handleToggleTag = (tagToToggle: string) => {
-    if (tags.includes(tagToToggle)) {
-      setTags(tags.filter(tag => tag !== tagToToggle));
-    } else {
-      if (tags.length >= 10) {
-        alert('태그는 최대 10개까지만 선택 가능합니다.');
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
+  };
+
+  const handleAddCustomTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const newTag = customTag.trim().toLowerCase().replace(/^#/, '');
+      if (!newTag) return;
+      
+      if (tags.includes(newTag)) {
+        setCustomTag('');
         return;
       }
-      setTags([...tags, tagToToggle]);
+      
+      if (tags.length >= 10) {
+        alert('태그는 최대 10개까지만 추가 가능합니다.');
+        return;
+      }
+      
+      setTags([...tags, newTag]);
+      setCustomTag('');
     }
   };
 
@@ -188,19 +205,29 @@ export default function PostCreatePage() {
           </div>
         )}
         <div className={styles.tagList}>
-          {suggestedTags.map((tag, index) => {
-            const isSelected = tags.includes(tag);
-            return (
+          {tags.map((tag, index) => (
+            <div key={index} className={styles.tagItem}>
+              #{tag}
               <button
-                key={index}
-                className={`${styles.tagItem} ${isSelected ? styles.tagItemSelected : ''}`}
-                onClick={() => handleToggleTag(tag)}
-                aria-label={`태그 ${tag} ${isSelected ? '해제' : '선택'}`}
+                type="button"
+                className={styles.removeTagBtn}
+                onClick={() => handleRemoveTag(tag)}
+                aria-label={`태그 ${tag} 삭제`}
               >
-                #{tag}
+                ✕
               </button>
-            );
-          })}
+            </div>
+          ))}
+          {tags.length < 10 && (
+            <input
+              type="text"
+              className={styles.tagInput}
+              placeholder="태그 입력 후 Enter"
+              value={customTag}
+              onChange={(e) => setCustomTag(e.target.value)}
+              onKeyDown={handleAddCustomTag}
+            />
+          )}
         </div>
         <div className={styles.tagCountText}>
           선택된 태그: {tags.length} / 10
