@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -13,7 +14,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "tryon_credits")
+@Table(
+        name = "tryon_credits",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_tryon_credits_job_id", columnNames = {"job_id"})
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TryonCredit {
@@ -38,4 +44,3 @@ public class TryonCredit {
         this.jobId = jobId;
     }
 }
-
