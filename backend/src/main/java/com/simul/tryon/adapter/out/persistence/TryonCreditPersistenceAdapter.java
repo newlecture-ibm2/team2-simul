@@ -22,5 +22,9 @@ public class TryonCreditPersistenceAdapter implements TryonCreditPersistencePort
     public long countByUserIdAndUsedAtBetween(UUID userId, LocalDateTime startInclusive, LocalDateTime endExclusive) {
         return tryonCreditJpaRepository.countByUserIdAndUsedAtBetween(userId, startInclusive, endExclusive);
     }
-}
 
+    @Override
+    public boolean existsByJobId(UUID jobId) {
+        return tryonCreditJpaRepository.existsByJobId(jobId);
+    }
+}
