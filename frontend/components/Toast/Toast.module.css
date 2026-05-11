@@ -1,0 +1,48 @@
+.toastWrapper {
+  position: fixed;
+  top: 80px; /* Header 바로 아래 */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  width: 90%;
+  max-width: 400px;
+}
+
+.visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.hidden {
+  opacity: 0;
+  transform: translate(-50%, -20px);
+}
+
+.toast {
+  padding: 12px 20px;
+  border-radius: var(--radius-comfortable, 20px);
+  background: rgba(30, 30, 30, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  word-break: keep-all;
+}
+
+.success {
+  border: 1px solid var(--color-green, #d1dc55);
+}
+
+.error {
+  border: 1px solid #ff4d4f;
+  background: color-mix(in srgb, #ff4d4f 20%, rgba(30, 30, 30, 0.8));
+}
+
+.info {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
