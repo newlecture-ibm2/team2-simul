@@ -16,10 +16,14 @@ import com.simul.tryon.application.port.out.TryonAiGenerationPort;
 import com.simul.tryon.application.port.out.TryonCreditPersistencePort;
 import com.simul.tryon.domain.model.BaseImage;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +38,8 @@ public class GenerateTryonService implements GenerateTryonUseCase {
     private static final int TOTAL_DAILY = 5;
     private static final int ESTIMATED_SECONDS = 20;
     private static final int MAX_ITEM_IDS = 3;
+    private static final Duration AI_TIMEOUT = Duration.ofSeconds(30);
+    private static final int MAX_RETRY = 1;
 
     private final BaseImagePersistencePort baseImagePersistencePort;
     private final ClosetItemPersistencePort closetItemPersistencePort;
@@ -117,15 +123,16 @@ public class GenerateTryonService implements GenerateTryonUseCase {
                 .map(img -> new TryonAiGenerationPort.ImagePart(img.bytes(), img.mimeType()))
                 .toList();
 
+        TryonAiGenerationPort.TryonAiGenerationCommand aiCommand =
+                new TryonAiGenerationPort.TryonAiGenerationCommand(
+                        userImage.bytes(),
+                        userImage.mimeType(),
+                        clothingParts,
+                        prompt
+                );
+
         try {
-            TryonAiGenerationPort.TryonAiGenerationResult result = tryonAiGenerationPort.generate(
-                    new TryonAiGenerationPort.TryonAiGenerationCommand(
-                            userImage.bytes(),
-                            userImage.mimeType(),
-                            clothingParts,
-                            prompt
-                    )
-            );
+            TryonAiGenerationPort.TryonAiGenerationResult result = generateWithRetry(aiCommand);
 
             String resultImageUrl = binaryImageStoragePort.upload(result.resultImageBytes(), result.resultImageMimeType(), "tryon");
             post.markCompleted(resultImageUrl);
@@ -152,6 +159,46 @@ public class GenerateTryonService implements GenerateTryonUseCase {
             post.markFailed();
             postRepositoryPort.save(post);
             throw new BusinessException(ErrorCode.AI_GENERATION_FAILED, e.getMessage());
+        }
+    }
+
+    private TryonAiGenerationPort.TryonAiGenerationResult generateWithRetry(TryonAiGenerationPort.TryonAiGenerationCommand command) {
+        BusinessException lastBusinessException = null;
+
+        for (int attempt = 0; attempt <= MAX_RETRY; attempt++) {
+            try {
+                return generateWithTimeout(command);
+            } catch (BusinessException be) {
+                lastBusinessException = be;
+                if (shouldRetry(be) && attempt < MAX_RETRY) {
+                    continue;
+                }
+                throw be;
+            }
+        }
+
+        // Should be unreachable
+        throw lastBusinessException != null ? lastBusinessException : new BusinessException(ErrorCode.AI_GENERATION_FAILED);
+    }
+
+    private boolean shouldRetry(BusinessException be) {
+        return be.getErrorCode() == ErrorCode.AI_TIMEOUT || be.getErrorCode() == ErrorCode.AI_GENERATION_FAILED;
+    }
+
+    private TryonAiGenerationPort.TryonAiGenerationResult generateWithTimeout(TryonAiGenerationPort.TryonAiGenerationCommand command) {
+        try {
+            return CompletableFuture.supplyAsync(() -> tryonAiGenerationPort.generate(command))
+                    .orTimeout(AI_TIMEOUT.toSeconds(), TimeUnit.SECONDS)
+                    .join();
+        } catch (CompletionException ce) {
+            Throwable cause = ce.getCause();
+            if (cause instanceof java.util.concurrent.TimeoutException) {
+                throw new BusinessException(ErrorCode.AI_TIMEOUT);
+            }
+            if (cause instanceof BusinessException be) {
+                throw be;
+            }
+            throw ce;
         }
     }
 
