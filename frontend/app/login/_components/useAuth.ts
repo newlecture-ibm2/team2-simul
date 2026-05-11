@@ -46,9 +46,9 @@ export function useAuth() {
   const loginWithEmail = async (data: Record<string, unknown>) => {
     setIsLoading(true);
     try {
-      const res = await emailLogin(data) as Record<string, unknown>;
-      if (res.success || res.accessToken) { // DTO might not have success, but BFF returns success: true
-        setUser(res.user as User);
+      const res = await emailLogin(data);
+      if (res.success && res.user) {
+        setUser(res.user);
         router.push('/');
       }
     } catch (error: unknown) {
@@ -62,9 +62,9 @@ export function useAuth() {
   const signupWithEmail = async (data: Record<string, unknown>) => {
     setIsLoading(true);
     try {
-      const res = await emailSignup(data) as Record<string, unknown>;
-      if (res.success || res.accessToken) {
-        setUser(res.user as User);
+      const res = await emailSignup(data);
+      if (res.success && res.user) {
+        setUser(res.user);
         router.push('/');
       }
     } catch (error: unknown) {

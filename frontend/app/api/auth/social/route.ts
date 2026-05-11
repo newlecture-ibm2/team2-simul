@@ -37,16 +37,45 @@ export async function POST(request: NextRequest) {
     const data = await backendResponse.json();
     const { accessToken, refreshToken, isNewUser } = data;
 
+    // JWT payload에서 userId와 role 추출 (세션 저장용)
+    let userId = '';
+    let userRole: 'USER' | 'ADMIN' = 'USER';
+    try {
+      const payload = JSON.parse(
+        Buffer.from(accessToken.split('.')[1], 'base64').toString('utf-8')
+      );
+      userId = payload.sub || '';
+      userRole = payload.role || 'USER';
+    } catch (e) {
+      console.error('JWT decoding failed:', e);
+    }
+
+    // 새로 발급받은 토큰으로 유저 정보 조회 (클라이언트 응답용)
+    let user = null;
+    try {
+      const userResponse = await fetch(`${backendUrl}/users/me`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+      if (userResponse.ok) {
+        user = await userResponse.json();
+      }
+    } catch (e) {
+      console.error('BFF Fetch User Error:', e);
+    }
+
     // 3. iron-session에 토큰을 암호화하여 저장
     const response = NextResponse.json({ 
       success: true,
       isNewUser,
+      user, // 클라이언트 스토어 동기화용 상세 유저 정보
     });
 
     const session = await getIronSession<SessionData>(request, response, sessionOptions);
     session.user = {
-      id: '', // 토큰에서 추출 가능하지만, 당장은 빈 값으로 설정
-      role: 'USER',
+      id: userId,
+      role: userRole,
       token: accessToken,
       refreshToken: refreshToken,
     };

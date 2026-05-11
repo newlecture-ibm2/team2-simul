@@ -1,4 +1,5 @@
 import axios, { AxiosRequestConfig, AxiosError } from 'axios';
+import { toast } from '@/lib/utils/toast';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api';
 
@@ -46,6 +47,11 @@ axiosInstance.interceptors.response.use(
     if (error.response?.data && (error.response.data as any).message) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       errorMessage = (error.response.data as any).message;
+    }
+
+    // 자동으로 에러 토스트 띄우기 (401 갱신 실패 등은 제외)
+    if (error.response?.status !== 401) {
+      toast.error(errorMessage);
     }
 
     return Promise.reject(new Error(errorMessage));

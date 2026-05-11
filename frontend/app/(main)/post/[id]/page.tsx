@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { toggleLike, getPostDetail, deletePost } from '../../../../lib/api/feedAPI';
 import { useAuthStore } from '../../../../lib/stores/useAuthStore';
+import Modal from './_components/Modal';
 import styles from './page.module.css';
 
 export interface PostDetailData {
@@ -28,6 +28,7 @@ export default function PostDetailPage() {
   
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  const [showMenu, setShowMenu] = useState(false);
   
   const params = useParams();
   const router = useRouter();
@@ -36,9 +37,63 @@ export default function PostDetailPage() {
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+
+  const isOwner = isAuthenticated && user && String(user.id).trim().toLowerCase() === post?.userId?.trim().toLowerCase();
+
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title?: string;
+    message: string;
+    onConfirm: () => void;
+    onCancel?: () => void;
+    confirmText?: string;
+    cancelText?: string;
+  }>({ isOpen: false, message: '', onConfirm: () => {} });
+
+  const openAlert = (message: string, onConfirm?: () => void) => {
+    setModalConfig({
+      isOpen: true,
+      message,
+      onConfirm: () => {
+        setModalConfig(prev => ({ ...prev, isOpen: false }));
+        if (onConfirm) onConfirm();
+      },
+    });
+  };
+
+  const openConfirm = (title: string, message: string, onConfirm: () => void) => {
+    setModalConfig({
+      isOpen: true,
+      title,
+      message,
+      confirmText: '예',
+      cancelText: '아니오',
+      onConfirm: () => {
+        setModalConfig(prev => ({ ...prev, isOpen: false }));
+        onConfirm();
+      },
+      onCancel: () => {
+        setModalConfig(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
+  // 메뉴 외부 클릭 시 닫기
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    }
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMenu]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!scrollRef.current) return;
@@ -91,7 +146,7 @@ export default function PostDetailPage() {
 
   const handleLike = async () => {
     if (!isAuthenticated) {
-      alert('좋아요를 누르려면 로그인이 필요합니다.');
+      openAlert('좋아요를 누르려면 로그인이 필요합니다.');
       return;
     }
 
@@ -112,15 +167,18 @@ export default function PostDetailPage() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('정말로 이 게시물을 삭제하시겠습니까?')) return;
+  const handleDeleteClick = () => {
+    setShowMenu(false);
+    openConfirm('게시물 삭제', '정말로 이 게시물을 삭제하시겠습니까?', executeDelete);
+  };
+
+  const executeDelete = async () => {
     try {
       await deletePost(postId);
-      alert('게시물이 삭제되었습니다.');
-      router.push('/');
+      openAlert('게시물이 삭제되었습니다.', () => router.push('/'));
     } catch (err) {
       console.error('삭제 실패:', err);
-      alert('삭제에 실패했습니다.');
+      openAlert('삭제에 실패했습니다.');
     }
   };
 
@@ -138,15 +196,40 @@ export default function PostDetailPage() {
         <button onClick={() => router.back()} className={styles.iconBtn} aria-label="뒤로가기">
           <img src="/icons/arrow-left.png" alt="Back" className={styles.icon} />
         </button>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {isAuthenticated && user && String(user.id) === post.userId && (
-             <button onClick={handleDelete} className={styles.iconBtn} aria-label="삭제하기">
-               <span style={{ fontSize: '14px', color: 'var(--color-primary)' }}>삭제</span>
-             </button>
-          )}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <button className={styles.iconBtn} aria-label="공유하기">
             <img src="/icons/square.and.arrow.up.png" alt="Share" className={styles.icon} />
           </button>
+          {isOwner && (
+            <div className={styles.menuWrapper} ref={menuRef}>
+              <button 
+                className={styles.iconBtn} 
+                onClick={() => setShowMenu(!showMenu)}
+                aria-label="더보기"
+              >
+                <img src="/icons/ellipsis.png" alt="More" className={styles.icon} />
+              </button>
+              {showMenu && (
+                <div className={styles.dropdownMenu}>
+                  <button 
+                    className={styles.menuItem} 
+                    onClick={() => { setShowMenu(false); router.push(`/post/${postId}/edit`); }}
+                  >
+                    <img src="/icons/pencil.png" alt="" className={styles.menuIcon} />
+                    <span>수정하기</span>
+                  </button>
+                  <div className={styles.menuDivider} />
+                  <button 
+                    className={`${styles.menuItem} ${styles.menuItemDanger}`} 
+                    onClick={handleDeleteClick}
+                  >
+                    <img src="/icons/trash.png" alt="" className={styles.menuIcon} />
+                    <span>삭제하기</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -202,7 +285,9 @@ export default function PostDetailPage() {
               <div className={styles.authorName}>{post.nickname}</div>
               <div className={styles.authorMeta}>{dateStr}</div>
             </div>
-            <button className={styles.followBtn}>팔로우</button>
+            {!isOwner && (
+              <button className={styles.followBtn}>팔로우</button>
+            )}
           </div>
 
           <p className={styles.caption}>
@@ -210,15 +295,15 @@ export default function PostDetailPage() {
           </p>
           
           {post.tags && post.tags.length > 0 && (
-             <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px'}}>
+             <div className={styles.tagRow}>
                 {post.tags.map((tag: string) => (
-                   <span key={tag} style={{color: 'var(--color-primary)', fontSize: '14px', fontWeight: '500'}}>#{tag}</span>
+                   <span key={tag} className={styles.tagChip}>#{tag}</span>
                 ))}
              </div>
           )}
 
           <div className={styles.stats}>
-            <button className={styles.statItem} onClick={handleLike}>
+            <button className={`${styles.statItem} ${isLiked ? styles.liked : ''}`} onClick={handleLike}>
               <img 
                 src={isLiked ? "/icons/heart-filled.png" : "/icons/heart.png"} 
                 alt="Like" 
@@ -241,6 +326,8 @@ export default function PostDetailPage() {
           <button className={styles.reportBtn}>🚨 게시물 신고하기</button>
         </div>
       </div>
+      <Modal {...modalConfig} />
     </div>
   );
 }
+

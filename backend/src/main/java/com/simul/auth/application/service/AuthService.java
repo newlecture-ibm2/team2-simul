@@ -7,6 +7,7 @@ import com.simul.auth.application.port.in.EmailAuthUseCase;
 import com.simul.auth.application.port.in.LogoutUseCase;
 import com.simul.auth.application.port.in.RefreshTokenUseCase;
 import com.simul.auth.application.port.in.SocialLoginUseCase;
+import com.simul.auth.application.port.out.AccessTokenBlacklistPort;
 import com.simul.auth.application.port.out.OAuth2ProviderPort;
 import com.simul.auth.application.port.out.RefreshTokenPort;
 import com.simul.auth.domain.model.AuthRole;
@@ -47,6 +48,7 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, Ema
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenPort refreshTokenPort;
+    private final AccessTokenBlacklistPort accessTokenBlacklistPort;
     private final long refreshTokenValiditySeconds;
 
     public AuthService(
@@ -56,6 +58,7 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, Ema
         JwtTokenProvider jwtTokenProvider,
         PasswordEncoder passwordEncoder,
         RefreshTokenPort refreshTokenPort,
+        AccessTokenBlacklistPort accessTokenBlacklistPort,
         @Value("${jwt.refresh-token-validity-in-seconds}") long refreshTokenValiditySeconds
     ) {
         // 제공자 이름으로 빠르게 찾을 수 있도록 Map으로 변환
@@ -67,6 +70,7 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, Ema
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordEncoder = passwordEncoder;
         this.refreshTokenPort = refreshTokenPort;
+        this.accessTokenBlacklistPort = accessTokenBlacklistPort;
         this.refreshTokenValiditySeconds = refreshTokenValiditySeconds;
     }
 
@@ -112,8 +116,8 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, Ema
 
     @Override
     public TokenResponse refreshToken(String refreshToken) {
-        // 1. Refresh Token JWT 서명 검증
-        jwtTokenProvider.validateToken(refreshToken);
+        // 1. Refresh Token JWT 서명 + 타입 검증 (Access Token으로 갱신 시도 차단)
+        jwtTokenProvider.validateRefreshToken(refreshToken);
 
         // 2. Redis에 해당 토큰이 존재하는지 확인 (강제 로그아웃 여부 체크)
         refreshTokenPort.findByToken(refreshToken)
@@ -137,9 +141,23 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, Ema
     }
 
     @Override
-    public void logout(String refreshToken) {
-        // Redis에서 리프레시 토큰 삭제 → 해당 토큰으로 재발급 불가
-        refreshTokenPort.deleteByToken(refreshToken);
+    public void logout(String refreshToken, String accessToken) {
+        // 1. Redis에서 리프레시 토큰 삭제 → 해당 토큰으로 재발급 불가
+        if (refreshToken != null) {
+            refreshTokenPort.deleteByToken(refreshToken);
+        }
+
+        // 2. Access Token 블랙리스트 등록 → 남은 유효기간 동안 사용 차단
+        if (accessToken != null) {
+            try {
+                long remainingSeconds = jwtTokenProvider.getRemainingSeconds(accessToken);
+                if (remainingSeconds > 0) {
+                    accessTokenBlacklistPort.addToBlacklist(accessToken, remainingSeconds);
+                }
+            } catch (Exception e) {
+                // 이미 만료된 토큰은 블랙리스트에 넣을 필요 없음
+            }
+        }
     }
 
     @Override
