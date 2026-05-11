@@ -84,6 +84,11 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
                     .build();
 
             post.addImage(postImage);
+            
+            // 첫 번째 이미지를 대표 이미지(imageUrl)로 설정
+            if (i == 0) {
+                post.updateImageUrl(imageUrl);
+            }
         }
 
         // Post 엔티티 저장
