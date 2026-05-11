@@ -34,8 +34,13 @@ public class ClosetItemPersistenceAdapter implements ClosetItemPersistencePort {
     }
 
     @Override
-    public Page<ClosetItem> findByUserIdWithFilter(UUID userId, Category category, UUID collectionId, Pageable pageable) {
-        return closetItemJpaRepository.findByUserIdAndFiltersWithPaging(userId, category, collectionId, pageable);
+    public Page<ClosetItem> findByUserIdWithFilter(UUID userId, Category category, Pageable pageable) {
+        return closetItemJpaRepository.findByUserIdAndCategoryWithPaging(userId, category, pageable);
+    }
+
+    @Override
+    public Page<ClosetItem> findByIdsWithFilter(List<UUID> itemIds, Category category, Pageable pageable) {
+        return closetItemJpaRepository.findByIdsAndCategoryWithPaging(itemIds, category, pageable);
     }
 
     @Override
@@ -47,20 +52,5 @@ public class ClosetItemPersistenceAdapter implements ClosetItemPersistencePort {
     public void delete(ClosetItem closetItem) {
         closetItem.softDelete();
         closetItemJpaRepository.save(closetItem);
-    }
-
-    @Override
-    public List<String> findTopImageUrlsByCollectionId(UUID collectionId, int limit) {
-        return closetItemJpaRepository.findTopImageUrlsByCollectionId(collectionId, org.springframework.data.domain.PageRequest.of(0, limit));
-    }
-
-    @Override
-    public long countByCollectionId(UUID collectionId) {
-        return closetItemJpaRepository.countByClosetCollectionIdAndDeletedAtIsNull(collectionId);
-    }
-
-    @Override
-    public boolean existsInCollection(UUID imageId, UUID collectionId) {
-        return closetItemJpaRepository.existsByClothingImageIdAndClosetCollectionIdAndDeletedAtIsNull(imageId, collectionId);
     }
 }
