@@ -10,6 +10,7 @@ import com.simul.post.domain.model.PostStatus;
 import com.simul.tryon.application.dto.TryonGenerateResponse;
 import com.simul.tryon.application.port.in.GenerateTryonUseCase;
 import com.simul.tryon.application.port.out.BaseImagePersistencePort;
+import com.simul.tryon.application.port.out.TryonAiGenerationPort;
 import com.simul.tryon.application.port.out.TryonCreditPersistencePort;
 import com.simul.tryon.domain.model.BaseImage;
 import java.time.Clock;
@@ -19,6 +20,8 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.simul.common.application.port.out.ImageReadPort;
+import org.springframework.beans.factory.annotation.Value;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +36,11 @@ public class GenerateTryonService implements GenerateTryonUseCase {
     private final PostRepositoryPort postRepositoryPort;
     private final TryonCreditPersistencePort tryonCreditPersistencePort;
     private final Clock kstClock;
+    private final ImageReadPort imageReadPort;
+    private final TryonAiGenerationPort tryonAiGenerationPort;
+
+    @Value("${simul.gemini.enabled:false}")
+    private boolean geminiEnabled;
 
     @Override
     public TryonGenerateResponse generate(GenerateTryonCommand command) {
@@ -55,7 +63,48 @@ public class GenerateTryonService implements GenerateTryonUseCase {
                 .isPublic(false)
                 .build());
 
+        // NOTE: In current phase, we call Gemini synchronously for a single-step generation.
+        // This will be evolved into async pipeline + SSE in subsequent tasks.
+        if (geminiEnabled) {
+            runAiGenerationAndUpdatePost(saved, baseImage, item);
+        }
+
         return new TryonGenerateResponse(saved.getPostId(), "processing", ESTIMATED_SECONDS);
+    }
+
+    private void runAiGenerationAndUpdatePost(Post post, BaseImage baseImage, ClosetItem item) {
+        // Lazily loaded, but within transactional boundary
+        String userImageUrl = baseImage.getImageUrl();
+        String clothingImageUrl = item.getClothingImage().getImageUrl();
+
+        ImageReadPort.ImageReadResult userImage = imageReadPort.read(userImageUrl);
+        ImageReadPort.ImageReadResult clothingImage = imageReadPort.read(clothingImageUrl);
+
+        String prompt = """
+                You are a virtual try-on image generator.
+                - The first image is a photo of a person.
+                - The second image is a clothing item image.
+                Task:
+                - Generate a realistic image of the person wearing the clothing item.
+                Constraints:
+                - Preserve the person’s identity and pose as much as possible.
+                - Keep the background natural (do not add text).
+                Output:
+                - Return only the generated image.
+                """;
+
+        TryonAiGenerationPort.TryonAiGenerationResult result = tryonAiGenerationPort.generate(
+                new TryonAiGenerationPort.TryonAiGenerationCommand(
+                        userImage.bytes(),
+                        userImage.mimeType(),
+                        clothingImage.bytes(),
+                        clothingImage.mimeType(),
+                        prompt
+                )
+        );
+
+        // TODO: persist result image into storage and set post.imageUrl + status=COMPLETED
+        // That will be added once image output persistence path is finalized.
     }
 
     private void ensureCreditsRemaining(UUID userId) {
@@ -87,4 +136,3 @@ public class GenerateTryonService implements GenerateTryonUseCase {
         return item;
     }
 }
-

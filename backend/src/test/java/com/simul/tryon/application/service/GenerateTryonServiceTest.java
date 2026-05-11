@@ -7,11 +7,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.simul.closet.application.port.out.ClosetItemPersistencePort;
+import com.simul.closet.domain.model.ClothingImage;
 import com.simul.closet.domain.model.ClosetItem;
+import com.simul.common.application.port.out.ImageReadPort;
 import com.simul.common.exception.BusinessException;
 import com.simul.common.exception.ErrorCode;
 import com.simul.post.application.port.out.PostRepositoryPort;
 import com.simul.post.domain.model.Post;
+import com.simul.tryon.application.port.out.TryonAiGenerationPort;
 import com.simul.tryon.application.port.in.GenerateTryonUseCase;
 import com.simul.tryon.application.port.out.BaseImagePersistencePort;
 import com.simul.tryon.application.port.out.TryonCreditPersistencePort;
@@ -33,11 +36,14 @@ class GenerateTryonServiceTest {
         ClosetItemPersistencePort itemPort = mock(ClosetItemPersistencePort.class);
         PostRepositoryPort postPort = mock(PostRepositoryPort.class);
         TryonCreditPersistencePort creditPort = mock(TryonCreditPersistencePort.class);
+        ImageReadPort imageReadPort = mock(ImageReadPort.class);
+        TryonAiGenerationPort aiPort = mock(TryonAiGenerationPort.class);
         Clock clock = Clock.fixed(Instant.parse("2026-05-11T01:00:00Z"), KST);
 
         when(creditPort.countByUserIdAndUsedAtBetween(any(), any(), any())).thenReturn(5L);
 
-        GenerateTryonService service = new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock);
+        GenerateTryonService service =
+                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort);
 
         var command = GenerateTryonUseCase.GenerateTryonCommand.builder()
                 .userId(UUID.randomUUID())
@@ -57,6 +63,8 @@ class GenerateTryonServiceTest {
         ClosetItemPersistencePort itemPort = mock(ClosetItemPersistencePort.class);
         PostRepositoryPort postPort = mock(PostRepositoryPort.class);
         TryonCreditPersistencePort creditPort = mock(TryonCreditPersistencePort.class);
+        ImageReadPort imageReadPort = mock(ImageReadPort.class);
+        TryonAiGenerationPort aiPort = mock(TryonAiGenerationPort.class);
         Clock clock = Clock.fixed(Instant.parse("2026-05-11T01:00:00Z"), KST);
 
         UUID userId = UUID.randomUUID();
@@ -74,13 +82,17 @@ class GenerateTryonServiceTest {
         ClosetItem item = mock(ClosetItem.class);
         when(item.getId()).thenReturn(itemId);
         when(item.getUserId()).thenReturn(userId);
+        ClothingImage clothingImage = mock(ClothingImage.class);
+        when(clothingImage.getImageUrl()).thenReturn("/uploads/images/closet/dummy.png");
+        when(item.getClothingImage()).thenReturn(clothingImage);
         when(itemPort.findById(itemId)).thenReturn(Optional.of(item));
 
         Post saved = mock(Post.class);
         when(saved.getPostId()).thenReturn(jobId);
         when(postPort.save(any(Post.class))).thenReturn(saved);
 
-        GenerateTryonService service = new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock);
+        GenerateTryonService service =
+                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort);
 
         var command = GenerateTryonUseCase.GenerateTryonCommand.builder()
                 .userId(userId)
@@ -94,4 +106,3 @@ class GenerateTryonServiceTest {
         assertThat(response.estimatedSeconds()).isEqualTo(20);
     }
 }
-
