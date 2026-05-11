@@ -54,7 +54,7 @@ export default function ProfileEditPage() {
 
       <div className={styles.avatarSection}>
         <div className={styles.avatar}>
-          {user?.profileImage ? <img src={user.profileImage} alt="Avatar" /> : '🧑'}
+          {user?.profileImageUrl ? <img src={user.profileImageUrl} alt="Avatar" /> : '🧑'}
         </div>
         <button className={styles.changeAvatarBtn}>프로필 사진 변경</button>
       </div>

@@ -1,11 +1,15 @@
 import { create } from 'zustand';
 
 export interface User {
-  id: number;
+  userId: string;
   nickname: string;
-  email: string;
-  profileImage?: string;
+  name?: string;
+  email?: string;
+  profileImageUrl?: string;
   bio?: string;
+  followerCount?: number;
+  followingCount?: number;
+  isFollowing?: boolean;
 }
 
 interface AuthState {

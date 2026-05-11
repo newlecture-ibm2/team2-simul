@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toggleLike, getPostDetail, deletePost } from '../../../../lib/api/feedAPI';
+import { checkIsFollowing, followUser, unfollowUser } from '@/lib/api/userAPI';
 import { useAuthStore } from '../../../../lib/stores/useAuthStore';
 import styles from './page.module.css';
 
@@ -39,6 +41,45 @@ export default function PostDetailPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+
+  const queryClient = useQueryClient();
+
+  // Fetch follow status if we have the author's userId
+  const { data: followStatus } = useQuery({
+    queryKey: ['isFollowing', post?.userId],
+    queryFn: () => checkIsFollowing(post!.userId),
+    enabled: !!post?.userId && isAuthenticated && user?.userId !== post.userId,
+  });
+
+  const isFollowingAuthor = followStatus?.isFollowing || false;
+
+  const followMutation = useMutation({
+    mutationFn: () => followUser(post!.userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['isFollowing', post!.userId] });
+    }
+  });
+
+  const unfollowMutation = useMutation({
+    mutationFn: () => unfollowUser(post!.userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['isFollowing', post!.userId] });
+    }
+  });
+
+  const handleFollowToggle = () => {
+    if (!isAuthenticated) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+    if (isFollowingAuthor) {
+      if (confirm(`${post?.nickname}님을 언팔로우하시겠습니까?`)) {
+        unfollowMutation.mutate();
+      }
+    } else {
+      followMutation.mutate();
+    }
+  };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!scrollRef.current) return;
@@ -139,7 +180,7 @@ export default function PostDetailPage() {
           <img src="/icons/arrow-left.png" alt="Back" className={styles.icon} />
         </button>
         <div style={{ display: 'flex', gap: '8px' }}>
-          {isAuthenticated && user && String(user.id) === post.userId && (
+          {isAuthenticated && user && String(user.userId) === post.userId && (
              <button onClick={handleDelete} className={styles.iconBtn} aria-label="삭제하기">
                <span style={{ fontSize: '14px', color: 'var(--color-primary)' }}>삭제</span>
              </button>
@@ -193,16 +234,31 @@ export default function PostDetailPage() {
 
         <div className={styles.contentSection}>
           <div className={styles.authorRow}>
-            {post.profileImageUrl ? (
-               <img src={post.profileImageUrl} alt="아바타" className={styles.authorAvatarImg} style={{width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover'}} />
-            ) : (
-               <span className={styles.authorAvatar}>🧑</span>
+            <Link href={`/profile/${post.userId}`} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'inherit' }}>
+              {post.profileImageUrl ? (
+                 <img src={post.profileImageUrl} alt="아바타" className={styles.authorAvatarImg} style={{width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover'}} />
+              ) : (
+                 <span className={styles.authorAvatar}>🧑</span>
+              )}
+              <div className={styles.authorInfo}>
+                <div className={styles.authorName}>{post.nickname}</div>
+                <div className={styles.authorMeta}>{dateStr}</div>
+              </div>
+            </Link>
+            
+            {(!isAuthenticated || (user && String(user.userId) !== String(post.userId))) && (
+              <button 
+                className={styles.followBtn} 
+                onClick={handleFollowToggle}
+                style={{
+                  backgroundColor: isFollowingAuthor ? 'rgba(255,255,255,0.2)' : 'var(--color-primary)',
+                  color: '#fff',
+                  border: isFollowingAuthor ? '1px solid rgba(255,255,255,0.5)' : 'none',
+                }}
+              >
+                {isFollowingAuthor ? '언팔로우' : '팔로우'}
+              </button>
             )}
-            <div className={styles.authorInfo}>
-              <div className={styles.authorName}>{post.nickname}</div>
-              <div className={styles.authorMeta}>{dateStr}</div>
-            </div>
-            <button className={styles.followBtn}>팔로우</button>
           </div>
 
           <p className={styles.caption}>

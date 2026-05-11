@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { getCurrentUser } from '@/lib/api/authAPI';
 import { User } from '@/lib/stores/useAuthStore';
@@ -9,6 +10,7 @@ import styles from './page.module.css';
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<'게시물' | '옷장'>('게시물');
+  const router = useRouter();
 
   const { data: user, isLoading } = useQuery<User>({
     queryKey: ['me'],
@@ -22,7 +24,7 @@ export default function ProfilePage() {
       <div className={styles.profileFrame}>
         {/* Immersive Hero Section */}
         <div className={styles.heroSection}>
-          <img src={user?.profileImage || "/profile.jpg"} alt="Profile Background" className={styles.heroBg} />
+          <img src={user?.profileImageUrl || "/profile.jpg"} alt="Profile Background" className={styles.heroBg} />
           <div className={styles.heroOverlay}></div>
 
           {/* Hero Content (Bottom aligned) */}
@@ -40,12 +42,20 @@ export default function ProfilePage() {
             </div>
 
             <div className={styles.heroStats}>
-              <div className={styles.statItem}>
-                <span className={styles.statNum}>0</span>
+              <div 
+                className={styles.statItem} 
+                style={{ cursor: 'pointer' }}
+                onClick={() => router.push('/profile/followings')}
+              >
+                <span className={styles.statNum}>{user?.followingCount || 0}</span>
                 <span className={styles.statText}>팔로잉</span>
               </div>
-              <div className={styles.statItem}>
-                <span className={styles.statNum}>0</span>
+              <div 
+                className={styles.statItem} 
+                style={{ cursor: 'pointer' }}
+                onClick={() => router.push('/profile/followers')}
+              >
+                <span className={styles.statNum}>{user?.followerCount || 0}</span>
                 <span className={styles.statText}>팔로워</span>
               </div>
               <div className={styles.statItem}>
