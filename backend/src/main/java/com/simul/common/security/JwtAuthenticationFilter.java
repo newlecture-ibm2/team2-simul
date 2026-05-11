@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import com.simul.auth.application.port.out.AccessTokenBlacklistPort;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,10 +28,16 @@ import java.util.UUID;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final AccessTokenBlacklistPort accessTokenBlacklistPort;
     private final Environment env;
 
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, Environment env) {
+    public JwtAuthenticationFilter(
+        JwtTokenProvider jwtTokenProvider,
+        AccessTokenBlacklistPort accessTokenBlacklistPort,
+        Environment env
+    ) {
         this.jwtTokenProvider = jwtTokenProvider;
+        this.accessTokenBlacklistPort = accessTokenBlacklistPort;
         this.env = env;
     }
 
@@ -45,7 +52,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null) {
             try {
-                jwtTokenProvider.validateToken(token);
+                // Access Token만 허용 (Refresh Token으로 API 인증 시도 차단)
+                jwtTokenProvider.validateAccessToken(token);
+
+                // 블랙리스트 체크 (로그아웃된 토큰 차단)
+                if (accessTokenBlacklistPort.isBlacklisted(token)) {
+                    SecurityContextHolder.clearContext();
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
                 UUID userId = jwtTokenProvider.getUserIdFromToken(token);
                 String role = jwtTokenProvider.getRoleFromToken(token);
