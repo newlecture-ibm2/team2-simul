@@ -3,10 +3,12 @@ package com.simul.common.config;
 import com.simul.closet.adapter.out.persistence.ClothingImageJpaRepository;
 import com.simul.closet.adapter.out.persistence.ClosetCollectionJpaRepository;
 import com.simul.closet.adapter.out.persistence.ClosetItemJpaRepository;
+import com.simul.closet.adapter.out.persistence.CollectionItemJpaRepository;
 import com.simul.closet.domain.model.Category;
 import com.simul.closet.domain.model.ClosetCollection;
 import com.simul.closet.domain.model.ClosetItem;
 import com.simul.closet.domain.model.ClothingImage;
+import com.simul.closet.domain.model.CollectionItem;
 import com.simul.post.adapter.out.persistence.PostJpaRepository;
 import com.simul.post.adapter.out.persistence.PostLikeJpaRepository;
 import com.simul.post.domain.model.Post;
@@ -45,6 +47,7 @@ public class DataInitializer implements CommandLineRunner {
     private final ClothingImageJpaRepository clothingImageJpaRepository;
     private final ClosetItemJpaRepository closetItemJpaRepository;
     private final ClosetCollectionJpaRepository closetCollectionJpaRepository;
+    private final CollectionItemJpaRepository collectionItemJpaRepository;
     private final PostJpaRepository postJpaRepository;
     private final PostLikeJpaRepository postLikeJpaRepository;
 
@@ -93,6 +96,7 @@ public class DataInitializer implements CommandLineRunner {
         // ==========================================
         List<ClothingImage> allImages = new ArrayList<>();
         List<ClosetItem> allItems = new ArrayList<>();
+        List<CollectionItem> allCollectionItems = new ArrayList<>();
 
         String[][] itemData = {
                 {"TOP",       "화이트 오버핏 티셔츠"},
@@ -107,12 +111,13 @@ public class DataInitializer implements CommandLineRunner {
                 {"ACCESSORY", "블랙 버킷햇"}
         };
 
-        createItemsForUser(ADMIN_ID, adminCol1, itemData, "admin", allImages, allItems);
-        createItemsForUser(USER1_ID, user1Col1, itemData, "user1", allImages, allItems);
-        createItemsForUser(USER2_ID, user2Col1, itemData, "user2", allImages, allItems);
+        createItemsForUser(ADMIN_ID, adminCol1, itemData, "admin", allImages, allItems, allCollectionItems);
+        createItemsForUser(USER1_ID, user1Col1, itemData, "user1", allImages, allItems, allCollectionItems);
+        createItemsForUser(USER2_ID, user2Col1, itemData, "user2", allImages, allItems, allCollectionItems);
 
         clothingImageJpaRepository.saveAll(allImages);
         closetItemJpaRepository.saveAll(allItems);
+        collectionItemJpaRepository.saveAll(allCollectionItems);
         log.info("  → 옷장 아이템 총 {}개 생성 완료 (유저당 10개)", allItems.size());
 
         // ==========================================
@@ -236,7 +241,8 @@ public class DataInitializer implements CommandLineRunner {
     private void createItemsForUser(UUID userId, ClosetCollection collection,
                                      String[][] itemData, String prefix,
                                      List<ClothingImage> imageAccumulator,
-                                     List<ClosetItem> itemAccumulator) {
+                                     List<ClosetItem> itemAccumulator,
+                                     List<CollectionItem> collectionItemAccumulator) {
         for (int i = 0; i < itemData.length; i++) {
             Category category = Category.valueOf(itemData[i][0]);
             String memo = itemData[i][1];
@@ -248,12 +254,19 @@ public class DataInitializer implements CommandLineRunner {
             ClosetItem closetItem = ClosetItem.builder()
                     .userId(userId)
                     .clothingImage(clothingImage)
-                    .closetCollection(collection)
                     .category(category)
                     .memo(memo)
                     .sortOrder(i)
                     .build();
             itemAccumulator.add(closetItem);
+
+            // CollectionItem 매핑 생성
+            CollectionItem collectionItem = CollectionItem.builder()
+                    .collection(collection)
+                    .item(closetItem)
+                    .sortOrder(i)
+                    .build();
+            collectionItemAccumulator.add(collectionItem);
         }
     }
 }

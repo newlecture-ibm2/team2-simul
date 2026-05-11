@@ -12,9 +12,9 @@ public interface ClosetCollectionJpaRepository extends JpaRepository<ClosetColle
     boolean existsByIdAndUserId(UUID id, UUID userId);
     java.util.List<ClosetCollection> findAllByUserId(UUID userId);
 
-    @Query("SELECT new com.simul.closet.adapter.out.persistence.CollectionWithCountDto(c, COUNT(i.id)) " +
+    @Query("SELECT new com.simul.closet.adapter.out.persistence.CollectionWithCountDto(c, COUNT(ci.id)) " +
            "FROM ClosetCollection c " +
-           "LEFT JOIN ClosetItem i ON c.id = i.closetCollection.id AND i.deletedAt IS NULL " +
+           "LEFT JOIN CollectionItem ci ON c.id = ci.collection.id AND ci.deletedAt IS NULL AND ci.item.deletedAt IS NULL " +
            "WHERE c.userId = :userId AND c.deletedAt IS NULL " +
            "GROUP BY c.id")
     Page<CollectionWithCountDto> findCollectionsWithItemCount(@Param("userId") UUID userId, Pageable pageable);

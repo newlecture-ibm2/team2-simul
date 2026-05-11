@@ -3,7 +3,7 @@ package com.simul.closet.application.service;
 import com.simul.closet.application.dto.ClosetCollectionResponse;
 import com.simul.closet.application.port.in.GetCollectionUseCase;
 import com.simul.closet.application.port.out.ClosetCollectionPersistencePort;
-import com.simul.closet.application.port.out.ClosetItemPersistencePort;
+import com.simul.closet.application.port.out.CollectionItemPersistencePort;
 import com.simul.closet.domain.model.ClosetCollection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ import java.util.UUID;
 public class GetCollectionService implements GetCollectionUseCase {
 
     private final ClosetCollectionPersistencePort closetCollectionPersistencePort;
-    private final ClosetItemPersistencePort closetItemPersistencePort;
+    private final CollectionItemPersistencePort collectionItemPersistencePort;
 
     @Override
     public ClosetCollectionResponse getCollection(UUID collectionId, UUID userId) {
@@ -27,8 +27,8 @@ public class GetCollectionService implements GetCollectionUseCase {
             throw new RuntimeException("ERR-003: 유효하지 않은 컬렉션입니다.");
         }
 
-        List<String> topImages = closetItemPersistencePort.findTopImageUrlsByCollectionId(collectionId, 3);
-        long itemCount = closetItemPersistencePort.countByCollectionId(collectionId);
+        List<String> topImages = collectionItemPersistencePort.findTopImageUrlsByCollectionId(collectionId, 3);
+        long itemCount = collectionItemPersistencePort.countByCollectionId(collectionId);
 
         return ClosetCollectionResponse.builder()
                 .collectionId(collection.getId())

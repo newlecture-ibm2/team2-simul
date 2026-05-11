@@ -11,7 +11,7 @@ export interface ClosetItemResponse {
   category: string | null;
   memo: string | null;
   tryCount: number;
-  collectionId?: string | null;
+  collectionIds: string[];
   createdAt: string;
 }
 
@@ -126,15 +126,21 @@ export async function deleteClosetCollection(id: string) {
   return apiClient(`/closet/collections/${id}`, { method: 'DELETE' });
 }
 
-/** 아이템 컬렉션 배정/해제 (단일) */
-export async function updateItemCollection(itemId: string, collectionId: string | null): Promise<void> {
-  return apiClient<void>(`/closet/items/${itemId}/collection`, {
-    method: 'PATCH',
-    body: JSON.stringify({ collectionId }),
+/** 아이템을 컬렉션에 추가 (매핑 생성) */
+export async function addItemToCollection(itemId: string, collectionId: string): Promise<void> {
+  return apiClient<void>(`/closet/items/${itemId}/collections/${collectionId}`, {
+    method: 'POST',
   });
 }
 
-/** 아이템 컬렉션 배정/해제 (대량) */
+/** 아이템을 컬렉션에서 제거 (매핑 삭제, 아이템 유지) */
+export async function removeItemFromCollection(itemId: string, collectionId: string): Promise<void> {
+  return apiClient<void>(`/closet/items/${itemId}/collections/${collectionId}`, {
+    method: 'DELETE',
+  });
+}
+
+/** 아이템 컬렉션 배정 (대량) */
 export async function bulkUpdateItemCollection(itemIds: string[], collectionId: string | null): Promise<void> {
   return apiClient<void>('/closet/items/collection/bulk', {
     method: 'PATCH',
@@ -142,7 +148,7 @@ export async function bulkUpdateItemCollection(itemIds: string[], collectionId: 
   });
 }
 
-/** 아이템 컬렉션 복사 (대량) - 한 아이템을 여러 폴더에 담을 때 사용 */
+/** 아이템 컬렉션 복사 (같은 소유자: 매핑만, 다른 소유자: Deep Copy) */
 export async function copyItemsToCollection(itemIds: string[], collectionId: string): Promise<void> {
   return apiClient<void>('/closet/items/copy', {
     method: 'POST',

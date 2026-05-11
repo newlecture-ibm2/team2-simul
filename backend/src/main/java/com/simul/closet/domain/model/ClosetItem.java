@@ -27,10 +27,6 @@ public class ClosetItem extends BaseJpaEntity {
     @JoinColumn(name = "image_id", nullable = false)
     private ClothingImage clothingImage;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "collection_id")
-    private ClosetCollection closetCollection;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "category")
     private Category category;
@@ -45,10 +41,9 @@ public class ClosetItem extends BaseJpaEntity {
     private Integer tryCount = 0;
 
     @Builder
-    public ClosetItem(UUID userId, ClothingImage clothingImage, ClosetCollection closetCollection, Category category, String memo, Integer sortOrder) {
+    public ClosetItem(UUID userId, ClothingImage clothingImage, Category category, String memo, Integer sortOrder) {
         this.userId = userId;
         this.clothingImage = clothingImage;
-        this.closetCollection = closetCollection;
         this.category = category;
         this.memo = memo;
         this.sortOrder = sortOrder;
@@ -60,10 +55,6 @@ public class ClosetItem extends BaseJpaEntity {
         this.memo = memo;
     }
 
-    public void setClosetCollection(ClosetCollection closetCollection) {
-        this.closetCollection = closetCollection;
-    }
-
     public void updateSortOrder(Integer sortOrder) {
         this.sortOrder = sortOrder;
     }
@@ -72,3 +63,4 @@ public class ClosetItem extends BaseJpaEntity {
         this.tryCount++;
     }
 }
+
