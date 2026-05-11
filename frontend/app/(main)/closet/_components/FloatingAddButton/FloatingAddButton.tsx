@@ -1,5 +1,6 @@
 'use client';
 
+import { createPortal } from 'react-dom';
 import styles from './FloatingAddButton.module.css';
 
 interface FloatingAddButtonProps {
@@ -11,13 +12,16 @@ export default function FloatingAddButton({
   onClick, 
   ariaLabel = "추가" 
 }: FloatingAddButtonProps) {
-  return (
+  if (typeof window === 'undefined') return null;
+
+  return createPortal(
     <button 
       className={styles.floatingAddBtn} 
       onClick={onClick}
       aria-label={ariaLabel}
     >
       <span className={styles.plusIcon}>+</span>
-    </button>
+    </button>,
+    document.body
   );
 }

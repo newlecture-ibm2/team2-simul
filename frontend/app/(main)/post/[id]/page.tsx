@@ -32,6 +32,7 @@ export default function PostDetailPage() {
   
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  const [showMenu, setShowMenu] = useState(false);
   
   const params = useParams();
   const router = useRouter();
@@ -40,9 +41,11 @@ export default function PostDetailPage() {
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+  
   const [confirmModal, setConfirmModal] = useState({ 
     isOpen: false, 
     title: '', 
@@ -98,6 +101,24 @@ export default function PostDetailPage() {
       followMutation.mutate();
     }
   };
+
+  const isOwner = isAuthenticated && user && (
+    user.userId?.trim().toLowerCase() === post?.userId?.trim().toLowerCase() ||
+    user.id?.trim().toLowerCase() === post?.userId?.trim().toLowerCase()
+  );
+
+  // 메뉴 외부 클릭 시 닫기
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    }
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMenu]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!scrollRef.current) return;
@@ -172,6 +193,7 @@ export default function PostDetailPage() {
   };
 
   const handleDelete = async () => {
+    setShowMenu(false);
     setConfirmModal({
       isOpen: true,
       title: '게시물을 삭제하시겠습니까?',
@@ -196,7 +218,6 @@ export default function PostDetailPage() {
   if (error) return <div className={styles.container}><div style={{padding: '20px', textAlign: 'center', color: 'red'}}>{error}</div></div>;
   if (!post) return null;
 
-  // format date roughly
   const dateObj = new Date(post.createdAt);
   const dateStr = `${dateObj.getFullYear()}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
 
@@ -206,15 +227,40 @@ export default function PostDetailPage() {
         <button onClick={() => router.back()} className={styles.iconBtn} aria-label="뒤로가기">
           <img src="/icons/arrow-left.png" alt="Back" className={styles.icon} />
         </button>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {isAuthenticated && user && String(user.userId) === post.userId && (
-             <button onClick={handleDelete} className={styles.iconBtn} aria-label="삭제하기">
-               <span style={{ fontSize: '14px', color: 'var(--color-primary)' }}>삭제</span>
-             </button>
-          )}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <button className={styles.iconBtn} aria-label="공유하기">
             <img src="/icons/square.and.arrow.up.png" alt="Share" className={styles.icon} />
           </button>
+          {isOwner && (
+            <div className={styles.menuWrapper} ref={menuRef}>
+              <button 
+                className={styles.iconBtn} 
+                onClick={() => setShowMenu(!showMenu)}
+                aria-label="더보기"
+              >
+                <img src="/icons/ellipsis.png" alt="More" className={styles.icon} />
+              </button>
+              {showMenu && (
+                <div className={styles.dropdownMenu}>
+                  <button 
+                    className={styles.menuItem} 
+                    onClick={() => { setShowMenu(false); router.push(`/post/${postId}/edit`); }}
+                  >
+                    <img src="/icons/pencil.png" alt="" className={styles.menuIcon} />
+                    <span>수정하기</span>
+                  </button>
+                  <div className={styles.menuDivider} />
+                  <button 
+                    className={`${styles.menuItem} ${styles.menuItemDanger}`} 
+                    onClick={handleDelete}
+                  >
+                    <img src="/icons/trash.png" alt="" className={styles.menuIcon} />
+                    <span>삭제하기</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -281,6 +327,7 @@ export default function PostDetailPage() {
                   backgroundColor: isFollowingAuthor ? 'rgba(255,255,255,0.2)' : 'var(--color-primary)',
                   color: '#fff',
                   border: isFollowingAuthor ? '1px solid rgba(255,255,255,0.5)' : 'none',
+                  marginLeft: 'auto'
                 }}
               >
                 {isFollowingAuthor ? '언팔로우' : '팔로우'}
@@ -293,22 +340,19 @@ export default function PostDetailPage() {
           </p>
           
           {post.tags && post.tags.length > 0 && (
-             <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px'}}>
+             <div className={styles.tagRow}>
                 {post.tags.map((tag: string) => (
-                   <span key={tag} style={{color: 'var(--color-primary)', fontSize: '14px', fontWeight: '500'}}>#{tag}</span>
+                   <span key={tag} className={styles.tagChip}>#{tag}</span>
                 ))}
              </div>
           )}
 
           <div className={styles.stats}>
-            <button className={styles.statItem} onClick={handleLike}>
+            <button className={`${styles.statItem} ${isLiked ? styles.liked : ''}`} onClick={handleLike}>
               <img 
                 src={isLiked ? "/icons/heart-filled.png" : "/icons/heart.png"} 
                 alt="Like" 
                 className={styles.statIcon} 
-                onError={(e) => {
-                   (e.target as HTMLImageElement).src = "/icons/heart.png";
-                }}
               />
               <span>{likeCount}</span>
             </button>

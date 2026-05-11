@@ -26,26 +26,24 @@ public interface ClosetItemJpaRepository extends JpaRepository<ClosetItem, UUID>
 
     @Query("SELECT ci FROM ClosetItem ci " +
            "JOIN FETCH ci.clothingImage " +
-           "LEFT JOIN ci.closetCollection cc " +
            "WHERE ci.userId = :userId AND ci.deletedAt IS NULL " +
-           "AND (:category IS NULL OR ci.category = :category) " +
-           "AND (:collectionId IS NULL OR cc.id = :collectionId)")
-    Page<ClosetItem> findByUserIdAndFiltersWithPaging(
+           "AND (:category IS NULL OR ci.category = :category)")
+    Page<ClosetItem> findByUserIdAndCategoryWithPaging(
         @Param("userId") UUID userId,
         @Param("category") Category category,
-        @Param("collectionId") UUID collectionId,
+        Pageable pageable
+    );
+
+    @Query("SELECT ci FROM ClosetItem ci " +
+           "JOIN FETCH ci.clothingImage " +
+           "WHERE ci.id IN :itemIds AND ci.deletedAt IS NULL " +
+           "AND (:category IS NULL OR ci.category = :category)")
+    Page<ClosetItem> findByIdsAndCategoryWithPaging(
+        @Param("itemIds") List<UUID> itemIds,
+        @Param("category") Category category,
         Pageable pageable
     );
 
     @Query("SELECT COUNT(ci) FROM ClosetItem ci WHERE ci.userId = :userId AND ci.deletedAt IS NULL")
     long countByUserIdAndDeletedAtIsNull(@Param("userId") UUID userId);
-
-    @Query("SELECT ci.clothingImage.imageUrl FROM ClosetItem ci " +
-           "WHERE ci.closetCollection.id = :collectionId AND ci.deletedAt IS NULL " +
-           "ORDER BY ci.createdAt DESC")
-    List<String> findTopImageUrlsByCollectionId(@Param("collectionId") UUID collectionId, Pageable pageable);
-
-    long countByClosetCollectionIdAndDeletedAtIsNull(UUID collectionId);
-
-    boolean existsByClothingImageIdAndClosetCollectionIdAndDeletedAtIsNull(UUID imageId, UUID collectionId);
 }

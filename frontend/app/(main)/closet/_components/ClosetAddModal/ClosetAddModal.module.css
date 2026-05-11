@@ -72,6 +72,7 @@
 
 .uploadGroup {
   display: flex;
+  justify-content: center;
   gap: 10px;
   margin-bottom: 8px;
 }
@@ -104,8 +105,9 @@
 }
 
 .previewContainer {
-  flex: 1;
-  height: 120px;
+  width: 100%;
+  max-width: 280px;
+  aspect-ratio: 1 / 1;
   position: relative;
   border-radius: var(--radius-standard);
   overflow: hidden;

@@ -3,8 +3,12 @@ package com.simul.closet.application.service;
 import com.simul.closet.application.port.in.CopyItemsToCollectionUseCase;
 import com.simul.closet.application.port.out.ClosetCollectionPersistencePort;
 import com.simul.closet.application.port.out.ClosetItemPersistencePort;
+import com.simul.closet.application.port.out.ClothingImagePersistencePort;
+import com.simul.closet.application.port.out.CollectionItemPersistencePort;
 import com.simul.closet.domain.model.ClosetCollection;
 import com.simul.closet.domain.model.ClosetItem;
+import com.simul.closet.domain.model.ClothingImage;
+import com.simul.closet.domain.model.CollectionItem;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +22,8 @@ public class CopyItemsToCollectionService implements CopyItemsToCollectionUseCas
 
     private final ClosetItemPersistencePort closetItemPersistencePort;
     private final ClosetCollectionPersistencePort closetCollectionPersistencePort;
+    private final CollectionItemPersistencePort collectionItemPersistencePort;
+    private final ClothingImagePersistencePort clothingImagePersistencePort;
 
     @Override
     public void copyItemsToCollection(CopyItemsToCollectionCommand command) {
@@ -32,32 +38,54 @@ public class CopyItemsToCollectionService implements CopyItemsToCollectionUseCas
             ClosetItem sourceItem = closetItemPersistencePort.findById(sourceItemId)
                     .orElseThrow(() -> new RuntimeException("ERR-003: 아이템을 찾을 수 없습니다."));
 
-            // 본인 아이템인지 확인
-            if (!sourceItem.getUserId().equals(command.userId())) {
-                continue; // 혹은 에러 발생
+            if (sourceItem.getUserId().equals(command.userId())) {
+                // === 같은 소유자: 매핑만 추가 (아이템 복제 없음) ===
+                // 중복 체크
+                if (collectionItemPersistencePort.existsByCollectionIdAndItemId(
+                        command.targetCollectionId(), sourceItem.getId())) {
+                    continue; // 이미 해당 컬렉션에 있으면 스킵
+                }
+
+                CollectionItem collectionItem = CollectionItem.builder()
+                        .collection(targetCollection)
+                        .item(sourceItem)
+                        .sortOrder(0)
+                        .build();
+                collectionItemPersistencePort.save(collectionItem);
+
+            } else {
+                // === 다른 소유자: Deep Copy (새 아이템 생성 + 매핑) ===
+                // 아이템 개수 상한 확인
+                long currentCount = closetItemPersistencePort.countByUserId(command.userId());
+                if (currentCount >= 200) {
+                    throw new RuntimeException("ERR-201-A: 옷장 아이템 개수 상한(200개)을 초과했습니다.");
+                }
+
+                // ClothingImage Deep Copy (독립 객체)
+                ClothingImage copiedImage = new ClothingImage(
+                        sourceItem.getClothingImage().getImageUrl(),
+                        command.userId()
+                );
+                clothingImagePersistencePort.save(copiedImage);
+
+                // ClosetItem Deep Copy
+                ClosetItem newItem = ClosetItem.builder()
+                        .userId(command.userId())
+                        .clothingImage(copiedImage)
+                        .category(sourceItem.getCategory())
+                        .memo(sourceItem.getMemo())
+                        .sortOrder(0)
+                        .build();
+                ClosetItem savedItem = closetItemPersistencePort.save(newItem);
+
+                // CollectionItem 매핑 생성
+                CollectionItem collectionItem = CollectionItem.builder()
+                        .collection(targetCollection)
+                        .item(savedItem)
+                        .sortOrder(0)
+                        .build();
+                collectionItemPersistencePort.save(collectionItem);
             }
-
-            // 중복 체크 (해당 폴더에 동일한 이미지가 이미 있는지)
-            boolean alreadyExists = closetItemPersistencePort.existsInCollection(
-                    sourceItem.getClothingImage().getId(), 
-                    command.targetCollectionId()
-            );
-
-            if (alreadyExists) {
-                continue; // 이미 있으면 스킵
-            }
-
-            // 새로운 ClosetItem 생성 (Deep Copy)
-            ClosetItem newItem = ClosetItem.builder()
-                    .userId(command.userId())
-                    .clothingImage(sourceItem.getClothingImage())
-                    .closetCollection(targetCollection)
-                    .category(sourceItem.getCategory())
-                    .memo(sourceItem.getMemo())
-                    .sortOrder(0)
-                    .build();
-
-            closetItemPersistencePort.save(newItem);
         }
     }
 }

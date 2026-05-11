@@ -1,12 +1,14 @@
 package com.simul.closet.application.service;
 
 import com.simul.closet.application.port.in.AddItemUseCase;
-import com.simul.closet.application.port.in.GetCollectionUseCase;
+import com.simul.closet.application.port.out.ClosetCollectionPersistencePort;
 import com.simul.closet.application.port.out.ClosetItemPersistencePort;
 import com.simul.closet.application.port.out.ClothingImagePersistencePort;
+import com.simul.closet.application.port.out.CollectionItemPersistencePort;
 import com.simul.closet.domain.model.ClosetCollection;
 import com.simul.closet.domain.model.ClosetItem;
 import com.simul.closet.domain.model.ClothingImage;
+import com.simul.closet.domain.model.CollectionItem;
 import com.simul.common.application.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,7 +24,8 @@ public class AddItemService implements AddItemUseCase {
     private final FileStorageService fileStorageService;
     private final ClothingImagePersistencePort clothingImagePersistencePort;
     private final ClosetItemPersistencePort closetItemPersistencePort;
-    private final com.simul.closet.application.port.out.ClosetCollectionPersistencePort closetCollectionPersistencePort;
+    private final ClosetCollectionPersistencePort closetCollectionPersistencePort;
+    private final CollectionItemPersistencePort collectionItemPersistencePort;
 
     @Override
     public UUID addItem(AddItemCommand command) {
@@ -37,25 +40,32 @@ public class AddItemService implements AddItemUseCase {
         ClothingImage clothingImage = new ClothingImage(imageUrl, command.getUserId());
         clothingImagePersistencePort.save(clothingImage);
 
-        // 3. 컬렉션 존재 여부 및 권한 확인 (있는 경우만)
-        ClosetCollection collection = null;
-        if (command.getCollectionId() != null) {
-            collection = closetCollectionPersistencePort.findById(command.getCollectionId());
-            if (collection == null || !collection.getUserId().equals(command.getUserId())) {
-                throw new RuntimeException("ERR-003: 유효하지 않은 컬렉션입니다.");
-            }
-        }
-
-        // 4. ClosetItem 생성 및 저장
+        // 3. ClosetItem 생성 및 저장 (컬렉션 정보 없이)
         ClosetItem closetItem = ClosetItem.builder()
                 .userId(command.getUserId())
                 .clothingImage(clothingImage)
-                .closetCollection(collection)
                 .category(command.getCategory())
                 .memo(command.getMemo())
-                .sortOrder(0) // 초기 정렬값
+                .sortOrder(0)
                 .build();
 
-        return closetItemPersistencePort.save(closetItem).getId();
+        ClosetItem savedItem = closetItemPersistencePort.save(closetItem);
+
+        // 4. 컬렉션이 지정된 경우 CollectionItem 매핑 생성
+        if (command.getCollectionId() != null) {
+            ClosetCollection collection = closetCollectionPersistencePort.findById(command.getCollectionId());
+            if (collection == null || !collection.getUserId().equals(command.getUserId())) {
+                throw new RuntimeException("ERR-003: 유효하지 않은 컬렉션입니다.");
+            }
+
+            CollectionItem collectionItem = CollectionItem.builder()
+                    .collection(collection)
+                    .item(savedItem)
+                    .sortOrder(0)
+                    .build();
+            collectionItemPersistencePort.save(collectionItem);
+        }
+
+        return savedItem.getId();
     }
 }

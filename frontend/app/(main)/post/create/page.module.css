@@ -11,10 +11,6 @@
   justify-content: space-between;
   width: 100%;
   margin: 0 0 24px 0;
-
-  position: sticky;
-  top: 65px;
-  z-index: 90;
   padding-top: 12px;
 }
 
@@ -179,7 +175,44 @@
   flex: 0 0 auto;
   display: flex;
   align-items: center;
+  gap: 6px;
   justify-content: center;
+  padding: 6px 12px 6px 16px;
+  background: color-mix(in srgb, var(--color-green) 60%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.removeTagBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.1);
+  color: var(--color-text-primary);
+  font-size: 10px;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 2px;
+}
+
+.removeTagBtn:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.tagInput {
+  flex: 1 1 100px;
+  min-width: 120px;
   padding: 8px 16px;
   background: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(10px);
@@ -187,23 +220,14 @@
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 99px;
   font-size: 13px;
-  font-weight: var(--weight-medium);
-  color: var(--color-text-secondary);
-  white-space: nowrap;
-  cursor: pointer;
+  color: var(--color-text-primary);
+  outline: none;
   transition: all var(--transition-fast);
 }
 
-.tagItem:hover {
+.tagInput:focus {
   background: rgba(255, 255, 255, 0.8);
-}
-
-.tagItemSelected {
-  background: color-mix(in srgb, var(--color-green) 60%, transparent);
-  border-color: rgba(255, 255, 255, 0.5);
-  color: var(--color-text-primary);
-  font-weight: 700;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: var(--color-primary);
 }
 
 .tagCountText {
@@ -211,6 +235,19 @@
   color: var(--color-text-disabled);
   text-align: right;
   margin-top: 8px;
+  transition: color var(--transition-fast);
+}
+
+.tagCountError {
+  color: #ff4d4f;
+  font-weight: 700;
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
 }
 
 /* ── Caption Textarea ── */

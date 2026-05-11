@@ -45,4 +45,13 @@ public class AttachTagsToPostService implements AttachTagsToPostUseCase {
             tagPersistencePort.savePostTag(postTag);
         }
     }
+
+    @Override
+    @Transactional
+    public void updateTags(UUID postId, List<String> tagNames) {
+        // 기존 태그 매핑 모두 삭제
+        tagPersistencePort.deletePostTagsByPostId(postId);
+        // 새 태그 매핑
+        attachTags(postId, tagNames);
+    }
 }

@@ -2,6 +2,7 @@ package com.simul.closet.application.service;
 
 import com.simul.closet.application.port.in.DeleteItemUseCase;
 import com.simul.closet.application.port.out.ClosetItemPersistencePort;
+import com.simul.closet.application.port.out.CollectionItemPersistencePort;
 import com.simul.closet.domain.model.ClosetItem;
 import com.simul.common.exception.BusinessException;
 import com.simul.common.exception.ErrorCode;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DeleteItemService implements DeleteItemUseCase {
 
     private final ClosetItemPersistencePort closetItemPersistencePort;
+    private final CollectionItemPersistencePort collectionItemPersistencePort;
 
     @Override
     @Transactional
@@ -25,6 +27,10 @@ public class DeleteItemService implements DeleteItemUseCase {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
 
+        // 1. 해당 아이템의 모든 컬렉션 매핑을 soft delete
+        collectionItemPersistencePort.deleteAllByItemId(item.getId());
+
+        // 2. 아이템 자체를 soft delete
         item.softDelete();
     }
 }
