@@ -36,10 +36,10 @@ public class TryonGenerateController {
                         .userId(userId)
                         .baseImageId(request.baseImageId())
                         .itemId(request.itemId())
+                        .itemIds(request.itemIds())
                         .build()
         );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
-
