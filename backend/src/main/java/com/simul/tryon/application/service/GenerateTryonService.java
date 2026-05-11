@@ -87,6 +87,9 @@ public class GenerateTryonService implements GenerateTryonUseCase {
 
     private List<UUID> normalizeItemIds(GenerateTryonCommand command) {
         if (command.getItemIds() != null && !command.getItemIds().isEmpty()) {
+            if (command.getItemIds().stream().anyMatch(it -> it == null)) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "item_ids에 null이 포함될 수 없습니다.");
+            }
             return command.getItemIds();
         }
         if (command.getItemId() != null) {
