@@ -15,12 +15,14 @@ import com.simul.common.exception.BusinessException;
 import com.simul.common.exception.ErrorCode;
 import com.simul.post.application.port.out.PostRepositoryPort;
 import com.simul.post.domain.model.Post;
+import com.simul.tryon.application.port.out.SafeSearchPort;
 import com.simul.tryon.application.port.out.TryonAiGenerationPort;
 import com.simul.tryon.application.port.in.GenerateTryonUseCase;
 import com.simul.tryon.application.port.in.DeductTryonCreditUseCase;
 import com.simul.tryon.application.port.out.BaseImagePersistencePort;
 import com.simul.tryon.application.port.out.TryonCreditPersistencePort;
 import com.simul.tryon.domain.model.BaseImage;
+import java.lang.reflect.Field;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -33,6 +35,16 @@ class GenerateTryonServiceTest {
 
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
+    private static void enableGemini(GenerateTryonService service) {
+        try {
+            Field field = GenerateTryonService.class.getDeclaredField("geminiEnabled");
+            field.setAccessible(true);
+            field.set(service, true);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Test
     void generate_rejectsWhenCreditsExhausted() {
         BaseImagePersistencePort baseImagePort = mock(BaseImagePersistencePort.class);
@@ -43,12 +55,13 @@ class GenerateTryonServiceTest {
         TryonAiGenerationPort aiPort = mock(TryonAiGenerationPort.class);
         BinaryImageStoragePort binaryImageStoragePort = mock(BinaryImageStoragePort.class);
         DeductTryonCreditUseCase deductTryonCreditUseCase = mock(DeductTryonCreditUseCase.class);
+        SafeSearchPort safeSearchPort = mock(SafeSearchPort.class);
         Clock clock = Clock.fixed(Instant.parse("2026-05-11T01:00:00Z"), KST);
 
         when(creditPort.countByUserIdAndUsedAtBetween(any(), any(), any())).thenReturn(5L);
 
         GenerateTryonService service =
-                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase);
+                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase, safeSearchPort);
 
         var command = GenerateTryonUseCase.GenerateTryonCommand.builder()
                 .userId(UUID.randomUUID())
@@ -72,6 +85,7 @@ class GenerateTryonServiceTest {
         TryonAiGenerationPort aiPort = mock(TryonAiGenerationPort.class);
         BinaryImageStoragePort binaryImageStoragePort = mock(BinaryImageStoragePort.class);
         DeductTryonCreditUseCase deductTryonCreditUseCase = mock(DeductTryonCreditUseCase.class);
+        SafeSearchPort safeSearchPort = mock(SafeSearchPort.class);
         Clock clock = Clock.fixed(Instant.parse("2026-05-11T01:00:00Z"), KST);
 
         UUID userId = UUID.randomUUID();
@@ -99,7 +113,7 @@ class GenerateTryonServiceTest {
         when(postPort.save(any(Post.class))).thenReturn(saved);
 
         GenerateTryonService service =
-                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase);
+                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase, safeSearchPort);
 
         var command = GenerateTryonUseCase.GenerateTryonCommand.builder()
                 .userId(userId)
@@ -123,6 +137,7 @@ class GenerateTryonServiceTest {
         TryonAiGenerationPort aiPort = mock(TryonAiGenerationPort.class);
         BinaryImageStoragePort binaryImageStoragePort = mock(BinaryImageStoragePort.class);
         DeductTryonCreditUseCase deductTryonCreditUseCase = mock(DeductTryonCreditUseCase.class);
+        SafeSearchPort safeSearchPort = mock(SafeSearchPort.class);
         Clock clock = Clock.fixed(Instant.parse("2026-05-11T01:00:00Z"), KST);
 
         UUID userId = UUID.randomUUID();
@@ -159,7 +174,7 @@ class GenerateTryonServiceTest {
         when(postPort.save(any(Post.class))).thenReturn(saved);
 
         GenerateTryonService service =
-                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase);
+                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase, safeSearchPort);
 
         var command = GenerateTryonUseCase.GenerateTryonCommand.builder()
                 .userId(userId)
@@ -181,10 +196,11 @@ class GenerateTryonServiceTest {
         TryonAiGenerationPort aiPort = mock(TryonAiGenerationPort.class);
         BinaryImageStoragePort binaryImageStoragePort = mock(BinaryImageStoragePort.class);
         DeductTryonCreditUseCase deductTryonCreditUseCase = mock(DeductTryonCreditUseCase.class);
+        SafeSearchPort safeSearchPort = mock(SafeSearchPort.class);
         Clock clock = Clock.fixed(Instant.parse("2026-05-11T01:00:00Z"), KST);
 
         GenerateTryonService service =
-                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase);
+                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase, safeSearchPort);
 
         var command = GenerateTryonUseCase.GenerateTryonCommand.builder()
                 .userId(UUID.randomUUID())
@@ -208,10 +224,11 @@ class GenerateTryonServiceTest {
         TryonAiGenerationPort aiPort = mock(TryonAiGenerationPort.class);
         BinaryImageStoragePort binaryImageStoragePort = mock(BinaryImageStoragePort.class);
         DeductTryonCreditUseCase deductTryonCreditUseCase = mock(DeductTryonCreditUseCase.class);
+        SafeSearchPort safeSearchPort = mock(SafeSearchPort.class);
         Clock clock = Clock.fixed(Instant.parse("2026-05-11T01:00:00Z"), KST);
 
         GenerateTryonService service =
-                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase);
+                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase, safeSearchPort);
 
         var command = GenerateTryonUseCase.GenerateTryonCommand.builder()
                 .userId(UUID.randomUUID())
@@ -223,5 +240,67 @@ class GenerateTryonServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.INVALID_INPUT);
+    }
+
+    @Test
+    void generate_whenGeminiEnabledAndUserImageInappropriate_throwsInappropriateImage() {
+        BaseImagePersistencePort baseImagePort = mock(BaseImagePersistencePort.class);
+        ClosetItemPersistencePort itemPort = mock(ClosetItemPersistencePort.class);
+        PostRepositoryPort postPort = mock(PostRepositoryPort.class);
+        TryonCreditPersistencePort creditPort = mock(TryonCreditPersistencePort.class);
+        ImageReadPort imageReadPort = mock(ImageReadPort.class);
+        TryonAiGenerationPort aiPort = mock(TryonAiGenerationPort.class);
+        BinaryImageStoragePort binaryImageStoragePort = mock(BinaryImageStoragePort.class);
+        DeductTryonCreditUseCase deductTryonCreditUseCase = mock(DeductTryonCreditUseCase.class);
+        SafeSearchPort safeSearchPort = mock(SafeSearchPort.class);
+        Clock clock = Clock.fixed(Instant.parse("2026-05-11T01:00:00Z"), KST);
+
+        UUID userId = UUID.randomUUID();
+        UUID baseImageId = UUID.randomUUID();
+        UUID itemId = UUID.randomUUID();
+
+        when(creditPort.countByUserIdAndUsedAtBetween(any(), any(), any())).thenReturn(0L);
+
+        BaseImage baseImage = mock(BaseImage.class);
+        when(baseImage.getId()).thenReturn(baseImageId);
+        when(baseImage.getUserId()).thenReturn(userId);
+        when(baseImage.getImageUrl()).thenReturn("/uploads/images/tryon/user.png");
+        when(baseImagePort.findById(baseImageId)).thenReturn(Optional.of(baseImage));
+
+        ClosetItem item = mock(ClosetItem.class);
+        when(item.getId()).thenReturn(itemId);
+        when(item.getUserId()).thenReturn(userId);
+        ClothingImage clothingImage = mock(ClothingImage.class);
+        when(clothingImage.getImageUrl()).thenReturn("/uploads/images/closet/top.png");
+        when(item.getClothingImage()).thenReturn(clothingImage);
+        when(itemPort.findById(itemId)).thenReturn(Optional.of(item));
+
+        Post saved = mock(Post.class);
+        when(postPort.save(any(Post.class))).thenReturn(saved);
+
+        when(imageReadPort.read("/uploads/images/tryon/user.png"))
+                .thenReturn(new ImageReadPort.ImageReadResult("u".getBytes(), "image/png"));
+
+        when(safeSearchPort.analyze(any()))
+                .thenReturn(new SafeSearchPort.SafeSearchResult(
+                        SafeSearchPort.Likelihood.LIKELY,
+                        SafeSearchPort.Likelihood.VERY_UNLIKELY,
+                        SafeSearchPort.Likelihood.VERY_UNLIKELY
+                ));
+
+        GenerateTryonService service =
+                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase, safeSearchPort);
+        enableGemini(service);
+
+        var command = GenerateTryonUseCase.GenerateTryonCommand.builder()
+                .userId(userId)
+                .baseImageId(baseImageId)
+                .itemId(itemId)
+                .build();
+
+        assertThatThrownBy(() -> service.generate(command))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INAPPROPRIATE_IMAGE);
     }
 }

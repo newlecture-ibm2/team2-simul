@@ -3,6 +3,7 @@ package com.simul.tryon.application.service;
 import com.simul.closet.application.port.out.ClosetItemPersistencePort;
 import com.simul.closet.domain.model.ClosetItem;
 import com.simul.common.application.port.out.BinaryImageStoragePort;
+import com.simul.common.application.port.out.ImageReadPort;
 import com.simul.common.exception.BusinessException;
 import com.simul.common.exception.ErrorCode;
 import com.simul.post.application.port.out.PostRepositoryPort;
@@ -12,6 +13,7 @@ import com.simul.tryon.application.dto.TryonGenerateResponse;
 import com.simul.tryon.application.port.in.GenerateTryonUseCase;
 import com.simul.tryon.application.port.in.DeductTryonCreditUseCase;
 import com.simul.tryon.application.port.out.BaseImagePersistencePort;
+import com.simul.tryon.application.port.out.SafeSearchPort;
 import com.simul.tryon.application.port.out.TryonAiGenerationPort;
 import com.simul.tryon.application.port.out.TryonCreditPersistencePort;
 import com.simul.tryon.domain.model.BaseImage;
@@ -21,10 +23,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.simul.common.application.port.out.ImageReadPort;
-import org.springframework.beans.factory.annotation.Value;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +45,7 @@ public class GenerateTryonService implements GenerateTryonUseCase {
     private final TryonAiGenerationPort tryonAiGenerationPort;
     private final BinaryImageStoragePort binaryImageStoragePort;
     private final DeductTryonCreditUseCase deductTryonCreditUseCase;
+    private final SafeSearchPort safeSearchPort;
 
     @Value("${simul.gemini.enabled:false}")
     private boolean geminiEnabled;
@@ -107,9 +109,13 @@ public class GenerateTryonService implements GenerateTryonUseCase {
         String userImageUrl = baseImage.getImageUrl();
 
         ImageReadPort.ImageReadResult userImage = imageReadPort.read(userImageUrl);
+        ensureNotInappropriate(post, userImage.bytes());
         List<ImageReadPort.ImageReadResult> clothingImages = items.stream()
                 .map(it -> imageReadPort.read(it.getClothingImage().getImageUrl()))
                 .toList();
+        for (ImageReadPort.ImageReadResult clothingImage : clothingImages) {
+            ensureNotInappropriate(post, clothingImage.bytes());
+        }
 
         String prompt = buildPromptForOrderedItems(clothingImages.size());
 
@@ -152,6 +158,15 @@ public class GenerateTryonService implements GenerateTryonUseCase {
             post.markFailed();
             postRepositoryPort.save(post);
             throw new BusinessException(ErrorCode.AI_GENERATION_FAILED, e.getMessage());
+        }
+    }
+
+    private void ensureNotInappropriate(Post post, byte[] imageBytes) {
+        SafeSearchPort.SafeSearchResult safeSearch = safeSearchPort.analyze(imageBytes);
+        if (safeSearch.isInappropriate()) {
+            post.markFailed();
+            postRepositoryPort.save(post);
+            throw new BusinessException(ErrorCode.INAPPROPRIATE_IMAGE);
         }
     }
 
