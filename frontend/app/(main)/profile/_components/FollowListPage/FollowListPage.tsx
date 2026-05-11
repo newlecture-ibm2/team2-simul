@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getFollowers, getFollowings, followUser, unfollowUser, getUserProfile, FollowUserResponse } from '@/lib/api/userAPI';
 import { useAuthStore, User } from '@/lib/stores/useAuthStore';
+import { toast } from '@/lib/utils/toast';
+import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
 import styles from './FollowListPage.module.css';
 
 interface FollowListPageProps {
@@ -18,6 +20,7 @@ export default function FollowListPage({ userId, type }: FollowListPageProps) {
   const queryClient = useQueryClient();
   const { isAuthenticated, user: currentUser } = useAuthStore();
   const [currentType, setCurrentType] = useState<'followers' | 'followings'>(type);
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, targetId: '' });
 
   // Sync state with prop if it changes (e.g. initial load)
   useEffect(() => {
@@ -41,6 +44,7 @@ export default function FollowListPage({ userId, type }: FollowListPageProps) {
   const followMutation = useMutation({
     mutationFn: (targetId: string) => followUser(targetId),
     onSuccess: () => {
+      toast.success('팔로우했습니다!');
       queryClient.invalidateQueries({ queryKey });
       queryClient.invalidateQueries({ queryKey: ['userProfile', userId] });
       queryClient.invalidateQueries({ queryKey: ['me'] });
@@ -50,6 +54,7 @@ export default function FollowListPage({ userId, type }: FollowListPageProps) {
   const unfollowMutation = useMutation({
     mutationFn: (targetId: string) => unfollowUser(targetId),
     onSuccess: () => {
+      toast.info('언팔로우했습니다.');
       queryClient.invalidateQueries({ queryKey });
       queryClient.invalidateQueries({ queryKey: ['userProfile', userId] });
       queryClient.invalidateQueries({ queryKey: ['me'] });
@@ -58,16 +63,19 @@ export default function FollowListPage({ userId, type }: FollowListPageProps) {
 
   const handleToggleFollow = (targetId: string, isFollowing: boolean) => {
     if (!isAuthenticated) {
-      alert('로그인이 필요합니다.');
+      toast.error('로그인이 필요합니다.');
       return;
     }
     if (isFollowing) {
-      if (confirm('정말 언팔로우하시겠습니까?')) {
-        unfollowMutation.mutate(targetId);
-      }
+      setConfirmModal({ isOpen: true, targetId });
     } else {
       followMutation.mutate(targetId);
     }
+  };
+
+  const handleConfirmUnfollow = () => {
+    unfollowMutation.mutate(confirmModal.targetId);
+    setConfirmModal({ ...confirmModal, isOpen: false });
   };
 
   return (
@@ -125,6 +133,16 @@ export default function FollowListPage({ userId, type }: FollowListPageProps) {
           ))}
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title="언팔로우 하시겠습니까?"
+        description="더 이상 이 사용자의 소식을 받지 않게 됩니다."
+        confirmText="언팔로우"
+        isDanger={true}
+        onConfirm={handleConfirmUnfollow}
+        onCancel={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+      />
     </div>
   );
 }

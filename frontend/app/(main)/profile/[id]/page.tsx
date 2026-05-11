@@ -6,6 +6,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getUserProfile, followUser, unfollowUser } from '@/lib/api/userAPI';
 import { useAuthStore, User } from '@/lib/stores/useAuthStore';
+import { toast } from '@/lib/utils/toast';
+import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
 import styles from '../page.module.css'; // Use the parent directory's CSS module
 
 export default function UserProfilePage() {
@@ -15,6 +17,7 @@ export default function UserProfilePage() {
   const userId = params.id as string;
   const { isAuthenticated, user: currentUser } = useAuthStore();
   const queryClient = useQueryClient();
+  const [isUnfollowModalOpen, setIsUnfollowModalOpen] = useState(false);
 
 
   
@@ -53,6 +56,9 @@ export default function UserProfilePage() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['userProfile', userId] });
     },
+    onSuccess: () => {
+      toast.success('팔로우했습니다!');
+    },
   });
 
   const unfollowMutation = useMutation({
@@ -77,17 +83,18 @@ export default function UserProfilePage() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['userProfile', userId] });
     },
+    onSuccess: () => {
+      toast.info('언팔로우했습니다.');
+    },
   });
 
   const handleFollowToggle = () => {
     if (!isAuthenticated) {
-      alert('로그인이 필요합니다.');
+      toast.error('로그인이 필요합니다.');
       return;
     }
     if (user?.isFollowing) {
-      if (confirm(`${user.nickname}님을 언팔로우하시겠습니까?`)) {
-        unfollowMutation.mutate();
-      }
+      setIsUnfollowModalOpen(true);
     } else {
       followMutation.mutate();
     }
@@ -194,6 +201,19 @@ export default function UserProfilePage() {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isUnfollowModalOpen}
+        title="언팔로우 하시겠습니까?"
+        description={`${user?.nickname}님의 소식을 더 이상 받지 않게 됩니다.`}
+        confirmText="언팔로우"
+        isDanger={true}
+        onConfirm={() => {
+          unfollowMutation.mutate();
+          setIsUnfollowModalOpen(false);
+        }}
+        onCancel={() => setIsUnfollowModalOpen(false)}
+      />
     </div>
   );
 }

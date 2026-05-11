@@ -7,6 +7,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toggleLike, getPostDetail, deletePost } from '../../../../lib/api/feedAPI';
 import { checkIsFollowing, followUser, unfollowUser } from '@/lib/api/userAPI';
 import { useAuthStore } from '../../../../lib/stores/useAuthStore';
+import { toast } from '@/lib/utils/toast';
+import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
 import styles from './page.module.css';
 
 export interface PostDetailData {
@@ -41,6 +43,13 @@ export default function PostDetailPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+  const [confirmModal, setConfirmModal] = useState({ 
+    isOpen: false, 
+    title: '', 
+    description: '', 
+    confirmText: '', 
+    onConfirm: () => {} 
+  });
 
   const queryClient = useQueryClient();
 
@@ -56,6 +65,7 @@ export default function PostDetailPage() {
   const followMutation = useMutation({
     mutationFn: () => followUser(post!.userId),
     onSuccess: () => {
+      toast.success('팔로우했습니다!');
       queryClient.invalidateQueries({ queryKey: ['isFollowing', post!.userId] });
     }
   });
@@ -63,19 +73,27 @@ export default function PostDetailPage() {
   const unfollowMutation = useMutation({
     mutationFn: () => unfollowUser(post!.userId),
     onSuccess: () => {
+      toast.info('언팔로우했습니다.');
       queryClient.invalidateQueries({ queryKey: ['isFollowing', post!.userId] });
     }
   });
 
   const handleFollowToggle = () => {
     if (!isAuthenticated) {
-      alert('로그인이 필요합니다.');
+      toast.error('로그인이 필요합니다.');
       return;
     }
     if (isFollowingAuthor) {
-      if (confirm(`${post?.nickname}님을 언팔로우하시겠습니까?`)) {
-        unfollowMutation.mutate();
-      }
+      setConfirmModal({
+        isOpen: true,
+        title: '언팔로우 하시겠습니까?',
+        description: `${post?.nickname}님의 소식을 더 이상 받지 않게 됩니다.`,
+        confirmText: '언팔로우',
+        onConfirm: () => {
+          unfollowMutation.mutate();
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        }
+      });
     } else {
       followMutation.mutate();
     }
@@ -132,7 +150,7 @@ export default function PostDetailPage() {
 
   const handleLike = async () => {
     if (!isAuthenticated) {
-      alert('좋아요를 누르려면 로그인이 필요합니다.');
+      toast.error('좋아요를 누르려면 로그인이 필요합니다.');
       return;
     }
 
@@ -154,15 +172,24 @@ export default function PostDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm('정말로 이 게시물을 삭제하시겠습니까?')) return;
-    try {
-      await deletePost(postId);
-      alert('게시물이 삭제되었습니다.');
-      router.push('/');
-    } catch (err) {
-      console.error('삭제 실패:', err);
-      alert('삭제에 실패했습니다.');
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: '게시물을 삭제하시겠습니까?',
+      description: '삭제된 게시물은 복구할 수 없습니다.',
+      confirmText: '삭제',
+      onConfirm: async () => {
+        try {
+          await deletePost(postId);
+          toast.success('게시물이 삭제되었습니다.');
+          router.push('/');
+        } catch (err) {
+          console.error('삭제 실패:', err);
+          toast.error('삭제에 실패했습니다.');
+        } finally {
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        }
+      }
+    });
   };
 
   if (isLoading) return <div className={styles.container}><div style={{padding: '20px', textAlign: 'center'}}>로딩 중...</div></div>;
@@ -297,6 +324,16 @@ export default function PostDetailPage() {
           <button className={styles.reportBtn}>🚨 게시물 신고하기</button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        description={confirmModal.description}
+        confirmText={confirmModal.confirmText}
+        isDanger={true}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }
