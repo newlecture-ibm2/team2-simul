@@ -35,11 +35,13 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
-        // 로컬/테스트 환경이 아닐 때만 HTTPS 강제
+        // SSL 종료(HTTPS)는 Nginx 역방향 프록시에서 처리하므로, 내부 Docker 네트워크(HTTP)에서는 강제하지 않습니다.
+        /*
         if (!Arrays.asList(env.getActiveProfiles()).contains("local") && 
             !Arrays.asList(env.getActiveProfiles()).contains("test")) {
             http.requiresChannel(channel -> channel.anyRequest().requiresSecure());
         }
+        */
 
         http
             .csrf(AbstractHttpConfigurer::disable)
@@ -54,8 +56,8 @@ public class SecurityConfig {
                 .requestMatchers("/uploads/**").permitAll()
                 // 피드/게시물 상세는 비로그인 열람 허용
                 .requestMatchers("GET", "/posts", "/posts/**").permitAll()
-                // 옷장 아이템 조회 (개발용 임시 허용 — 추후 인증 필수로 전환)
-                .requestMatchers("GET", "/closet/**").permitAll()
+                // 옷장 아이템 조회 (로그인 필수)
+                .requestMatchers("/closet/**").authenticated()
                 // 관리자 전용
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 // 나머지는 인증 필요

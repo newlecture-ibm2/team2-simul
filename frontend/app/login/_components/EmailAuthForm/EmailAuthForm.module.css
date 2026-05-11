@@ -97,3 +97,16 @@
   margin-bottom: 6px;
   margin-left: 4px;
 }
+
+.privacyNote {
+  font-size: var(--font-caption);
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+
+.privacyNote a {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: underline;
+}

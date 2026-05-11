@@ -18,6 +18,7 @@ public class User {
     private String providerId;
     private String name;
     private String nickname;
+    private String password;
     
     @Builder.Default
     private Gender gender = Gender.UNKNOWN;

@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getIronSession } from 'iron-session';
+import { sessionOptions, SessionData } from '@/lib/session';
 
+/**
+ * 소셜 로그인 BFF 라우트
+ *
+ * 1. 브라우저에서 provider, code, redirectUri를 받음
+ * 2. 백엔드(Spring Boot)에 전달하여 JWT 발급
+ * 3. 발급받은 토큰을 iron-session에 암호화 저장
+ */
 export async function POST(request: NextRequest) {
   try {
     // 1. 클라이언트(브라우저)로부터 전달받은 데이터 추출
@@ -26,36 +35,27 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await backendResponse.json();
-    const { accessToken, refreshToken } = data;
+    const { accessToken, refreshToken, isNewUser } = data;
 
-    // 3. 응답 생성 및 JWT를 httpOnly 쿠키에 저장
+    // 3. iron-session에 토큰을 암호화하여 저장
     const response = NextResponse.json({ 
       success: true,
-      user: data.user 
+      isNewUser,
     });
 
-    // Access Token 쿠키 설정
-    response.cookies.set('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 3600, 
-    });
-
-    // Refresh Token 쿠키 설정
-    response.cookies.set('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 14,
-    });
+    const session = await getIronSession<SessionData>(request, response, sessionOptions);
+    session.user = {
+      id: '', // 토큰에서 추출 가능하지만, 당장은 빈 값으로 설정
+      role: 'USER',
+      token: accessToken,
+      refreshToken: refreshToken,
+    };
+    await session.save();
 
     return response;
 
   } catch (error) {
-    console.error('BFF Auth Error:', error);
+    console.error('BFF Social Auth Error:', error);
     return NextResponse.json(
       { message: '내부 서버 오류가 발생했습니다.' },
       { status: 500 }

@@ -9,10 +9,11 @@ import Toggle from './_components/Toggle/Toggle';
 import VerticalDeck from './_components/VerticalDeck/VerticalDeck';
 import FloatingAddButton from './_components/FloatingAddButton';
 import ClosetAddModal from './_components/ClosetAddModal/ClosetAddModal';
+import AlertModal from './_components/AlertModal/AlertModal';
 import { useClosetItems } from './_components/useClosetItems';
 import styles from './page.module.css';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { addClosetItem, addClosetCollection, getClosetCollections } from '@/lib/api/closetAPI';
+import { addClosetItem, addClosetCollection, getClosetCollections, updateClosetCollection, deleteClosetCollection } from '@/lib/api/closetAPI';
 
 // const DUMMY_FOLDERS_DATA = [
 //   { id: 1, title: 'shirts outfit', itemCount: 3, lastUpdated: '2주 전', images: [] },
@@ -34,6 +35,7 @@ function ClosetPageContent() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
 
   // API 호출: 옷장 아이템 목록
   const apiParams = useMemo(() => ({
@@ -57,7 +59,7 @@ function ClosetPageContent() {
       title: c.name,
       itemCount: c.itemCount,
       lastUpdated: new Date(c.createdAt).toLocaleDateString(),
-      images: c.coverImageUrl ? [c.coverImageUrl] : []
+      images: c.images && c.images.length > 0 ? c.images : (c.coverImageUrl ? [c.coverImageUrl] : [])
     }));
   }, [collectionsData]);
 
@@ -107,9 +109,36 @@ function ClosetPageContent() {
     addCollectionMutation.mutate(formData);
   };
 
-  const handleRenameFolder = (_id: string, _newTitle: string) => {
-    // TODO: 폴더 이름 변경 PATCH API 호출 필요
+  const updateCollectionMutation = useMutation({
+    mutationFn: ({ id, title }: { id: string; title: string }) => {
+      const formData = new FormData();
+      formData.append('name', title);
+      return updateClosetCollection(id, formData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['closetCollections'] });
+    },
+  });
+
+  const deleteCollectionMutation = useMutation({
+    mutationFn: (id: string) => deleteClosetCollection(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['closetCollections'] });
+    },
+  });
+
+  const handleRenameFolder = (id: string | number, newTitle: string) => {
+    if (!newTitle.trim()) {
+      setShowAlert(true);
+      setEditingFolderId(null);
+      return;
+    }
+    updateCollectionMutation.mutate({ id: String(id), title: newTitle.trim() });
     setEditingFolderId(null);
+  };
+
+  const handleDeleteFolder = (id: string | number) => {
+    deleteCollectionMutation.mutate(String(id));
   };
 
   const handleCardClick = (id: string) => {
@@ -168,14 +197,20 @@ function ClosetPageContent() {
             ) : (
               <>
                 <div className={styles.grid}>
-                  {displayItems.map(item => (
-                    <ClosetCard 
-                      key={item.id} 
-                      id={item.id} 
-                      imageUrl={item.imageUrl}
-                      onClick={handleCardClick}
-                    />
-                  ))}
+                  {displayItems.length > 0 ? (
+                    displayItems.map(item => (
+                      <ClosetCard 
+                        key={item.id} 
+                        id={item.id} 
+                        imageUrl={item.imageUrl}
+                        onClick={handleCardClick}
+                      />
+                    ))
+                  ) : (
+                    <div className={styles.emptyWrapper}>
+                      <p>아이템이 없습니다.</p>
+                    </div>
+                  )}
                 </div>
 
                 {totalPages > 1 && (
@@ -215,7 +250,8 @@ function ClosetPageContent() {
                       images={folder.images}
                       onClick={(id) => router.push(`/closet/folders/${id}`)}
                       isEditing={editingFolderId === folder.id}
-                      onRename={(id, title) => handleRenameFolder(String(id), title)}
+                      onRename={handleRenameFolder}
+                      onDelete={handleDeleteFolder}
                     />
                   ))}
                 </div>
@@ -253,6 +289,13 @@ function ClosetPageContent() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         itemId={selectedItemId}
+      />
+
+      <AlertModal
+        isOpen={showAlert}
+        title="폴더 이름 오류"
+        message="폴더 이름은 최소 한 글자 이상이어야 합니다."
+        onClose={() => setShowAlert(false)}
       />
     </div>
   );

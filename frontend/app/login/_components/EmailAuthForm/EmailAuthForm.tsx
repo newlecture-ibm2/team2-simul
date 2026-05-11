@@ -9,7 +9,7 @@ interface EmailAuthFormProps {
 }
 
 export default function EmailAuthForm({ type }: EmailAuthFormProps) {
-  const { login, isLoading } = useAuth();
+  const { loginWithEmail, signupWithEmail, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -24,10 +24,11 @@ export default function EmailAuthForm({ type }: EmailAuthFormProps) {
       return;
     }
 
-    // 실제로는 여기서 이메일 로그인/회원가입 로직이 실행됩니다.
-    // 가입 시에는 { email, password, name, nickname, gender } 데이터가 백엔드로 전송됩니다.
-    console.log('가입 데이터:', { email, password, name, nickname, gender });
-    login('google'); // Mock 로직 재사용
+    if (type === 'signup') {
+      signupWithEmail({ email, password, name, nickname, gender });
+    } else {
+      loginWithEmail({ email, password });
+    }
   };
 
   return (
@@ -102,6 +103,9 @@ export default function EmailAuthForm({ type }: EmailAuthFormProps) {
               </button>
             </div>
           </div>
+          <p className={styles.privacyNote}>
+            가입을 진행하면 SIMUL의 <a href="#">이용약관</a> 및 <a href="#">개인정보처리방침</a>에 동의하게 됩니다.
+          </p>
         </>
       )}
 

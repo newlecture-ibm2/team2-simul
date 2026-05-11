@@ -12,6 +12,10 @@ const TABS = [
   { href: '/profile', iconName: 'profile' },
 ];
 
+interface CustomWindow extends Window {
+  isNavigatingFromBottomNav?: boolean;
+}
+
 export default function BottomNav() {
   const pathname = usePathname();
 
@@ -31,6 +35,11 @@ export default function BottomNav() {
             key={tab.href}
             href={tab.href}
             className={`${styles.navItem} ${active ? styles.navItemActive : ''}`}
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                (window as CustomWindow).isNavigatingFromBottomNav = true;
+              }
+            }}
           >
             <img src={iconSrc} alt={`${tab.iconName} 탭`} className={styles.navIcon} />
           </Link>

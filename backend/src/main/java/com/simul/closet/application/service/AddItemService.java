@@ -22,7 +22,7 @@ public class AddItemService implements AddItemUseCase {
     private final FileStorageService fileStorageService;
     private final ClothingImagePersistencePort clothingImagePersistencePort;
     private final ClosetItemPersistencePort closetItemPersistencePort;
-    private final GetCollectionUseCase getCollectionUseCase;
+    private final com.simul.closet.application.port.out.ClosetCollectionPersistencePort closetCollectionPersistencePort;
 
     @Override
     public UUID addItem(AddItemCommand command) {
@@ -40,7 +40,10 @@ public class AddItemService implements AddItemUseCase {
         // 3. 컬렉션 존재 여부 및 권한 확인 (있는 경우만)
         ClosetCollection collection = null;
         if (command.getCollectionId() != null) {
-            collection = getCollectionUseCase.getCollection(command.getCollectionId(), command.getUserId());
+            collection = closetCollectionPersistencePort.findById(command.getCollectionId());
+            if (collection == null || !collection.getUserId().equals(command.getUserId())) {
+                throw new RuntimeException("ERR-003: 유효하지 않은 컬렉션입니다.");
+            }
         }
 
         // 4. ClosetItem 생성 및 저장

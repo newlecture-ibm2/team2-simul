@@ -89,6 +89,20 @@ trigger: always_on
 - **추가 버튼 프레임**: 마지막 칸은 `--color-surface-sand` 배경 + 중앙 `+` 아이콘
 - **캡션 입력창**: 글자 수 카운터(`0/300`)를 textarea 내부 우측 하단에 `position: absolute`로 배치. `pointer-events: none` 적용
 
+### 11. 모바일 뷰포트(Viewport) 최적화
+- **앱 감성 UI**: Next.js 14+ 기준 `app/layout.tsx`에 반드시 명시적인 Viewport 설정을 추가할 것
+- **필수 설정**:
+  ```typescript
+  export const viewport: Viewport = {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: 'cover',
+  };
+  ```
+- 줌(Zoom)을 방지하여 모바일 앱과 같은 조작감을 유지하고, 노치 디자인(viewportFit: 'cover')에 완벽히 대응해야 함
+
 ---
 
 ## 기술 스택
@@ -143,13 +157,14 @@ app/(main)/closet/
 | Header | 루트 레이아웃 전용 (app/layout.tsx) |
 | Footer | 루트 레이아웃 전용 (app/layout.tsx) |
 | BottomNav | 루트 레이아웃 전용 (app/layout.tsx) |
+| OfflineBanner | 전역 네트워크 상태 표시 배너 (app/layout.tsx) |
 | Button | 기본형 버튼 레퍼런스 |
 | Toggle | 기본형 토글 레퍼런스 |
 
 ## API 함수 규칙
 ```
 lib/api/
-├── client.ts         # 공통 fetch wrapper
+├── client.ts         # 공통 Axios 기반 API 클라이언트 및 에러 인터셉터 (401 갱신)
 ├── authAPI.ts        # 인증 API
 ├── eventAPI.ts       # 이벤트 API
 ├── hostAPI.ts        # 호스트 API
@@ -160,7 +175,7 @@ lib/api/
 └── index.ts          # re-export
 ```
 - 도메인별 별도 파일로 분리
-- 공통 fetch wrapper(`client.ts`)에 한 번만 정의
+- 공통 API wrapper(`client.ts`)에 한 번만 정의. 내부적으로 Axios 인스턴스와 인터셉터를 사용하여 전역 네트워크 에러 및 토큰 갱신(401 Unauthorized) 로직을 처리.
 
 ## BFF 라우트 핸들러
 ```

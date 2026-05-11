@@ -9,6 +9,7 @@ services:
         NEXT_PUBLIC_KAKAO_CLIENT_ID: ${NEXT_PUBLIC_KAKAO_CLIENT_ID}
         NEXT_PUBLIC_NAVER_CLIENT_ID: ${NEXT_PUBLIC_NAVER_CLIENT_ID}
         NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
+        BACKEND_URL: http://backend:8080
     container_name: simul-frontend
     # 프론트엔드만 외부망으로 포트 개방 (변수를 통해 제어하며, 기본값은 3222)
     ports:
@@ -45,6 +46,8 @@ services:
       - NAVER_CLIENT_SECRET=${NAVER_CLIENT_SECRET}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
     volumes:
       - ./vision-key.json:/app/vision-key.json:ro
       - simul-uploads:/app/uploads
@@ -66,6 +69,15 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - simul-db-data:/var/lib/postgresql/data
+    networks:
+      - simul-network
+    restart: always
+
+  redis:
+    image: redis:latest
+    container_name: simul-redis
+    expose:
+      - "6379"
     networks:
       - simul-network
     restart: always

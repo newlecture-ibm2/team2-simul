@@ -1,38 +1,55 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useState, useRef, useEffect } from 'react';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { getClosetCollection, ClosetItemResponse } from '@/lib/api/closetAPI';
+import { useClosetItems } from '../../_components/useClosetItems';
 import ClosetCard from '../../_components/ClosetCard/ClosetCard';
 import ClosetDetailModal from '../../_components/ClosetDetailModal/ClosetDetailModal';
 import DeleteConfirmModal from '../../_components/DeleteConfirmModal/DeleteConfirmModal';
-import FolderMoveModal from './_components/FolderMoveModal/FolderMoveModal';
+import FolderMoveModal from '../../_components/FolderMoveModal/FolderMoveModal';
 import AddItemModal from './_components/AddItemModal/AddItemModal';
 import Toggle from '../../_components/Toggle/Toggle';
 import FloatingAddButton from '../../_components/FloatingAddButton';
 import ClosetAddModal from '../../_components/ClosetAddModal';
+import AlertModal from '../../_components/AlertModal/AlertModal';
 import styles from './page.module.css';
 
-// Dummy folder metadata (would come from API)
-const FOLDER_DATA: Record<string, { title: string; items: { id: string }[] }> = {
-  '1': { title: 'shirts outfit', items: Array.from({ length: 3 }, (_, i) => ({ id: String(i + 1) })) },
-  '2': { title: 'spring vibes', items: Array.from({ length: 8 }, (_, i) => ({ id: String(i + 1) })) },
-  '3': { title: 'wishlist', items: Array.from({ length: 12 }, (_, i) => ({ id: String(i + 1) })) },
-};
-
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 20;
 
 export default function FolderDetailPage() {
   const router = useRouter();
   const params = useParams();
   const folderId = params.id as string;
+  const searchParams = useSearchParams();
+  const isEditInitial = searchParams.get('edit') === 'true';
 
-  const folderMeta = FOLDER_DATA[folderId] || { title: '폴더', items: [] };
+  // 1. Fetch Collection Metadata
+  const { data: collection, isLoading: isCollectionLoading } = useQuery({
+    queryKey: ['closetCollection', folderId],
+    queryFn: () => getClosetCollection(folderId),
+  });
 
-  const [viewMode, setViewMode] = useState<'view' | 'edit'>('view');
-  const [folderTitle, setFolderTitle] = useState(folderMeta.title);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0); // Backend uses 0-indexed pages
+
+  // 2. Fetch Collection Items
+  const { 
+    items: apiItems, 
+    isLoading: isItemsLoading, 
+    totalCount,
+    refetch: refetchItems 
+  } = useClosetItems({
+    collectionId: folderId,
+    page: currentPage,
+    size: ITEMS_PER_PAGE,
+    sort: 'recent'
+  });
+
+  const [viewMode, setViewMode] = useState<'view' | 'edit'>(isEditInitial ? 'edit' : 'view');
+  const [folderTitle, setFolderTitle] = useState('');
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-  const [items, setItems] = useState(folderMeta.items);
+  const [items, setItems] = useState<ClosetItemResponse[]>([]); // For local manipulation/display
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -41,18 +58,18 @@ export default function FolderDetailPage() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [isClosetAddModalOpen, setIsClosetAddModalOpen] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
 
-  // Available items to add (dummy data)
-  const AVAILABLE_ITEMS = Array.from({ length: 20 }, (_, i) => ({ id: String(i + 100) }));
+  // Sync title and items from API
+  useEffect(() => {
+    if (collection) setFolderTitle(collection.name);
+  }, [collection]);
 
-  // For the modal list, we'll convert FOLDER_DATA to an array
-  const allFolders = Object.entries(FOLDER_DATA).map(([id, data]) => ({ id, title: data.title }));
+  useEffect(() => {
+    setItems(apiItems);
+  }, [apiItems]);
 
-  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
-  const currentItems = items.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   const toggleSelectItem = (id: string) => {
     setSelectedItems(prev => {
@@ -132,7 +149,12 @@ export default function FolderDetailPage() {
               value={folderTitle}
               onChange={(e) => setFolderTitle(e.target.value)}
               onBlur={() => {
-                if (!folderTitle.trim()) setFolderTitle(folderMeta.title);
+                if (!folderTitle.trim()) {
+                  if (collection) setFolderTitle(collection.name);
+                  setShowAlert(true);
+                  return;
+                }
+                // TODO: updateClosetCollection API call
                 console.log(`Renaming folder ${folderId} to ${folderTitle}`);
               }}
               onKeyDown={(e) => {
@@ -141,7 +163,7 @@ export default function FolderDetailPage() {
               autoFocus
             />
           ) : (
-            <h1 className={styles.title}>{folderTitle}</h1>
+            <h1 className={styles.title}>{isCollectionLoading ? '로딩 중...' : folderTitle}</h1>
           )}
         </div>
 
@@ -160,13 +182,15 @@ export default function FolderDetailPage() {
       </header>
 
       {/* Grid */}
-      {items.length > 0 ? (
+      {(isCollectionLoading || isItemsLoading) ? (
+        <div className={styles.loadingState}>아이템을 불러오는 중...</div>
+      ) : items.length > 0 ? (
         <div className={styles.grid}>
-          {currentItems.map((item, index) => {
-            const globalIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+          {items.map((item, index) => {
+            const globalIndex = index; // Local index within the current page
             return (
               <div
-                key={item.id}
+                key={item.itemId}
                 className={`${styles.cardWrapper} ${dragIndex === globalIndex ? styles.dragging : ''} ${dragOverIndex === globalIndex ? styles.dragOver : ''}`}
                 draggable={viewMode === 'edit'}
                 onDragStart={() => viewMode === 'edit' && handleDragStart(globalIndex)}
@@ -177,17 +201,17 @@ export default function FolderDetailPage() {
               >
                 {viewMode === 'edit' && (
                   <div
-                    className={`${styles.editOverlay} ${selectedItems.has(item.id) ? styles.selected : ''}`}
-                    onClick={(e) => { e.stopPropagation(); toggleSelectItem(item.id); }}
+                    className={`${styles.editOverlay} ${selectedItems.has(item.itemId) ? styles.selected : ''}`}
+                    onClick={(e) => { e.stopPropagation(); toggleSelectItem(item.itemId); }}
                   >
-                    {selectedItems.has(item.id) && (
+                    {selectedItems.has(item.itemId) && (
                       <svg className={styles.checkIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                     )}
                   </div>
                 )}
-                <ClosetCard id={item.id} onClick={handleCardClick} />
+                <ClosetCard id={item.itemId} imageUrl={item.imageUrl} onClick={handleCardClick} />
               </div>
             );
           })}
@@ -202,13 +226,13 @@ export default function FolderDetailPage() {
       {totalPages > 1 && (
         <div className={styles.paginationWrapper}>
           <div className={styles.paginationTrack}>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            {Array.from({ length: totalPages }, (_, i) => i).map((page) => (
               <button
                 key={page}
                 className={`${styles.pageBtn} ${currentPage === page ? styles.activePage : ''}`}
                 onClick={() => setCurrentPage(page)}
               >
-                {page}
+                {page + 1}
               </button>
             ))}
           </div>
@@ -267,9 +291,10 @@ export default function FolderDetailPage() {
         isOpen={showDeleteModal}
         count={selectedItems.size}
         onConfirm={() => {
-          setItems(prev => prev.filter(item => !selectedItems.has(item.id)));
+          setItems(prev => prev.filter(item => !selectedItems.has(item.itemId)));
           setSelectedItems(new Set());
           setShowDeleteModal(false);
+          refetchItems();
         }}
         onCancel={() => setShowDeleteModal(false)}
       />
@@ -277,13 +302,13 @@ export default function FolderDetailPage() {
       {/* Folder Move Modal */}
       <FolderMoveModal
         isOpen={showMoveModal}
-        folders={allFolders}
+        itemIds={Array.from(selectedItems)}
         currentFolderId={folderId}
-        onConfirm={(targetId) => {
-          console.log(`Moving ${selectedItems.size} items to folder ${targetId}`);
-          setItems(prev => prev.filter(item => !selectedItems.has(item.id)));
+        onSuccess={() => {
+          setItems(prev => prev.filter(item => !selectedItems.has(item.itemId)));
           setSelectedItems(new Set());
           setShowMoveModal(false);
+          refetchItems();
         }}
         onCancel={() => setShowMoveModal(false)}
       />
@@ -291,11 +316,17 @@ export default function FolderDetailPage() {
       <AddItemModal 
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
-        availableItems={AVAILABLE_ITEMS}
-        onAdd={(selectedIds) => {
-          const newItems = selectedIds.map(id => ({ id }));
-          setItems(prev => [...prev, ...newItems]);
-          setShowAddModal(false);
+        existingImageIds={items.map(item => item.imageId)}
+        onAdd={async (selectedIds) => {
+          try {
+            const { copyItemsToCollection } = await import('@/lib/api/closetAPI');
+            await copyItemsToCollection(selectedIds, folderId);
+            setShowAddModal(false);
+            refetchItems();
+          } catch (error) {
+            console.error('Failed to add items to folder:', error);
+            alert('아이템 추가에 실패했습니다.');
+          }
         }}
       />
 
@@ -303,6 +334,13 @@ export default function FolderDetailPage() {
         isOpen={isDetailModalOpen} 
         onClose={() => setIsDetailModalOpen(false)} 
         itemId={selectedItemId}
+      />
+
+      <AlertModal
+        isOpen={showAlert}
+        title="폴더 이름 오류"
+        message="폴더 이름은 최소 한 글자 이상이어야 합니다."
+        onClose={() => setShowAlert(false)}
       />
     </div>
   );

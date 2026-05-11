@@ -5,6 +5,8 @@ import com.simul.common.exception.ErrorCode;
 import com.simul.user.application.dto.UserResponse;
 import com.simul.user.application.port.in.LoadUserUseCase;
 import com.simul.user.application.port.in.RegisterUserUseCase;
+import com.simul.user.application.port.in.UpdateUserUseCase;
+import com.simul.user.application.port.in.WithdrawUserUseCase;
 import com.simul.user.application.port.out.UserPersistencePort;
 import com.simul.user.domain.model.Gender;
 import com.simul.user.domain.model.User;
@@ -21,7 +23,7 @@ import java.util.stream.Collectors;
  * - UserPersistencePort(Output Port)를 통해 DB에 접근
  */
 @Service
-public class UserService implements LoadUserUseCase, RegisterUserUseCase {
+public class UserService implements LoadUserUseCase, RegisterUserUseCase, UpdateUserUseCase, WithdrawUserUseCase {
 
     private final UserPersistencePort userPersistencePort;
 
@@ -62,5 +64,46 @@ public class UserService implements LoadUserUseCase, RegisterUserUseCase {
                 .gender((gender != null) ? gender : Gender.UNKNOWN)
                 .build();
         return userPersistencePort.save(newUser);
+    }
+
+    /**
+     * 이메일 회원가입으로 신규 사용자 등록
+     */
+    @Override
+    public User registerEmailUser(String email, String password, String nickname, String name, Gender gender) {
+        // 이미 가입된 이메일인지 확인
+        if (userPersistencePort.findByProviderAndProviderId("email", email).isPresent()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "이미 가입된 이메일입니다.");
+        }
+
+        User newUser = User.builder()
+                .provider("email")
+                .providerId(email)
+                .password(password)
+                .nickname(nickname)
+                .name(name)
+                .gender((gender != null) ? gender : Gender.UNKNOWN)
+                .build();
+        return userPersistencePort.save(newUser);
+    }
+
+    @Override
+    public void updateProfile(UUID userId, String nickname, String name, Gender gender, String bio, String profileImageUrl) {
+        User user = userPersistencePort.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        user.updateProfile(nickname, name, gender, bio, profileImageUrl);
+        userPersistencePort.save(user);
+    }
+
+    @Override
+    public void withdraw(UUID userId) {
+        User user = userPersistencePort.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        user.deactivate();
+        // soft delete logic is inside Persistence Adapter (via UserJpaEntity softDelete or similar)
+        // Here we explicitly tell the domain it's inactive, and save will handle the rest.
+        userPersistencePort.save(user);
     }
 }

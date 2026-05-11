@@ -6,10 +6,12 @@ import { apiClient } from './client';
 
 export interface ClosetItemResponse {
   itemId: string;
+  imageId: string;
   imageUrl: string;
   category: string | null;
   memo: string | null;
   tryCount: number;
+  collectionId?: string | null;
   createdAt: string;
 }
 
@@ -21,6 +23,7 @@ export interface ClosetItemListResponse {
 
 export interface GetClosetItemsParams {
   category?: string;
+  collectionId?: string;
   sort?: string;
   page?: number;
   size?: number;
@@ -35,6 +38,7 @@ export async function getClosetItems(params?: GetClosetItemsParams): Promise<Clo
   const queryParams: Record<string, string> = {};
 
   if (params?.category) queryParams.category = params.category;
+  if (params?.collectionId) queryParams.collectionId = params.collectionId;
   if (params?.sort) queryParams.sort = params.sort;
   if (params?.page !== undefined) queryParams.page = String(params.page);
   if (params?.size !== undefined) queryParams.size = String(params.size);
@@ -75,6 +79,7 @@ export interface ClosetCollectionResponse {
   collectionId: string;
   name: string;
   coverImageUrl: string | null;
+  images: string[];
   itemCount: number;
   createdAt: string;
 }
@@ -101,4 +106,46 @@ export async function getClosetCollections(params?: { sort?: string; page?: numb
   if (params?.size !== undefined) queryParams.size = String(params.size);
 
   return apiClient<ClosetCollectionListResponse>('/closet/collections', { params: queryParams });
+}
+
+/** 컬렉션(폴더) 상세 조회 */
+export async function getClosetCollection(id: string): Promise<ClosetCollectionResponse> {
+  return apiClient<ClosetCollectionResponse>(`/closet/collections/${id}`);
+}
+
+/** 컬렉션(폴더) 수정 */
+export async function updateClosetCollection(id: string, formData: FormData) {
+  return apiClient(`/closet/collections/${id}`, {
+    method: 'PATCH',
+    body: formData,
+  });
+}
+
+/** 컬렉션(폴더) 삭제 */
+export async function deleteClosetCollection(id: string) {
+  return apiClient(`/closet/collections/${id}`, { method: 'DELETE' });
+}
+
+/** 아이템 컬렉션 배정/해제 (단일) */
+export async function updateItemCollection(itemId: string, collectionId: string | null): Promise<void> {
+  return apiClient<void>(`/closet/items/${itemId}/collection`, {
+    method: 'PATCH',
+    body: JSON.stringify({ collectionId }),
+  });
+}
+
+/** 아이템 컬렉션 배정/해제 (대량) */
+export async function bulkUpdateItemCollection(itemIds: string[], collectionId: string | null): Promise<void> {
+  return apiClient<void>('/closet/items/collection/bulk', {
+    method: 'PATCH',
+    body: JSON.stringify({ itemIds, collectionId }),
+  });
+}
+
+/** 아이템 컬렉션 복사 (대량) - 한 아이템을 여러 폴더에 담을 때 사용 */
+export async function copyItemsToCollection(itemIds: string[], collectionId: string): Promise<void> {
+  return apiClient<void>('/closet/items/copy', {
+    method: 'POST',
+    body: JSON.stringify({ itemIds, collectionId }),
+  });
 }
