@@ -59,10 +59,29 @@ export async function POST(request: NextRequest) {
         },
       });
       if (userResponse.ok) {
-        user = await userResponse.json();
+        const profile = await userResponse.json();
+        // 백엔드 응답을 프론트엔드 스토어(User) 인터페이스에 맞게 매핑
+        user = {
+          id: profile.userId || userId,
+          nickname: profile.nickname,
+          email: profile.email || '',
+          profileImage: profile.profileImageUrl,
+          bio: profile.bio,
+          role: profile.role || userRole,
+        };
       }
     } catch (e) {
       console.error('BFF Fetch User Error:', e);
+    }
+
+    // 유저 정보 조회를 실패했더라도 세션용 데이터로 최소한의 정보 생성
+    if (!user) {
+      user = {
+        id: userId,
+        role: userRole,
+        nickname: '사용자',
+        email: ''
+      };
     }
 
     // 3. iron-session에 토큰을 암호화하여 저장
