@@ -27,12 +27,14 @@ import java.util.*;
 
 import com.simul.post.application.port.in.GetPostDetailUseCase;
 import com.simul.post.application.port.in.DeletePostUseCase;
+import com.simul.post.application.port.in.UpdatePostUseCase;
 import com.simul.post.application.dto.PostDetailResponse;
+import com.simul.post.application.dto.UpdatePostCommand;
 // ... imports handled below by inserting at class declaration
 
 @Service
 @RequiredArgsConstructor
-public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetPostDetailUseCase, DeletePostUseCase {
+public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetPostDetailUseCase, DeletePostUseCase, UpdatePostUseCase {
 
     private final PostRepositoryPort postRepositoryPort;
     private final PostLikePersistencePort postLikePersistencePort;
@@ -226,5 +228,72 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
 
         post.softDelete();
         postRepositoryPort.save(post);
+    }
+
+    @Override
+    @Transactional
+    public void updatePost(UpdatePostCommand command) {
+        Post post = postRepositoryPort.findById(command.getPostId())
+                .orElseThrow(() -> new IllegalArgumentException("게시물을 찾을 수 없습니다."));
+
+        if (!post.getUserId().equals(command.getUserId())) {
+            throw new IllegalArgumentException("ERR-002: 본인의 게시물만 수정할 수 있습니다.");
+        }
+
+        if (command.getTags() != null && command.getTags().size() > 10) {
+            throw new IllegalArgumentException("ERR-307-A: 태그는 최대 10개까지 등록 가능합니다.");
+        }
+
+        // 이미지 검증 및 수정
+        List<String> existingUrls = command.getExistingImageUrls() != null ? command.getExistingImageUrls() : new ArrayList<>();
+        List<MultipartFile> newFiles = command.getNewImages() != null ? command.getNewImages() : new ArrayList<>();
+
+        if (existingUrls.isEmpty() && newFiles.isEmpty()) {
+            throw new IllegalArgumentException("ERR-301-A: 최소 1장의 이미지가 필요합니다.");
+        }
+        if (existingUrls.size() + newFiles.size() > 5) {
+            throw new IllegalArgumentException("ERR-301-D: 이미지는 최대 5장까지 등록 가능합니다.");
+        }
+
+        // 유지되지 않은 기존 이미지 제거 (URL 정규화 처리: 호스트 부분 제외하고 매칭)
+        List<String> normalizedExistingUrls = existingUrls.stream()
+                .map(url -> url.contains("/uploads/images/") ? url.substring(url.indexOf("/uploads/images/")) : url)
+                .toList();
+
+        post.getImages().removeIf(img -> !normalizedExistingUrls.contains(img.getImageUrl()));
+
+        // 새 이미지 추가
+        if (!newFiles.isEmpty()) {
+            int maxOrder = post.getImages().stream().mapToInt(com.simul.post.domain.model.PostImage::getSortOrder).max().orElse(-1);
+            for (int i = 0; i < newFiles.size(); i++) {
+                String imageUrl = fileStorageService.store(newFiles.get(i));
+                com.simul.post.domain.model.PostImage postImage = com.simul.post.domain.model.PostImage.builder()
+                        .imageUrl(imageUrl)
+                        .sortOrder(maxOrder + 1 + i)
+                        .build();
+                post.addImage(postImage);
+            }
+        }
+
+        // 대표 이미지(첫 번째 이미지) 업데이트
+        if (!post.getImages().isEmpty()) {
+            String firstImageUrl = post.getImages().stream()
+                    .filter(img -> img != null && img.getSortOrder() != null)
+                    .min(java.util.Comparator.comparing(com.simul.post.domain.model.PostImage::getSortOrder))
+                    .map(com.simul.post.domain.model.PostImage::getImageUrl)
+                    .orElseGet(() -> post.getImages().get(0).getImageUrl());
+            post.updateImageUrl(firstImageUrl);
+        } else {
+            post.updateImageUrl(null);
+        }
+
+        // 엔티티 업데이트 (caption, isPublic)
+        post.update(command.getCaption(), command.getIsPublic());
+        postRepositoryPort.save(post);
+
+        // 태그 업데이트
+        if (command.getTags() != null) {
+            attachTagsToPostUseCase.updateTags(command.getPostId(), command.getTags());
+        }
     }
 }

@@ -1,17 +1,19 @@
-.createPage {
+.container {
   max-width: 450px;
   margin: 0 auto;
-  padding: 8px var(--space-page-x) 100px var(--space-page-x);
+  padding: 0 var(--space-page-x) 100px var(--space-page-x);
+  min-height: 100vh;
+  background: var(--color-surface-fog);
 }
 
-/* Header */
+/* ── Header ── */
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin: 0 0 24px 0;
-  padding-top: 12px;
+  padding: 12px 0;
+  margin-bottom: 24px;
 }
 
 .title {
@@ -21,10 +23,41 @@
   color: var(--color-text-primary);
 }
 
-/* ── Image Carousel ── */
+.cancelBtn {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  padding: 8px 0;
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.submitBtn {
+  font-size: 15px;
+  color: var(--color-primary);
+  font-weight: 700;
+  padding: 8px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Image Carousel (생성 페이지와 동일) ── */
 .carouselContainer {
   width: 100%;
-  margin-bottom: 24px;
 }
 
 .imageScrollArea {
@@ -32,7 +65,6 @@
   gap: 10px;
   overflow-x: auto;
   padding-bottom: 8px;
-
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -119,17 +151,55 @@
   transform: scale(1.1);
 }
 
-/* ── Tag Section ── */
-.tagContainer {
-  width: 100%;
-  margin-bottom: 20px;
+/* ── NEW 배지 ── */
+.newBadge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--color-green);
+  color: var(--color-text-black);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  z-index: 5;
 }
 
-.tagLabel {
-  font-size: 14px;
-  font-weight: 600;
+/* ── Tag Section (생성 페이지와 동일) ── */
+.tagContainer {
+  width: 100%;
+}
+
+.tagHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 700;
   color: var(--color-text-primary);
-  margin-bottom: 10px;
+}
+
+.tagCount {
+  font-size: 12px;
+  color: var(--color-text-disabled);
+  transition: color var(--transition-fast);
+}
+
+.tagCountError {
+  color: #ff4d4f;
+  font-weight: 700;
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
 }
 
 .analyzingText {
@@ -152,12 +222,10 @@
 }
 
 @keyframes pulse {
-
   0%,
   100% {
     opacity: 0.3;
   }
-
   50% {
     opacity: 1;
   }
@@ -230,29 +298,9 @@
   border-color: var(--color-primary);
 }
 
-.tagCountText {
-  font-size: 12px;
-  color: var(--color-text-disabled);
-  text-align: right;
-  margin-top: 8px;
-  transition: color var(--transition-fast);
-}
-
-.tagCountError {
-  color: #ff4d4f;
-  font-weight: 700;
-  animation: shake 0.4s ease-in-out;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  75% { transform: translateX(4px); }
-}
-
 /* ── Caption Textarea ── */
 .formGroup {
-  margin-bottom: 20px;
+  width: 100%;
 }
 
 .textareaWrapper {
@@ -293,13 +341,16 @@
   pointer-events: none;
 }
 
+.captionCounterMax {
+  color: var(--color-error);
+}
+
 /* ── Public Toggle ── */
 .publicToggleRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 24px;
   padding: 16px;
   border-radius: var(--radius-comfortable);
   background: rgba(255, 255, 255, 0.12);
@@ -317,6 +368,17 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.toggleLabel {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.toggleSubLabel {
+  font-size: 12px;
+  color: var(--color-text-disabled);
 }
 
 .toggleSwitch {
@@ -363,22 +425,4 @@
 
 .toggleSwitch input:checked+.toggleSlider::before {
   transform: translateX(20px);
-}
-
-.toggleLabel {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.toggleSubLabel {
-  font-size: 12px;
-  color: var(--color-text-disabled);
-}
-
-/* ── Submit Row ── */
-.submitRow {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 100px;
 }
