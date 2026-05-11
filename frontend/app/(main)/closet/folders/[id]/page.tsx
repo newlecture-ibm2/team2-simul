@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { getClosetCollection, ClosetItemResponse } from '@/lib/api/closetAPI';
 import { useClosetItems } from '../../_components/useClosetItems';
@@ -13,6 +13,7 @@ import AddItemModal from './_components/AddItemModal/AddItemModal';
 import Toggle from '../../_components/Toggle/Toggle';
 import FloatingAddButton from '../../_components/FloatingAddButton';
 import ClosetAddModal from '../../_components/ClosetAddModal';
+import AlertModal from '../../_components/AlertModal/AlertModal';
 import styles from './page.module.css';
 
 const ITEMS_PER_PAGE = 20;
@@ -21,6 +22,8 @@ export default function FolderDetailPage() {
   const router = useRouter();
   const params = useParams();
   const folderId = params.id as string;
+  const searchParams = useSearchParams();
+  const isEditInitial = searchParams.get('edit') === 'true';
 
   // 1. Fetch Collection Metadata
   const { data: collection, isLoading: isCollectionLoading } = useQuery({
@@ -43,7 +46,7 @@ export default function FolderDetailPage() {
     sort: 'recent'
   });
 
-  const [viewMode, setViewMode] = useState<'view' | 'edit'>('view');
+  const [viewMode, setViewMode] = useState<'view' | 'edit'>(isEditInitial ? 'edit' : 'view');
   const [folderTitle, setFolderTitle] = useState('');
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [items, setItems] = useState<ClosetItemResponse[]>([]); // For local manipulation/display
@@ -55,6 +58,7 @@ export default function FolderDetailPage() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [isClosetAddModalOpen, setIsClosetAddModalOpen] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
 
   // Sync title and items from API
   useEffect(() => {
@@ -144,9 +148,10 @@ export default function FolderDetailPage() {
               className={styles.titleInput}
               value={folderTitle}
               onChange={(e) => setFolderTitle(e.target.value)}
-                onBlur={() => {
+              onBlur={() => {
                 if (!folderTitle.trim()) {
                   if (collection) setFolderTitle(collection.name);
+                  setShowAlert(true);
                   return;
                 }
                 // TODO: updateClosetCollection API call
@@ -329,6 +334,13 @@ export default function FolderDetailPage() {
         isOpen={isDetailModalOpen} 
         onClose={() => setIsDetailModalOpen(false)} 
         itemId={selectedItemId}
+      />
+
+      <AlertModal
+        isOpen={showAlert}
+        title="폴더 이름 오류"
+        message="폴더 이름은 최소 한 글자 이상이어야 합니다."
+        onClose={() => setShowAlert(false)}
       />
     </div>
   );

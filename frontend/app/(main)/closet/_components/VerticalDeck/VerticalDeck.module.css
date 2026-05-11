@@ -110,3 +110,12 @@
   -webkit-backdrop-filter: blur(4px);
   pointer-events: none;
 }
+
+.emptyDeck {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
