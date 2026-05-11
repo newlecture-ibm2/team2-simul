@@ -74,7 +74,7 @@ export async function apiClient<T>(
   if (typeof body === 'string') {
     try {
       data = JSON.parse(body);
-    } catch (e) {
+    } catch {
       // JSON 파싱 실패 시 원본 유지
     }
   }
@@ -86,7 +86,8 @@ export async function apiClient<T>(
     headers: headers as Record<string, string>,
     data,
     // fetch의 RequestInit 옵션 중 호환 가능한 것들을 넘김 (예: signal)
-    ...rest,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...(rest as any),
   };
 
   if (body instanceof FormData) {

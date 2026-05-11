@@ -157,13 +157,14 @@ app/(main)/closet/
 | Header | 루트 레이아웃 전용 (app/layout.tsx) |
 | Footer | 루트 레이아웃 전용 (app/layout.tsx) |
 | BottomNav | 루트 레이아웃 전용 (app/layout.tsx) |
+| OfflineBanner | 전역 네트워크 상태 표시 배너 (app/layout.tsx) |
 | Button | 기본형 버튼 레퍼런스 |
 | Toggle | 기본형 토글 레퍼런스 |
 
 ## API 함수 규칙
 ```
 lib/api/
-├── client.ts         # 공통 fetch wrapper
+├── client.ts         # 공통 Axios 기반 API 클라이언트 및 에러 인터셉터 (401 갱신)
 ├── authAPI.ts        # 인증 API
 ├── eventAPI.ts       # 이벤트 API
 ├── hostAPI.ts        # 호스트 API
@@ -174,7 +175,7 @@ lib/api/
 └── index.ts          # re-export
 ```
 - 도메인별 별도 파일로 분리
-- 공통 fetch wrapper(`client.ts`)에 한 번만 정의
+- 공통 API wrapper(`client.ts`)에 한 번만 정의. 내부적으로 Axios 인스턴스와 인터셉터를 사용하여 전역 네트워크 에러 및 토큰 갱신(401 Unauthorized) 로직을 처리.
 
 ## BFF 라우트 핸들러
 ```
