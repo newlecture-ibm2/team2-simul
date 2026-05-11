@@ -108,4 +108,17 @@ public class Post extends BaseJpaEntity {
     public void updateImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }
+
+    public void markProcessing() {
+        this.status = PostStatus.PROCESSING;
+    }
+
+    public void markCompleted(String resultImageUrl) {
+        this.status = PostStatus.COMPLETED;
+        this.imageUrl = resultImageUrl;
+    }
+
+    public void markFailed() {
+        this.status = PostStatus.FAILED;
+    }
 }

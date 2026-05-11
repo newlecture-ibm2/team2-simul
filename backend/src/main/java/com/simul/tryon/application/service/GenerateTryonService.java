@@ -2,6 +2,7 @@ package com.simul.tryon.application.service;
 
 import com.simul.closet.application.port.out.ClosetItemPersistencePort;
 import com.simul.closet.domain.model.ClosetItem;
+import com.simul.common.application.port.out.BinaryImageStoragePort;
 import com.simul.common.exception.BusinessException;
 import com.simul.common.exception.ErrorCode;
 import com.simul.post.application.port.out.PostRepositoryPort;
@@ -9,6 +10,7 @@ import com.simul.post.domain.model.Post;
 import com.simul.post.domain.model.PostStatus;
 import com.simul.tryon.application.dto.TryonGenerateResponse;
 import com.simul.tryon.application.port.in.GenerateTryonUseCase;
+import com.simul.tryon.application.port.in.DeductTryonCreditUseCase;
 import com.simul.tryon.application.port.out.BaseImagePersistencePort;
 import com.simul.tryon.application.port.out.TryonAiGenerationPort;
 import com.simul.tryon.application.port.out.TryonCreditPersistencePort;
@@ -40,6 +42,8 @@ public class GenerateTryonService implements GenerateTryonUseCase {
     private final Clock kstClock;
     private final ImageReadPort imageReadPort;
     private final TryonAiGenerationPort tryonAiGenerationPort;
+    private final BinaryImageStoragePort binaryImageStoragePort;
+    private final DeductTryonCreditUseCase deductTryonCreditUseCase;
 
     @Value("${simul.gemini.enabled:false}")
     private boolean geminiEnabled;
@@ -113,17 +117,42 @@ public class GenerateTryonService implements GenerateTryonUseCase {
                 .map(img -> new TryonAiGenerationPort.ImagePart(img.bytes(), img.mimeType()))
                 .toList();
 
-        TryonAiGenerationPort.TryonAiGenerationResult result = tryonAiGenerationPort.generate(
-                new TryonAiGenerationPort.TryonAiGenerationCommand(
-                        userImage.bytes(),
-                        userImage.mimeType(),
-                        clothingParts,
-                        prompt
-                )
-        );
+        try {
+            TryonAiGenerationPort.TryonAiGenerationResult result = tryonAiGenerationPort.generate(
+                    new TryonAiGenerationPort.TryonAiGenerationCommand(
+                            userImage.bytes(),
+                            userImage.mimeType(),
+                            clothingParts,
+                            prompt
+                    )
+            );
 
-        // TODO: persist result image into storage and set post.imageUrl + status=COMPLETED
-        // That will be added once image output persistence path is finalized.
+            String resultImageUrl = binaryImageStoragePort.upload(result.resultImageBytes(), result.resultImageMimeType(), "tryon");
+            post.markCompleted(resultImageUrl);
+            postRepositoryPort.save(post);
+
+            // credit deduct only on success
+            deductTryonCreditUseCase.deductOnSuccess(
+                    DeductTryonCreditUseCase.DeductTryonCreditCommand.builder()
+                            .userId(post.getUserId())
+                            .jobId(post.getPostId())
+                            .build()
+            );
+
+            // increment try_count for each used item
+            for (ClosetItem item : items) {
+                item.incrementTryCount();
+                closetItemPersistencePort.save(item);
+            }
+        } catch (BusinessException be) {
+            post.markFailed();
+            postRepositoryPort.save(post);
+            throw be;
+        } catch (Exception e) {
+            post.markFailed();
+            postRepositoryPort.save(post);
+            throw new BusinessException(ErrorCode.AI_GENERATION_FAILED, e.getMessage());
+        }
     }
 
     private String buildPromptForOrderedItems(int clothingCount) {
