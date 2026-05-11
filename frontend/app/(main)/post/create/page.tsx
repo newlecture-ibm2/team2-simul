@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useRef, MouseEvent } from 'react';
+import { useState, useRef, MouseEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from './_components/Button';
 import { createPost } from '@/lib/api/feedAPI';
 import { analyzeTags } from '@/lib/api/tagAPI';
+import Modal from '../[id]/_components/Modal';
 import styles from './page.module.css';
 
 export default function PostCreatePage() {
@@ -17,6 +18,24 @@ export default function PostCreatePage() {
   const [isPublic, setIsPublic] = useState(false);
   const [customTag, setCustomTag] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title?: string;
+    message: string;
+    onConfirm: () => void;
+  }>({ isOpen: false, message: '', onConfirm: () => {} });
+
+  const openAlert = (message: string, onConfirm?: () => void) => {
+    setModalConfig({
+      isOpen: true,
+      message,
+      onConfirm: () => {
+        setModalConfig(prev => ({ ...prev, isOpen: false }));
+        if (onConfirm) onConfirm();
+      },
+    });
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -65,7 +84,7 @@ export default function PostCreatePage() {
 
   const handleAddImageClick = () => {
     if (images.length >= 5) {
-      alert('이미지는 최대 5장까지 첨부 가능합니다.');
+      openAlert('이미지는 최대 5장까지 첨부 가능합니다.');
       return;
     }
     fileInputRef.current?.click();
@@ -83,13 +102,13 @@ export default function PostCreatePage() {
           setTags(prev => {
             const newTags = extractedTags.filter((tag: string) => !prev.includes(tag));
             const combined = [...prev, ...newTags];
-            return combined.slice(0, 10);
+            return combined;
           });
         }
       } catch (err: unknown) {
         console.error('태그 분석 실패:', err);
         if (err instanceof Error && err.message.includes('429')) {
-          alert('사진을 너무 빠르게 많이 올리셨네요! 😅\n잠시만 기다렸다가 다시 올려주시면 자동 태그가 추출됩니다.');
+          openAlert('사진을 너무 빠르게 많이 올리셨네요! 😅\n잠시만 기다렸다가 다시 올려주시면 자동 태그가 추출됩니다.');
         }
       } finally {
         setIsAnalyzing(false);
@@ -116,15 +135,8 @@ export default function PostCreatePage() {
       if (!newTag) return;
       
       if (tags.includes(newTag)) {
-        setCustomTag('');
         return;
       }
-      
-      if (tags.length >= 10) {
-        alert('태그는 최대 10개까지만 추가 가능합니다.');
-        return;
-      }
-      
       setTags([...tags, newTag]);
       setCustomTag('');
     }
@@ -132,7 +144,12 @@ export default function PostCreatePage() {
 
   const handleSubmit = async () => {
     if (images.length === 0) {
-      alert('최소 1장의 이미지를 첨부해주세요.');
+      openAlert('최소 1장의 이미지를 첨부해주세요.');
+      return;
+    }
+    
+    if (tags.length > 10) {
+      openAlert('태그는 최대 10개까지만 등록 가능합니다. 불필요한 태그를 지워주세요.');
       return;
     }
 
@@ -144,11 +161,10 @@ export default function PostCreatePage() {
 
     try {
       await createPost(formData);
-      alert('게시물이 성공적으로 작성되었습니다.');
-      router.push('/');
+      openAlert('게시물이 성공적으로 작성되었습니다.', () => router.push('/'));
     } catch (err) {
       console.error('게시물 작성 실패:', err);
-      alert('게시물 작성에 실패했습니다.');
+      openAlert('게시물 작성에 실패했습니다.');
     }
   };
 
@@ -218,7 +234,6 @@ export default function PostCreatePage() {
               </button>
             </div>
           ))}
-          {tags.length < 10 && (
             <input
               type="text"
               className={styles.tagInput}
@@ -227,12 +242,11 @@ export default function PostCreatePage() {
               onChange={(e) => setCustomTag(e.target.value)}
               onKeyDown={handleAddCustomTag}
             />
-          )}
+          </div>
+          <div className={`${styles.tagCountText} ${tags.length > 10 ? styles.tagCountError : ''}`}>
+            선택된 태그: {tags.length} / 10
+          </div>
         </div>
-        <div className={styles.tagCountText}>
-          선택된 태그: {tags.length} / 10
-        </div>
-      </div>
 
       {/* Caption */}
       <div className={styles.formGroup}>
@@ -270,6 +284,7 @@ export default function PostCreatePage() {
         <Button variant="secondary" size="lg" fullWidth onClick={() => router.back()}>취소</Button>
         <Button variant="large-dark" fullWidth onClick={handleSubmit}>업로드</Button>
       </div>
+      <Modal {...modalConfig} />
     </div>
   );
 }

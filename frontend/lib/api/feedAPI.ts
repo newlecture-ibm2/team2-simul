@@ -60,10 +60,10 @@ export async function toggleLike(postId: string) {
 }
 
 /** 게시물 수정 */
-export async function updatePost(postId: string, data: { caption?: string; isPublic?: boolean; tags?: string[] }) {
+export async function updatePost(postId: string, data: FormData) {
   return apiClient(`/posts/${postId}`, {
     method: 'PATCH',
-    body: JSON.stringify(data),
+    body: data,
   });
 }
 

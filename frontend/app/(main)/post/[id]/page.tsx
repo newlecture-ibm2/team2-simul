@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { toggleLike, getPostDetail, deletePost } from '../../../../lib/api/feedAPI';
 import { useAuthStore } from '../../../../lib/stores/useAuthStore';
+import Modal from './_components/Modal';
 import styles from './page.module.css';
 
 export interface PostDetailData {
@@ -42,6 +43,44 @@ export default function PostDetailPage() {
   const [scrollLeft, setScrollLeft] = useState(0);
 
   const isOwner = isAuthenticated && user && String(user.id).trim().toLowerCase() === post?.userId?.trim().toLowerCase();
+
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title?: string;
+    message: string;
+    onConfirm: () => void;
+    onCancel?: () => void;
+    confirmText?: string;
+    cancelText?: string;
+  }>({ isOpen: false, message: '', onConfirm: () => {} });
+
+  const openAlert = (message: string, onConfirm?: () => void) => {
+    setModalConfig({
+      isOpen: true,
+      message,
+      onConfirm: () => {
+        setModalConfig(prev => ({ ...prev, isOpen: false }));
+        if (onConfirm) onConfirm();
+      },
+    });
+  };
+
+  const openConfirm = (title: string, message: string, onConfirm: () => void) => {
+    setModalConfig({
+      isOpen: true,
+      title,
+      message,
+      confirmText: '예',
+      cancelText: '아니오',
+      onConfirm: () => {
+        setModalConfig(prev => ({ ...prev, isOpen: false }));
+        onConfirm();
+      },
+      onCancel: () => {
+        setModalConfig(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
 
   // 메뉴 외부 클릭 시 닫기
   useEffect(() => {
@@ -107,7 +146,7 @@ export default function PostDetailPage() {
 
   const handleLike = async () => {
     if (!isAuthenticated) {
-      alert('좋아요를 누르려면 로그인이 필요합니다.');
+      openAlert('좋아요를 누르려면 로그인이 필요합니다.');
       return;
     }
 
@@ -128,16 +167,18 @@ export default function PostDetailPage() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
     setShowMenu(false);
-    if (!confirm('정말로 이 게시물을 삭제하시겠습니까?')) return;
+    openConfirm('게시물 삭제', '정말로 이 게시물을 삭제하시겠습니까?', executeDelete);
+  };
+
+  const executeDelete = async () => {
     try {
       await deletePost(postId);
-      alert('게시물이 삭제되었습니다.');
-      router.push('/');
+      openAlert('게시물이 삭제되었습니다.', () => router.push('/'));
     } catch (err) {
       console.error('삭제 실패:', err);
-      alert('삭제에 실패했습니다.');
+      openAlert('삭제에 실패했습니다.');
     }
   };
 
@@ -180,7 +221,7 @@ export default function PostDetailPage() {
                   <div className={styles.menuDivider} />
                   <button 
                     className={`${styles.menuItem} ${styles.menuItemDanger}`} 
-                    onClick={handleDelete}
+                    onClick={handleDeleteClick}
                   >
                     <img src="/icons/trash.png" alt="" className={styles.menuIcon} />
                     <span>삭제하기</span>
@@ -262,7 +303,7 @@ export default function PostDetailPage() {
           )}
 
           <div className={styles.stats}>
-            <button className={styles.statItem} onClick={handleLike}>
+            <button className={`${styles.statItem} ${isLiked ? styles.liked : ''}`} onClick={handleLike}>
               <img 
                 src={isLiked ? "/icons/heart-filled.png" : "/icons/heart.png"} 
                 alt="Like" 
@@ -285,6 +326,7 @@ export default function PostDetailPage() {
           <button className={styles.reportBtn}>🚨 게시물 신고하기</button>
         </div>
       </div>
+      <Modal {...modalConfig} />
     </div>
   );
 }

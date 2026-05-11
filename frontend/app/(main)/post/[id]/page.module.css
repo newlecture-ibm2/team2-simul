@@ -359,6 +359,10 @@
   transform: scale(1.05);
 }
 
+.liked {
+  color: var(--color-error) !important;
+}
+
 .statIcon {
   width: 22px;
   height: 22px;

@@ -14,4 +14,6 @@ public class UpdatePostCommand {
     private final String caption;
     private final Boolean isPublic;
     private final List<String> tags;
+    private final List<String> existingImageUrls;
+    private final List<org.springframework.web.multipart.MultipartFile> newImages;
 }

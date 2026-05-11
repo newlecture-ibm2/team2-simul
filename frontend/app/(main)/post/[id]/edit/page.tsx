@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, MouseEvent } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getPostDetail, updatePost } from '../../../../../lib/api/feedAPI';
 import { analyzeTags } from '../../../../../lib/api/tagAPI';
+import Modal from '../_components/Modal';
 import styles from './page.module.css';
 
 export interface PostDetailData {
@@ -28,6 +29,24 @@ export default function PostEditPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title?: string;
+    message: string;
+    onConfirm: () => void;
+  }>({ isOpen: false, message: '', onConfirm: () => {} });
+
+  const openAlert = (message: string, onConfirm?: () => void) => {
+    setModalConfig({
+      isOpen: true,
+      message,
+      onConfirm: () => {
+        setModalConfig(prev => ({ ...prev, isOpen: false }));
+        if (onConfirm) onConfirm();
+      },
+    });
+  };
 
   // 기존 서버 이미지 URL + 새로 추가한 로컬 이미지를 구분
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
@@ -100,7 +119,7 @@ export default function PostEditPage() {
   // ── 이미지 추가 ──
   const handleAddImageClick = () => {
     if (totalImageCount >= 5) {
-      alert('이미지는 최대 5장까지 첨부 가능합니다.');
+      openAlert('이미지는 최대 5장까지 첨부 가능합니다.');
       return;
     }
     fileInputRef.current?.click();
@@ -119,13 +138,13 @@ export default function PostEditPage() {
           setTags(prev => {
             const newTags = extractedTags.filter((tag: string) => !prev.includes(tag));
             const combined = [...prev, ...newTags];
-            return combined.slice(0, 10);
+            return combined;
           });
         }
       } catch (err: unknown) {
         console.error('태그 분석 실패:', err);
         if (err instanceof Error && err.message.includes('429')) {
-          alert('사진을 너무 빠르게 많이 올리셨네요! 😅\n잠시만 기다렸다가 다시 올려주시면 자동 태그가 추출됩니다.');
+          openAlert('사진을 너무 빠르게 많이 올리셨네요! 😅\n잠시만 기다렸다가 다시 올려주시면 자동 태그가 추출됩니다.');
         }
       } finally {
         setIsAnalyzing(false);
@@ -164,11 +183,6 @@ export default function PostEditPage() {
         return;
       }
       
-      if (tags.length >= 10) {
-        alert('태그는 최대 10개까지만 추가 가능합니다.');
-        return;
-      }
-      
       setTags([...tags, newTag]);
       setCustomTag('');
     }
@@ -177,20 +191,28 @@ export default function PostEditPage() {
   // ── 저장 ──
   const handleUpdate = async () => {
     if (totalImageCount === 0) {
-      alert('최소 1장의 이미지가 필요합니다.');
+      openAlert('최소 1장의 이미지가 필요합니다.');
       return;
     }
+
+    if (tags.length > 10) {
+      openAlert('태그는 최대 10개까지만 등록 가능합니다. 불필요한 태그를 지워주세요.');
+      return;
+    }
+    const formData = new FormData();
+    formData.append('caption', caption);
+    formData.append('isPublic', isPublic ? 'true' : 'false');
+    tags.forEach(tag => formData.append('tags', tag));
+    existingImageUrls.forEach(url => formData.append('existingImageUrls', url));
+    newImages.forEach(img => formData.append('newImages', img));
+
     setIsSaving(true);
     try {
-      await updatePost(postId, {
-        caption,
-        isPublic,
-        tags,
-      });
-      router.push(`/post/${postId}`);
+      await updatePost(postId, formData);
+      router.replace(`/post/${postId}`);
     } catch (err: unknown) {
       console.error(err);
-      alert('게시물 수정에 실패했습니다.');
+      openAlert('게시물 수정에 실패했습니다.');
     } finally {
       setIsSaving(false);
     }
@@ -272,7 +294,9 @@ export default function PostEditPage() {
         <div className={styles.tagContainer}>
           <div className={styles.tagHeader}>
             <h2 className={styles.sectionTitle}>태그</h2>
-            <span className={styles.tagCount}>{tags.length} / 10</span>
+            <span className={`${styles.tagCount} ${tags.length > 10 ? styles.tagCountError : ''}`}>
+              {tags.length} / 10
+            </span>
           </div>
           {isAnalyzing && (
             <div className={styles.analyzingText}>
@@ -294,16 +318,14 @@ export default function PostEditPage() {
                 </button>
               </div>
             ))}
-            {tags.length < 10 && (
-              <input
-                type="text"
-                className={styles.tagInput}
+            <input
+              type="text"
+              className={styles.tagInput}
                 placeholder="태그 입력 후 Enter"
                 value={customTag}
                 onChange={(e) => setCustomTag(e.target.value)}
                 onKeyDown={handleAddCustomTag}
               />
-            )}
           </div>
         </div>
 
@@ -340,6 +362,7 @@ export default function PostEditPage() {
           </label>
         </div>
       </main>
+      <Modal {...modalConfig} />
     </div>
   );
 }

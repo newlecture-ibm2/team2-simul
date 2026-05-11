@@ -104,4 +104,8 @@ public class Post extends BaseJpaEntity {
             this.isPublic = isPublic;
         }
     }
+
+    public void updateImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 }
