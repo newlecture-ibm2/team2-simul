@@ -86,6 +86,14 @@ public class JwtTokenProvider {
     }
 
     /**
+     * 토큰에서 타입(type) 추출 — "access" 또는 "refresh"
+     */
+    public String getTypeFromToken(String token) {
+        Claims claims = parseClaims(token);
+        return claims.get("type", String.class);
+    }
+
+    /**
      * 토큰 유효성 검증
      * - 만료, 서명 위조, 형식 오류 시 BusinessException 발생
      */
@@ -97,6 +105,48 @@ public class JwtTokenProvider {
             throw new BusinessException(ErrorCode.TOKEN_EXPIRED, "토큰이 만료되었습니다");
         } catch (JwtException e) {
             throw new BusinessException(ErrorCode.INVALID_TOKEN, "유효하지 않은 토큰입니다");
+        }
+    }
+
+    /**
+     * Access Token 전용 검증
+     * - 서명/만료 + type="access" 여부까지 확인
+     * - Refresh Token으로 일반 API 인증을 시도하는 것을 방지
+     */
+    public boolean validateAccessToken(String token) {
+        validateToken(token);
+        String type = getTypeFromToken(token);
+        if (!"access".equals(type)) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN, "Access Token이 아닙니다");
+        }
+        return true;
+    }
+
+    /**
+     * Refresh Token 전용 검증
+     * - 서명/만료 + type="refresh" 여부까지 확인
+     */
+    public boolean validateRefreshToken(String token) {
+        validateToken(token);
+        String type = getTypeFromToken(token);
+        if (!"refresh".equals(type)) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN, "Refresh Token이 아닙니다");
+        }
+        return true;
+    }
+
+    /**
+     * 토큰의 남은 유효 시간(초) 계산
+     * - 블랙리스트 TTL 설정에 사용
+     */
+    public long getRemainingSeconds(String token) {
+        try {
+            Claims claims = parseClaims(token);
+            Date expiration = claims.getExpiration();
+            long remainingMs = expiration.getTime() - System.currentTimeMillis();
+            return Math.max(remainingMs / 1000, 0);
+        } catch (Exception e) {
+            return 0;
         }
     }
 

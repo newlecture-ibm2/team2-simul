@@ -16,13 +16,20 @@ export async function POST(request: NextRequest) {
   const response = NextResponse.json({ success: true });
   const session = await getIronSession<SessionData>(request, response, sessionOptions);
 
-  // 2. 세션에 refreshToken이 있으면 백엔드에 보내서 Redis에서 삭제
+  // 2. 세션에 refreshToken이 있으면 백엔드에 보내서 Redis에서 삭제 (Access Token도 함께 전달하여 블랙리스트 처리)
   const refreshToken = session.user?.refreshToken;
-  if (refreshToken) {
+  const accessToken = session.user?.token;
+  
+  if (refreshToken || accessToken) {
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+      
       await fetch(`${backendUrl}/auth/logout`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers,
         body: JSON.stringify({ refreshToken }),
       });
     } catch (error) {

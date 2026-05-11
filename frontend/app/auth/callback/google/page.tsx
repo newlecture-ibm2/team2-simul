@@ -18,8 +18,7 @@ function CallbackHandler() {
 
       const redirectUri = `${window.location.origin}/auth/callback/google`;
       socialLogin('google', code, redirectUri)
-        .then((data: unknown) => {
-          const res = data as { user: User; isNewUser: boolean };
+        .then((res) => {
           console.log('로그인 성공!', res)
           
           if (res.user) {

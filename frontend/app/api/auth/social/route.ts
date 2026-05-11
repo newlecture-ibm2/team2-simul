@@ -37,10 +37,26 @@ export async function POST(request: NextRequest) {
     const data = await backendResponse.json();
     const { accessToken, refreshToken, isNewUser } = data;
 
+    // 새로 발급받은 토큰으로 유저 정보 조회
+    let user = null;
+    try {
+      const userResponse = await fetch(`${backendUrl}/users/me`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+      if (userResponse.ok) {
+        user = await userResponse.json();
+      }
+    } catch (e) {
+      console.error('BFF Fetch User Error:', e);
+    }
+
     // 3. iron-session에 토큰을 암호화하여 저장
     const response = NextResponse.json({ 
       success: true,
       isNewUser,
+      user,
     });
 
     const session = await getIronSession<SessionData>(request, response, sessionOptions);
