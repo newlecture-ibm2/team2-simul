@@ -2,9 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toggleLike, getPostDetail, deletePost } from '../../../../lib/api/feedAPI';
+import { checkIsFollowing, followUser, unfollowUser } from '@/lib/api/userAPI';
 import { useAuthStore } from '../../../../lib/stores/useAuthStore';
-import Modal from './_components/Modal';
+import { toast } from '@/lib/utils/toast';
+import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
 import styles from './page.module.css';
 
 export interface PostDetailData {
@@ -41,46 +45,67 @@ export default function PostDetailPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+  
+  const [confirmModal, setConfirmModal] = useState({ 
+    isOpen: false, 
+    title: '', 
+    description: '', 
+    confirmText: '', 
+    onConfirm: () => {} 
+  });
 
-  const isOwner = isAuthenticated && user && String(user.id).trim().toLowerCase() === post?.userId?.trim().toLowerCase();
+  const queryClient = useQueryClient();
 
-  const [modalConfig, setModalConfig] = useState<{
-    isOpen: boolean;
-    title?: string;
-    message: string;
-    onConfirm: () => void;
-    onCancel?: () => void;
-    confirmText?: string;
-    cancelText?: string;
-  }>({ isOpen: false, message: '', onConfirm: () => {} });
+  // Fetch follow status if we have the author's userId
+  const { data: followStatus } = useQuery({
+    queryKey: ['isFollowing', post?.userId],
+    queryFn: () => checkIsFollowing(post!.userId),
+    enabled: !!post?.userId && isAuthenticated && user?.userId !== post.userId,
+  });
 
-  const openAlert = (message: string, onConfirm?: () => void) => {
-    setModalConfig({
-      isOpen: true,
-      message,
-      onConfirm: () => {
-        setModalConfig(prev => ({ ...prev, isOpen: false }));
-        if (onConfirm) onConfirm();
-      },
-    });
+  const isFollowingAuthor = followStatus?.isFollowing || false;
+
+  const followMutation = useMutation({
+    mutationFn: () => followUser(post!.userId),
+    onSuccess: () => {
+      toast.success('팔로우했습니다!');
+      queryClient.invalidateQueries({ queryKey: ['isFollowing', post!.userId] });
+    }
+  });
+
+  const unfollowMutation = useMutation({
+    mutationFn: () => unfollowUser(post!.userId),
+    onSuccess: () => {
+      toast.info('언팔로우했습니다.');
+      queryClient.invalidateQueries({ queryKey: ['isFollowing', post!.userId] });
+    }
+  });
+
+  const handleFollowToggle = () => {
+    if (!isAuthenticated) {
+      toast.error('로그인이 필요합니다.');
+      return;
+    }
+    if (isFollowingAuthor) {
+      setConfirmModal({
+        isOpen: true,
+        title: '언팔로우 하시겠습니까?',
+        description: `${post?.nickname}님의 소식을 더 이상 받지 않게 됩니다.`,
+        confirmText: '언팔로우',
+        onConfirm: () => {
+          unfollowMutation.mutate();
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        }
+      });
+    } else {
+      followMutation.mutate();
+    }
   };
 
-  const openConfirm = (title: string, message: string, onConfirm: () => void) => {
-    setModalConfig({
-      isOpen: true,
-      title,
-      message,
-      confirmText: '예',
-      cancelText: '아니오',
-      onConfirm: () => {
-        setModalConfig(prev => ({ ...prev, isOpen: false }));
-        onConfirm();
-      },
-      onCancel: () => {
-        setModalConfig(prev => ({ ...prev, isOpen: false }));
-      }
-    });
-  };
+  const isOwner = isAuthenticated && user && (
+    user.userId?.trim().toLowerCase() === post?.userId?.trim().toLowerCase() ||
+    user.id?.trim().toLowerCase() === post?.userId?.trim().toLowerCase()
+  );
 
   // 메뉴 외부 클릭 시 닫기
   useEffect(() => {
@@ -146,7 +171,7 @@ export default function PostDetailPage() {
 
   const handleLike = async () => {
     if (!isAuthenticated) {
-      openAlert('좋아요를 누르려면 로그인이 필요합니다.');
+      toast.error('좋아요를 누르려면 로그인이 필요합니다.');
       return;
     }
 
@@ -167,26 +192,32 @@ export default function PostDetailPage() {
     }
   };
 
-  const handleDeleteClick = () => {
+  const handleDelete = async () => {
     setShowMenu(false);
-    openConfirm('게시물 삭제', '정말로 이 게시물을 삭제하시겠습니까?', executeDelete);
-  };
-
-  const executeDelete = async () => {
-    try {
-      await deletePost(postId);
-      openAlert('게시물이 삭제되었습니다.', () => router.push('/'));
-    } catch (err) {
-      console.error('삭제 실패:', err);
-      openAlert('삭제에 실패했습니다.');
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: '게시물을 삭제하시겠습니까?',
+      description: '삭제된 게시물은 복구할 수 없습니다.',
+      confirmText: '삭제',
+      onConfirm: async () => {
+        try {
+          await deletePost(postId);
+          toast.success('게시물이 삭제되었습니다.');
+          router.push('/');
+        } catch (err) {
+          console.error('삭제 실패:', err);
+          toast.error('삭제에 실패했습니다.');
+        } finally {
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        }
+      }
+    });
   };
 
   if (isLoading) return <div className={styles.container}><div style={{padding: '20px', textAlign: 'center'}}>로딩 중...</div></div>;
   if (error) return <div className={styles.container}><div style={{padding: '20px', textAlign: 'center', color: 'red'}}>{error}</div></div>;
   if (!post) return null;
 
-  // format date roughly
   const dateObj = new Date(post.createdAt);
   const dateStr = `${dateObj.getFullYear()}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
 
@@ -221,7 +252,7 @@ export default function PostDetailPage() {
                   <div className={styles.menuDivider} />
                   <button 
                     className={`${styles.menuItem} ${styles.menuItemDanger}`} 
-                    onClick={handleDeleteClick}
+                    onClick={handleDelete}
                   >
                     <img src="/icons/trash.png" alt="" className={styles.menuIcon} />
                     <span>삭제하기</span>
@@ -276,17 +307,31 @@ export default function PostDetailPage() {
 
         <div className={styles.contentSection}>
           <div className={styles.authorRow}>
-            {post.profileImageUrl ? (
-               <img src={post.profileImageUrl} alt="아바타" className={styles.authorAvatarImg} style={{width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover'}} />
-            ) : (
-               <span className={styles.authorAvatar}>🧑</span>
-            )}
-            <div className={styles.authorInfo}>
-              <div className={styles.authorName}>{post.nickname}</div>
-              <div className={styles.authorMeta}>{dateStr}</div>
-            </div>
-            {!isOwner && (
-              <button className={styles.followBtn}>팔로우</button>
+            <Link href={`/profile/${post.userId}`} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'inherit' }}>
+              {post.profileImageUrl ? (
+                 <img src={post.profileImageUrl} alt="아바타" className={styles.authorAvatarImg} style={{width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover'}} />
+              ) : (
+                 <span className={styles.authorAvatar}>🧑</span>
+              )}
+              <div className={styles.authorInfo}>
+                <div className={styles.authorName}>{post.nickname}</div>
+                <div className={styles.authorMeta}>{dateStr}</div>
+              </div>
+            </Link>
+            
+            {(!isAuthenticated || (user && String(user.userId) !== String(post.userId))) && (
+              <button 
+                className={styles.followBtn} 
+                onClick={handleFollowToggle}
+                style={{
+                  backgroundColor: isFollowingAuthor ? 'rgba(255,255,255,0.2)' : 'var(--color-primary)',
+                  color: '#fff',
+                  border: isFollowingAuthor ? '1px solid rgba(255,255,255,0.5)' : 'none',
+                  marginLeft: 'auto'
+                }}
+              >
+                {isFollowingAuthor ? '언팔로우' : '팔로우'}
+              </button>
             )}
           </div>
 
@@ -308,9 +353,6 @@ export default function PostDetailPage() {
                 src={isLiked ? "/icons/heart-filled.png" : "/icons/heart.png"} 
                 alt="Like" 
                 className={styles.statIcon} 
-                onError={(e) => {
-                   (e.target as HTMLImageElement).src = "/icons/heart.png";
-                }}
               />
               <span>{likeCount}</span>
             </button>
@@ -326,8 +368,16 @@ export default function PostDetailPage() {
           <button className={styles.reportBtn}>🚨 게시물 신고하기</button>
         </div>
       </div>
-      <Modal {...modalConfig} />
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        description={confirmModal.description}
+        confirmText={confirmModal.confirmText}
+        isDanger={true}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }
-
