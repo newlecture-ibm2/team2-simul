@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TryonCreditJpaRepository extends JpaRepository<TryonCredit, UUID> {
     long countByUserIdAndUsedAtBetween(UUID userId, LocalDateTime startInclusive, LocalDateTime endExclusive);
+    boolean existsByJobId(UUID jobId);
 }
-
