@@ -100,20 +100,27 @@ public class AuthController {
 
     /**
      * 로그아웃
-     * DELETE /auth/logout
+     * POST /auth/logout
      *
-     * Redis에서 리프레시 토큰을 삭제하여 재사용을 차단
-     * 프론트엔드에서는 추가로 httpOnly 쿠키(세션) 삭제 처리
+     * - Redis에서 리프레시 토큰을 삭제하여 재사용을 차단
+     * - Authorization 헤더의 Access Token도 블랙리스트에 등록하여 즉시 무효화
+     * - 프론트엔드에서는 추가로 httpOnly 쿠키(세션) 삭제 처리
      *
      * Request Body:
      * { "refreshToken": "jwt..." }
      */
-    @DeleteMapping("/logout")
-    public ResponseEntity<Void> logout(@RequestBody Map<String, String> request) {
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(
+        @RequestHeader(value = "Authorization", required = false) String authorization,
+        @RequestBody Map<String, String> request
+    ) {
         String refreshToken = request.get("refreshToken");
-        if (refreshToken != null) {
-            logoutUseCase.logout(refreshToken);
+        // Access Token 추출 (블랙리스트용)
+        String accessToken = null;
+        if (authorization != null && authorization.startsWith("Bearer ")) {
+            accessToken = authorization.substring(7);
         }
+        logoutUseCase.logout(refreshToken, accessToken);
         return ResponseEntity.noContent().build();
     }
 }

@@ -158,6 +158,8 @@ app/(main)/closet/
 | Footer | 루트 레이아웃 전용 (app/layout.tsx) |
 | BottomNav | 루트 레이아웃 전용 (app/layout.tsx) |
 | OfflineBanner | 전역 네트워크 상태 표시 배너 (app/layout.tsx) |
+| Toast | 전역 알림 컴포넌트 (CustomEvent 기반, app/layout.tsx) |
+| GlobalLoading | 전역 로딩 스피너 (TanStack Query 기반, app/layout.tsx) |
 | Button | 기본형 버튼 레퍼런스 |
 | Toggle | 기본형 토글 레퍼런스 |
 
@@ -200,9 +202,10 @@ app/api/[...path]/
   - `{Feature}.tsx` — UI 렌더링만
 - 컴포넌트 300줄 초과 시 서브 컴포넌트 분리
 
-## 전역 상태 (Zustand)
-- 관심사별 스토어 분리: `useAuthStore`, `useUIStore` 등
-- JWT는 Zustand에 저장하지 않음 (iron-session으로 서버 관리)
+## 전역 상태 및 공통 UI 상태 관리
+- **비즈니스 상태 (Zustand)**: 인증/인가 등 핵심 비즈니스 로직 위주로 사용 (`useAuthStore` 등). JWT는 Zustand에 저장하지 않고 iron-session으로 관리.
+- **로딩 (Global Loading)**: Zustand를 사용하지 않고 **TanStack Query의 `useIsFetching`, `useIsMutating`** 을 구독하여 전역 로딩 자동화 (300ms 딜레이 깜빡임 방지).
+- **토스트 (Toast)**: 상태 관리 라이브러리 종속성 없이 **순수 JS `CustomEvent`** (Pub/Sub)를 활용 (`lib/utils/toast.ts`). Axios 인터셉터 등 React 외부 환경에서도 자유롭게 호출 가능.
 
 ## v7 코드 테이블 대응
 - 상태 비교: `status.id === 2` (숫자 ID 기반)
