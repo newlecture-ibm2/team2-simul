@@ -1,5 +1,6 @@
 package com.simul.user.application.port.in;
 
+import com.simul.user.application.dto.UserProfileResponse;
 import com.simul.user.application.dto.UserResponse;
 import java.util.List;
 import java.util.Map;
@@ -21,4 +22,11 @@ public interface LoadUserUseCase {
      * 여러 사용자 ID로 사용자 조회 맵 반환
      */
     Map<UUID, UserResponse> loadUsers(List<UUID> userIds);
+
+    /**
+     * 사용자 프로필 조회 (팔로우 정보 포함)
+     * @param targetUserId 조회할 사용자 ID
+     * @param currentUserId 현재 로그인 사용자 ID (null이면 비로그인)
+     */
+    UserProfileResponse loadUserProfile(UUID targetUserId, UUID currentUserId);
 }

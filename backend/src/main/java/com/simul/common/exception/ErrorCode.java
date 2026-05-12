@@ -44,6 +44,9 @@ public enum ErrorCode {
     TAG_LIMIT_EXCEEDED("ERR-307-A", HttpStatus.UNPROCESSABLE_ENTITY, "태그는 최대 10개까지만 추가할 수 있습니다"),
     VISION_API_FAILED("ERR-307-B", HttpStatus.INTERNAL_SERVER_ERROR, "자동 태그 추출에 실패했어요. 수동으로 입력해주세요"),
 
+    // 팔로우
+    SELF_FOLLOW("ERR-501-A", HttpStatus.UNPROCESSABLE_ENTITY, "자기 자신을 팔로우할 수 없습니다"),
+
     // 신고
     DUPLICATE_REPORT("ERR-401-A", HttpStatus.UNPROCESSABLE_ENTITY, "이미 신고한 게시물입니다");
 
