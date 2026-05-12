@@ -71,7 +71,10 @@ export default function FolderCard({
   };
 
   return (
-    <div className={styles.folderCard} onClick={() => !isEditing && onClick?.(id)}>
+    <div 
+      className={`${styles.folderCard} ${showMenu ? styles.active : ''}`} 
+      onClick={() => !isEditing && onClick?.(id)}
+    >
       <div className={styles.imageGrid}>
         <div className={styles.mainImageWrapper}>
           {mainImage && <img src={mainImage} alt={`${title} 메인`} className={styles.image} />}

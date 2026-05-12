@@ -15,11 +15,6 @@ import styles from './page.module.css';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { addClosetItem, addClosetCollection, getClosetCollections, updateClosetCollection, deleteClosetCollection } from '@/lib/api/closetAPI';
 
-// const DUMMY_FOLDERS_DATA = [
-//   { id: 1, title: 'shirts outfit', itemCount: 3, lastUpdated: '2주 전', images: [] },
-//   { id: 2, title: 'spring vibes', itemCount: 8, lastUpdated: '1달 전', images: [] },
-//   { id: 3, title: 'wishlist', itemCount: 12, lastUpdated: '어제', images: [] },
-// ];
 
 const PAGE_SIZE = 10;
 

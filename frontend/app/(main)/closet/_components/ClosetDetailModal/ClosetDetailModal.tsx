@@ -9,11 +9,6 @@ import FolderMoveModal from '../FolderMoveModal/FolderMoveModal';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getClosetItem, updateClosetItem, deleteClosetItem } from '@/lib/api/closetAPI';
 
-const DUMMY_FOLDERS = [
-  { id: 1, title: 'shirts outfit' },
-  { id: 2, title: 'spring vibes' },
-  { id: 3, title: 'wishlist' },
-];
 
 interface ClosetDetailModalProps {
   isOpen: boolean;
