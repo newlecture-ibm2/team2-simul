@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/Button';
 import Toggle from './_components/Toggle/Toggle';
 import styles from './page.module.css';
-import { generateTryon, getMyBaseImages } from '@/lib/api/tryonAPI';
+import { generateTryon, getMyBaseImages, uploadBaseImage } from '@/lib/api/tryonAPI';
 
 const DUMMY_CLOTHES = [
   { id: 1, image: '/clothes.png' },
@@ -25,11 +25,25 @@ export default function StudioPage() {
   const [selectedClothes, setSelectedClothes] = useState<number[]>([]); // Store selected clothes IDs
   const [itemIds, setItemIds] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingBaseImage, setIsUploadingBaseImage] = useState(false);
+  const baseImageInputRef = useRef<HTMLInputElement | null>(null);
 
   const selectedPersonImageUrl = useMemo(() => {
     const picked = baseImages.find(b => b.base_image_id === selectedBaseImageId);
     return picked?.image_url || '/dummy.jpg';
   }, [baseImages, selectedBaseImageId]);
+
+  const refreshBaseImages = async () => {
+    const res = await getMyBaseImages();
+    const list = (res.base_images ?? []).map(b => ({
+      base_image_id: b.base_image_id,
+      image_url: b.image_url,
+    }));
+    setBaseImages(list);
+    if (!selectedBaseImageId && list.length > 0) {
+      setSelectedBaseImageId(list[0].base_image_id);
+    }
+  };
 
   useEffect(() => {
     let canceled = false;
@@ -61,7 +75,26 @@ export default function StudioPage() {
   };
 
   const handleUploadClick = () => {
-    // 임시: 업로드 클릭 시 아무 동작 안 함 (추후 모달 띄우기)
+    if (activeTab === 'person') {
+      baseImageInputRef.current?.click();
+      return;
+    }
+
+    // 옷 업로드는 추후 구현
+  };
+
+  const handleBaseImagePicked = async (file: File | null) => {
+    if (!file) return;
+    setIsUploadingBaseImage(true);
+    try {
+      const uploaded = await uploadBaseImage(file);
+      await refreshBaseImages();
+      setSelectedBaseImageId(uploaded.base_image_id);
+      setActiveTab('person');
+    } finally {
+      setIsUploadingBaseImage(false);
+      if (baseImageInputRef.current) baseImageInputRef.current.value = '';
+    }
   };
 
   const handleTryon = async () => {
@@ -136,6 +169,14 @@ export default function StudioPage() {
 
       {/* Bottom Overlay (Gradient & Controls) */}
       <div className={styles.bottomOverlay}>
+        <input
+          ref={baseImageInputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={(e) => handleBaseImagePicked(e.target.files?.[0] ?? null)}
+        />
+
         <details style={{ width: '100%', marginBottom: 12 }}>
           <summary style={{ cursor: 'pointer' }}>개발자 입력 (임시)</summary>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
@@ -174,26 +215,37 @@ export default function StudioPage() {
       </div>
 
       {/* Item Carousel */}
-      <div className={styles.carouselContainer}>
-        <div className={styles.carousel}>
-          {/* Add / Upload Card */}
-          <div className={styles.itemCard} onClick={handleUploadClick}>
-            <div className={styles.uploadInner}>
-              <span className={styles.plusIcon}>+</span>
+        <div className={styles.carouselContainer}>
+          <div className={styles.carousel}>
+            {/* Add / Upload Card */}
+            <div className={styles.itemCard} onClick={handleUploadClick}>
+              <div className={styles.uploadInner}>
+                <span className={styles.plusIcon}>
+                  {activeTab === 'person' && isUploadingBaseImage ? '…' : '+'}
+                </span>
+              </div>
             </div>
-          </div>
 
-        {/* Person List */}
-          {activeTab === 'person' && baseImages.map((img, i) => (
-            <div
-              key={img.base_image_id}
-              className={`${styles.itemCard} ${selectedBaseImageId === img.base_image_id ? styles.selectedCard : ''}`}
-              onClick={() => setSelectedBaseImageId(img.base_image_id)}
-            >
-              <img src={img.image_url} alt={`Person ${i}`} className={styles.itemImage} />
-              {selectedBaseImageId === img.base_image_id && <div className={styles.checkBadge}>✓</div>}
-            </div>
-          ))}
+            {/* Person List */}
+            {activeTab === 'person' && (
+              <>
+                {baseImages.length === 0 && (
+                  <div style={{ padding: '12px 4px', fontSize: 12, opacity: 0.7 }}>
+                    베이스 이미지가 없습니다. + 버튼으로 업로드해주세요.
+                  </div>
+                )}
+                {baseImages.map((img, i) => (
+                  <div
+                    key={img.base_image_id}
+                    className={`${styles.itemCard} ${selectedBaseImageId === img.base_image_id ? styles.selectedCard : ''}`}
+                    onClick={() => setSelectedBaseImageId(img.base_image_id)}
+                  >
+                    <img src={img.image_url} alt={`Person ${i}`} className={styles.itemImage} />
+                    {selectedBaseImageId === img.base_image_id && <div className={styles.checkBadge}>✓</div>}
+                  </div>
+                ))}
+              </>
+            )}
 
           {/* Clothes List */}
           {activeTab === 'clothes' && DUMMY_CLOTHES.map((cloth) => {

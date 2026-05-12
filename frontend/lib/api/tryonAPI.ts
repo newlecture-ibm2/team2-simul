@@ -14,6 +14,11 @@ export type MyBaseImagesResponse = {
   }>;
 };
 
+export type BaseImageUploadResponse = {
+  base_image_id: string;
+  image_url: string;
+};
+
 /** 시착 생성 요청 (기술서/백엔드 스펙: POST /tryon/generate) */
 export async function generateTryon(data: {
   base_image_id: string;
@@ -23,6 +28,16 @@ export async function generateTryon(data: {
   return apiClient('/tryon/generate', {
     method: 'POST',
     body: JSON.stringify(data),
+  });
+}
+
+/** 베이스 이미지 업로드 (POST /tryon/base-images) */
+export async function uploadBaseImage(file: File): Promise<BaseImageUploadResponse> {
+  const form = new FormData();
+  form.append('image', file);
+  return apiClient('/tryon/base-images', {
+    method: 'POST',
+    body: form,
   });
 }
 
