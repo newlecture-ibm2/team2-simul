@@ -1,0 +1,75 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* Dim 처리 */
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.sheet {
+  /* 글래스모피즘이 필요하다면 아래 주석을 해제하고 배경색을 변경하세요
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  */
+  background-color: var(--color-surface, #ffffff);
+  border-radius: var(--radius-comfortable, 30px) var(--radius-comfortable, 30px) 0 0;
+  padding: 16px 20px 32px;
+  width: 100%;
+  max-width: 450px; /* SIMUL 모바일 뷰포트 기준 (규칙 3, 11) */
+  margin: 0 auto; /* 데스크톱 환경에서 450px 기준 중앙 정렬 */
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh; /* 화면의 90%를 넘지 않도록 제한 */
+}
+
+.handle {
+  width: 40px;
+  height: 4px;
+  background-color: var(--color-border, #e0e0e0);
+  border-radius: var(--radius-button, 99px);
+  margin: 0 auto 16px;
+}
+
+.header {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--color-text-primary, #111111);
+}
+
+.content {
+  overflow-y: auto;
+  flex: 1;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
