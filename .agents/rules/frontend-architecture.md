@@ -162,6 +162,7 @@ app/(main)/closet/
 | GlobalLoading | 전역 로딩 스피너 (TanStack Query 기반, app/layout.tsx) |
 | Button | 기본형 버튼 레퍼런스 |
 | Toggle | 기본형 토글 레퍼런스 |
+| ConfirmModal | 기본형 확인 다이얼로그 레퍼런스 |
 
 ## API 함수 규칙
 ```
