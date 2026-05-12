@@ -1,6 +1,6 @@
 package com.simul.post.application.dto;
 
-import com.simul.post.domain.model.Report;
+import com.simul.post.domain.model.PostReport;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -12,7 +12,7 @@ public record ReportResponse(
     String reason,
     LocalDateTime createdAt
 ) {
-    public static ReportResponse from(Report report) {
+    public static ReportResponse from(PostReport report) {
         return new ReportResponse(
             report.getReportId(),
             report.getPostId(),

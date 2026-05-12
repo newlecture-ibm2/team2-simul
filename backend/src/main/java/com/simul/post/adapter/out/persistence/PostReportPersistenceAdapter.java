@@ -5,6 +5,9 @@ import com.simul.post.domain.model.PostReport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.UUID;
 
 @Component
@@ -26,5 +29,10 @@ public class PostReportPersistenceAdapter implements PostReportPersistencePort {
     @Override
     public int countByPostId(UUID postId) {
         return postReportJpaRepository.countByPostId(postId);
+    }
+
+    @Override
+    public Page<PostReport> loadAllReports(Pageable pageable) {
+        return postReportJpaRepository.findAllByOrderByCreatedAtDesc(pageable);
     }
 }

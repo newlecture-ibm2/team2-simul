@@ -1,35 +1,17 @@
 package com.simul.post.application.service;
 
-<<<<<<< HEAD
-import com.simul.post.application.dto.ReportResponse;
-import com.simul.post.application.port.in.GetReportsUseCase;
-import com.simul.post.application.port.out.LoadReportPort;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-@Service
-@RequiredArgsConstructor
-@Transactional(readOnly = true)
-public class ReportService implements GetReportsUseCase {
-
-    private final LoadReportPort loadReportPort;
-
-    @Override
-    public Page<ReportResponse> getReports(Pageable pageable) {
-        return loadReportPort.loadAllReports(pageable)
-                .map(ReportResponse::from);
-=======
 import com.simul.common.exception.BusinessException;
 import com.simul.common.exception.ErrorCode;
+import com.simul.post.application.dto.ReportResponse;
+import com.simul.post.application.port.in.GetReportsUseCase;
 import com.simul.post.application.port.in.ReportPostUseCase;
 import com.simul.post.application.port.out.PostReportPersistencePort;
 import com.simul.post.application.port.out.PostRepositoryPort;
 import com.simul.post.domain.model.Post;
 import com.simul.post.domain.model.PostReport;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +19,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class ReportService implements ReportPostUseCase {
+public class ReportService implements ReportPostUseCase, GetReportsUseCase {
 
     private final PostRepositoryPort postRepositoryPort;
     private final PostReportPersistencePort postReportPersistencePort;
@@ -61,6 +43,12 @@ public class ReportService implements ReportPostUseCase {
 
         post.incrementReportCount();
         postRepositoryPort.save(post);
->>>>>>> e9e23e10061ed9f034ea94ee25977d1b7544d6b1
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ReportResponse> getReports(Pageable pageable) {
+        return postReportPersistencePort.loadAllReports(pageable)
+                .map(ReportResponse::from);
     }
 }
