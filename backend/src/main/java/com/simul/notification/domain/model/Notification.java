@@ -18,8 +18,8 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "notifications", indexes = {
-        // 수신자별 최신순 조회 최적화 (목록 조회 API)
-        @Index(name = "idx_notifications_recipient_created", columnList = "recipient_id, created_at DESC"),
+        // 수신자별 목록 조회 최적화 (ORDER BY is_read ASC, created_at DESC 와 완전 일치)
+        @Index(name = "idx_notifications_recipient_created", columnList = "recipient_id, is_read ASC, created_at DESC"),
         // 미읽음 수 조회 최적화 (배지 표시용 count 쿼리)
         @Index(name = "idx_notifications_recipient_unread", columnList = "recipient_id, is_read")
 })
