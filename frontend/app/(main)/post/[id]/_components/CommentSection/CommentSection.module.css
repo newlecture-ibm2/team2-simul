@@ -161,3 +161,73 @@
   font-style: italic;
   font-size: 14px;
 }
+
+.editedMark {
+  font-style: italic;
+  font-size: 11px;
+  color: #aaa;
+}
+
+.editWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.editTextarea {
+  width: 100%;
+  background: var(--color-surface-white);
+  border: 1px solid var(--color-primary);
+  border-radius: 12px;
+  padding: 8px 12px;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  resize: none;
+  min-height: 40px;
+  outline: none;
+}
+
+.editActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.cancelEditBtn {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.saveEditBtn {
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.saveEditBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.repliesToggleWrapper {
+  margin-top: 8px;
+  margin-left: 36px;
+}
+
+.repliesToggleBtn {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+}

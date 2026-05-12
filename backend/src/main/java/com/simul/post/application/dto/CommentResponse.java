@@ -13,5 +13,6 @@ public record CommentResponse(
     Integer depth,
     LocalDateTime createdAt,
     boolean isDeleted,
+    boolean isEdited,
     List<CommentResponse> replies
 ) {}

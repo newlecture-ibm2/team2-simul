@@ -23,6 +23,7 @@ export interface Comment {
   depth: number;
   createdAt: string;
   isDeleted: boolean;
+  isEdited: boolean;
   replies: Comment[];
 }
 
@@ -133,6 +134,14 @@ export async function createComment(postId: string, content: string, parentComme
   return apiClient<Comment>(`/posts/${postId}/comments`, {
     method: 'POST',
     body: JSON.stringify({ content, parentCommentId }),
+  });
+}
+
+/** 댓글 수정 */
+export async function updateComment(commentId: string, content: string) {
+  return apiClient<Comment>(`/comments/${commentId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ content }),
   });
 }
 

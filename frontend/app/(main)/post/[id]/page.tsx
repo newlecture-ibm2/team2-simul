@@ -26,6 +26,7 @@ export interface PostDetailData {
   caption: string;
   likeCount: number;
   viewCount: number;
+  commentCount: number;
   isLiked: boolean;
   createdAt: string;
 }
@@ -394,7 +395,7 @@ export default function PostDetailPage() {
             
             <div className={styles.statItem}>
               <img src="/icons/bubble.png" alt="Comment" className={styles.statIcon} />
-              <span>0</span>
+              <span>{post.commentCount || 0}</span>
             </div>
             <div className={styles.statItem} style={{marginLeft: 'auto', color: '#999', fontSize: '13px'}}>
                조회 {post.viewCount}
@@ -414,7 +415,7 @@ export default function PostDetailPage() {
         title={confirmModal.title}
         description={confirmModal.description}
         confirmText={confirmModal.confirmText}
-        isDestructive={true}
+        isDanger={true}
         onConfirm={confirmModal.onConfirm}
         onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
       />

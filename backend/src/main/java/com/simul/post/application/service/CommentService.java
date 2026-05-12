@@ -30,9 +30,11 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.HashMap;
 
+import com.simul.post.application.port.in.UpdateCommentUseCase;
+
 @Service
 @RequiredArgsConstructor
-public class CommentService implements LoadCommentUseCase, CreateCommentUseCase, DeleteCommentUseCase {
+public class CommentService implements LoadCommentUseCase, CreateCommentUseCase, DeleteCommentUseCase, UpdateCommentUseCase {
 
     private final CommentPersistencePort commentPersistencePort;
     private final PostRepositoryPort postPersistencePort;
@@ -103,6 +105,9 @@ public class CommentService implements LoadCommentUseCase, CreateCommentUseCase,
 
         Comment savedComment = commentPersistencePort.save(comment);
 
+        post.incrementCommentCount();
+        postPersistencePort.save(post);
+
         // 알림 생성 로직
         try {
             String nickname = loadUserUseCase.loadUser(userId).nickname();
@@ -134,6 +139,28 @@ public class CommentService implements LoadCommentUseCase, CreateCommentUseCase,
 
         comment.softDelete();
         commentPersistencePort.save(comment);
+
+        Post post = postPersistencePort.findById(comment.getPostId()).orElse(null);
+        if (post != null) {
+            post.decrementCommentCount();
+            postPersistencePort.save(post);
+        }
+    }
+
+    @Override
+    @Transactional
+    public CommentResponse updateComment(UUID commentId, UUID userId, String content) {
+        Comment comment = commentPersistencePort.findById(commentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
+
+        if (!comment.getUserId().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+
+        comment.updateContent(content);
+        Comment savedComment = commentPersistencePort.save(comment);
+
+        return mapToResponse(savedComment);
     }
 
 
@@ -161,6 +188,7 @@ public class CommentService implements LoadCommentUseCase, CreateCommentUseCase,
                 comment.getDepth(),
                 comment.getCreatedAt(),
                 isDeleted,
+                comment.getIsEdited() != null ? comment.getIsEdited() : false,
                 replies
         );
     }

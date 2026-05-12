@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import styles from './CommentSection.module.css';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getComments, createComment, deleteComment, Comment } from '@/lib/api/feedAPI';
+import { getComments, createComment, deleteComment, updateComment, Comment } from '@/lib/api/feedAPI';
 import { useAuthStore } from '@/lib/stores/useAuthStore';
 import { toast } from '@/lib/utils/toast';
 import Link from 'next/link';
@@ -19,6 +19,9 @@ export default function CommentSection({ postId }: Props) {
   const [content, setContent] = useState('');
   const [replyingTo, setReplyingTo] = useState<{ id: string; nickname: string } | null>(null);
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({});
 
   const { data: pageData, isLoading } = useQuery({
     queryKey: ['comments', postId],
@@ -57,6 +60,19 @@ export default function CommentSection({ postId }: Props) {
     }
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, content }: { id: string; content: string }) => updateComment(id, content),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', postId] });
+      setEditingCommentId(null);
+      setEditContent('');
+      toast.success('댓글이 수정되었습니다.');
+    },
+    onError: () => {
+      toast.error('댓글 수정에 실패했습니다.');
+    }
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim()) return;
@@ -82,6 +98,11 @@ export default function CommentSection({ postId }: Props) {
     }
   };
 
+  const handleEditSubmit = (commentId: string) => {
+    if (!editContent.trim()) return;
+    updateMutation.mutate({ id: commentId, content: editContent });
+  };
+
   const comments = pageData?.content || [];
 
   const renderComment = (comment: Comment, isReply = false) => {
@@ -103,14 +124,36 @@ export default function CommentSection({ postId }: Props) {
             <Link href={`/profile/${comment.userId}`} style={{textDecoration: 'none', color: 'inherit'}}>
               <span className={styles.nickname}>{comment.nickname}</span>
             </Link>
-            <span className={styles.createdAt}>{dateStr}</span>
+            <span className={styles.createdAt}>
+              {dateStr} {comment.isEdited && <span className={styles.editedMark}>(수정됨)</span>}
+            </span>
           </div>
           {comment.isDeleted ? (
             <div className={styles.deletedText}>삭제된 댓글입니다.</div>
+          ) : editingCommentId === comment.commentId ? (
+            <div className={styles.editWrapper}>
+              <textarea
+                className={styles.editTextarea}
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                maxLength={200}
+                rows={2}
+              />
+              <div className={styles.editActions}>
+                <button className={styles.cancelEditBtn} onClick={() => setEditingCommentId(null)}>취소</button>
+                <button 
+                  className={styles.saveEditBtn} 
+                  onClick={() => handleEditSubmit(comment.commentId)}
+                  disabled={updateMutation.isPending || !editContent.trim()}
+                >
+                  {updateMutation.isPending ? '저장중...' : '저장'}
+                </button>
+              </div>
+            </div>
           ) : (
             <div className={styles.text}>{comment.content}</div>
           )}
-          {!comment.isDeleted && (
+          {!comment.isDeleted && editingCommentId !== comment.commentId && (
             <div className={styles.actions}>
               {!isReply && (
                 <button 
@@ -121,7 +164,18 @@ export default function CommentSection({ postId }: Props) {
                 </button>
               )}
               {isOwner && (
-                <button className={styles.actionBtn} onClick={() => handleDelete(comment.commentId)}>삭제</button>
+                <>
+                  <button 
+                    className={styles.actionBtn} 
+                    onClick={() => {
+                      setEditingCommentId(comment.commentId);
+                      setEditContent(comment.content);
+                    }}
+                  >
+                    수정
+                  </button>
+                  <button className={styles.actionBtn} onClick={() => handleDelete(comment.commentId)}>삭제</button>
+                </>
               )}
             </div>
           )}
@@ -144,7 +198,17 @@ export default function CommentSection({ postId }: Props) {
             comments.map(comment => (
               <React.Fragment key={comment.commentId}>
                 {renderComment(comment)}
-                {comment.replies?.map(reply => renderComment(reply, true))}
+                {comment.replies && comment.replies.length > 0 && (
+                  <div className={styles.repliesToggleWrapper}>
+                    <button 
+                      className={styles.repliesToggleBtn}
+                      onClick={() => setExpandedReplies(prev => ({ ...prev, [comment.commentId]: !prev[comment.commentId] }))}
+                    >
+                      {expandedReplies[comment.commentId] ? '▲ 답글 숨기기' : `▼ 답글 ${comment.replies.length}개 보기`}
+                    </button>
+                  </div>
+                )}
+                {expandedReplies[comment.commentId] && comment.replies?.map(reply => renderComment(reply, true))}
               </React.Fragment>
             ))
           )}

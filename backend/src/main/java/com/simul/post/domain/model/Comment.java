@@ -36,6 +36,9 @@ public class Comment extends BaseJpaEntity {
     @Column(name = "content", length = 200, nullable = false)
     private String content;
 
+    @Column(name = "is_edited", columnDefinition = "boolean default false")
+    private Boolean isEdited = false;
+
     @Builder
     public Comment(UUID postId, UUID userId, UUID parentCommentId, Integer depth, String content) {
         this.postId = postId;
@@ -43,5 +46,11 @@ public class Comment extends BaseJpaEntity {
         this.parentCommentId = parentCommentId;
         this.depth = depth != null ? depth : 1;
         this.content = content;
+        this.isEdited = false;
+    }
+
+    public void updateContent(String newContent) {
+        this.content = newContent;
+        this.isEdited = true;
     }
 }
