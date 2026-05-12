@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { sessionOptions, SessionData } from '@/lib/session';
 
@@ -34,7 +34,8 @@ export async function proxyHandler(req: NextRequest, path: string[]) {
     };
 
     // iron-session을 통해 세션의 JWT 추출 후 Authorization 헤더 주입
-    const session = await getIronSession<SessionData>(req, new Response(), sessionOptions);
+    // NextResponse를 넘겨야 쿠키 파싱/저장이 안정적으로 동작합니다.
+    const session = await getIronSession<SessionData>(req, NextResponse.next(), sessionOptions);
     if (session.user?.token) {
       headers.set('Authorization', `Bearer ${session.user.token}`);
     }
