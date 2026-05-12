@@ -1,23 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { getCurrentUser } from '@/lib/api/authAPI';
-import { User } from '@/lib/stores/useAuthStore';
+import { getUserPosts } from '@/lib/api/feedAPI';
+import { useAuthStore, User } from '@/lib/stores/useAuthStore';
 import styles from './page.module.css';
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<'게시물' | '옷장'>('게시물');
   const router = useRouter();
+  const { setUser } = useAuthStore();
 
-  const { data: user, isLoading } = useQuery<User>({
+  // 1. 내 정보 조회
+  const { data: user, isLoading: isUserLoading } = useQuery<User>({
     queryKey: ['me'],
     queryFn: getCurrentUser,
   });
 
-  if (isLoading) return <div className={styles.loading}>로딩 중...</div>;
+  // 2. 내 게시물 목록 조회
+  const { data: postsData, isLoading: isPostsLoading } = useQuery({
+    queryKey: ['userPosts', user?.userId],
+    queryFn: () => user ? getUserPosts(user.userId) : Promise.reject('User not logged in'),
+    enabled: !!user?.userId,
+  });
+
+  // 가져온 정보를 전역 스토어에 동기화
+  useEffect(() => {
+    if (user) {
+      setUser(user);
+    }
+  }, [user, setUser]);
+
+  if (isUserLoading) return <div className={styles.loading}>로딩 중...</div>;
 
   return (
     <div className={styles.profilePage}>
@@ -59,7 +76,7 @@ export default function ProfilePage() {
                 <span className={styles.statText}>팔로워</span>
               </div>
               <div className={styles.statItem}>
-                <span className={styles.statNum}>0</span>
+                <span className={styles.statNum}>{user?.postCount || 0}</span>
                 <span className={styles.statText}>게시물</span>
               </div>
             </div>
@@ -87,9 +104,16 @@ export default function ProfilePage() {
           <div className={styles.gridContent}>
             {activeTab === '게시물' && (
               <div className={styles.postGrid}>
-                {Array.from({ length: 24 }, (_, i) => (
-                  <Link key={i} href={`/post/${i + 1}`} className={styles.gridItem}>
-                    <img src="/recent.jpg" alt="Post" className={styles.gridImage} />
+                {postsData?.content.length === 0 && (
+                  <div className={styles.emptyMsg}>게시물이 없습니다.</div>
+                )}
+                {postsData?.content.map((post) => (
+                  <Link key={post.postId} href={`/post/${post.postId}`} className={styles.gridItem}>
+                    <img 
+                      src={post.imageUrl || "/recent.jpg"} 
+                      alt="Post" 
+                      className={styles.gridImage} 
+                    />
                   </Link>
                 ))}
               </div>

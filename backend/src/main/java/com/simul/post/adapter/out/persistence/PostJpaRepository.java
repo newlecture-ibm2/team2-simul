@@ -10,4 +10,8 @@ import java.util.UUID;
 public interface PostJpaRepository extends JpaRepository<Post, UUID> {
     Page<Post> findAllByIsPublicTrueAndIsBlindedFalse(Pageable pageable);
     Page<Post> findAllByUserIdInAndIsPublicTrueAndIsBlindedFalse(List<UUID> userIds, Pageable pageable);
+    
+    long countByUserId(UUID userId);
+    Page<Post> findAllByUserId(UUID userId, Pageable pageable);
+    Page<Post> findAllByUserIdAndIsPublicTrue(UUID userId, Pageable pageable);
 }

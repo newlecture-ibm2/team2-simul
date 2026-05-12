@@ -12,6 +12,7 @@ export interface User {
   role?: string;
   followerCount?: number;
   followingCount?: number;
+  postCount?: number;
   isFollowing?: boolean;
 }
 

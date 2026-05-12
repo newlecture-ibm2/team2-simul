@@ -41,6 +41,18 @@ export async function getFeedPosts(params?: {
   return apiClient<PageResponse<FeedPost>>('/posts', { params: queryParams });
 }
 
+/** 특정 유저의 게시물 목록 조회 */
+export async function getUserPosts(userId: string, params?: {
+  page?: number;
+  size?: number;
+}) {
+  const queryParams: Record<string, string> = {};
+  if (params?.page !== undefined) queryParams.page = String(params.page);
+  if (params?.size !== undefined) queryParams.size = String(params.size);
+  
+  return apiClient<PageResponse<FeedPost>>(`/posts/users/${userId}`, { params: queryParams });
+}
+
 /** 게시물 상세 조회 */
 export async function getPostDetail(id: string) {
   return apiClient(`/posts/${id}`);

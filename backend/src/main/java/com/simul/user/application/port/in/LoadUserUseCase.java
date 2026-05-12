@@ -24,9 +24,9 @@ public interface LoadUserUseCase {
     Map<UUID, UserResponse> loadUsers(List<UUID> userIds);
 
     /**
-     * 사용자 프로필 조회 (팔로우 정보 포함)
      * @param targetUserId 조회할 사용자 ID
      * @param currentUserId 현재 로그인 사용자 ID (null이면 비로그인)
+     * @param postCount 게시물 수
      */
-    UserProfileResponse loadUserProfile(UUID targetUserId, UUID currentUserId);
+    UserProfileResponse loadUserProfile(UUID targetUserId, UUID currentUserId, long postCount);
 }

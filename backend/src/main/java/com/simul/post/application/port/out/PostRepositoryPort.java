@@ -15,4 +15,8 @@ public interface PostRepositoryPort {
     
     Page<Post> findAllPublicPosts(Pageable pageable);
     Page<Post> findFollowingPosts(List<UUID> userIds, Pageable pageable);
+    
+    long countByUserId(UUID userId);
+    Page<Post> findByUserId(UUID userId, Pageable pageable);
+    Page<Post> findPublicPostsByUserId(UUID userId, Pageable pageable);
 }

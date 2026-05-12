@@ -18,6 +18,7 @@ export interface PostDetailData {
   likeCount: number;
   viewCount: number;
   isLiked: boolean;
+  isPublic: boolean;
   createdAt: string;
 }
 
@@ -77,7 +78,7 @@ export default function PostEditPage() {
         setExistingImageUrls(data.images || []);
         setTags(data.tags || []);
         setCaption(data.caption || '');
-        setIsPublic(true);
+        setIsPublic(data.isPublic ?? true);
         setIsLoading(false);
       } catch (err: unknown) {
         console.error(err);
