@@ -2,8 +2,7 @@ package com.simul.post.application.service;
 
 import com.simul.common.exception.BusinessException;
 import com.simul.common.exception.ErrorCode;
-import com.simul.notification.application.port.in.CreateNotificationUseCase;
-import com.simul.notification.domain.model.NotificationType;
+import com.simul.notification.application.dto.ReportBlindedEvent;
 import com.simul.post.application.port.out.PostRepositoryPort;
 import com.simul.post.application.port.out.ReportPersistencePort;
 import com.simul.post.domain.model.Post;
@@ -16,6 +15,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -36,7 +36,7 @@ class ReportServiceTest {
     private ReportPersistencePort reportPersistencePort;
 
     @Mock
-    private CreateNotificationUseCase createNotificationUseCase;
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private ReportService reportService;
@@ -62,7 +62,7 @@ class ReportServiceTest {
     }
 
     @Test
-    @DisplayName("정상 신고 접수: 1~9회 누적 시 블라인드 및 알림 미발송")
+    @DisplayName("정상 신고 접수: 1~9회 누적 시 블라인드 및 알림 이벤트 미발행")
     void reportPost_success() {
         // given
         given(postRepositoryPort.findById(postId)).willReturn(Optional.of(post));
@@ -77,7 +77,7 @@ class ReportServiceTest {
         
         verify(reportPersistencePort, times(1)).save(any());
         verify(postRepositoryPort, times(1)).save(post);
-        verify(createNotificationUseCase, never()).createNotification(any());
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     @Test
@@ -94,7 +94,7 @@ class ReportServiceTest {
     }
 
     @Test
-    @DisplayName("10회 누적: 자동 블라인드 처리 및 작성자 알림 발송")
+    @DisplayName("10회 누적: 자동 블라인드 처리 및 작성자 알림 이벤트 발행")
     void reportPost_blindAndNotify() {
         // given
         // 미리 신고 9회 누적 상태로 세팅
@@ -119,14 +119,12 @@ class ReportServiceTest {
         verify(reportPersistencePort, times(1)).save(any());
         verify(postRepositoryPort, times(1)).save(post);
 
-        // 알림 전송 확인
-        ArgumentCaptor<CreateNotificationUseCase.CreateNotificationCommand> captor =
-                ArgumentCaptor.forClass(CreateNotificationUseCase.CreateNotificationCommand.class);
-        verify(createNotificationUseCase, times(1)).createNotification(captor.capture());
+        // 알림 이벤트 발행 확인
+        ArgumentCaptor<ReportBlindedEvent> captor = ArgumentCaptor.forClass(ReportBlindedEvent.class);
+        verify(eventPublisher, times(1)).publishEvent(captor.capture());
 
-        CreateNotificationUseCase.CreateNotificationCommand command = captor.getValue();
-        assertThat(command.getRecipientId()).isEqualTo(postAuthorId);
-        assertThat(command.getType()).isEqualTo(NotificationType.REPORT_BLIND);
-        assertThat(command.getReferenceId()).isEqualTo(postId);
+        ReportBlindedEvent event = captor.getValue();
+        assertThat(event.postId()).isEqualTo(postId);
+        assertThat(event.postOwnerId()).isEqualTo(postAuthorId);
     }
 }
