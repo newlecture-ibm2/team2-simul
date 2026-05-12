@@ -310,7 +310,6 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
 
     @Override
     @Transactional(readOnly = true)
-<<<<<<< HEAD
     public Page<LikeUserResponse> getPostLikes(UUID postId, Pageable pageable) {
         // 1. 게시물 존재 확인
         postRepositoryPort.findById(postId)
@@ -436,7 +435,6 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
                     post.getLikeCount(),
                     true, // 내가 좋아요한 목록이므로 항상 true
                     post.getCreatedAt()
-            );
             );
         });
     }
