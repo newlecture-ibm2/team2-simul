@@ -163,6 +163,7 @@ app/(main)/closet/
 | Button | 기본형 버튼 레퍼런스 |
 | Toggle | 기본형 토글 레퍼런스 |
 | ConfirmModal | 기본형 확인 다이얼로그 레퍼런스 |
+| BottomSheet | 기본형 모바일 바텀시트 레퍼런스 (slideUp 애니메이션, Dim 처리) |
 
 ## API 함수 규칙
 ```
