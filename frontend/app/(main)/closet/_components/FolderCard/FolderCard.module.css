@@ -6,6 +6,11 @@
   transition: transform var(--transition-normal);
   width: 100%;
   position: relative;
+  z-index: 1;
+}
+
+.folderCard.active {
+  z-index: 101; /* menuContainer(100)보다 높게 설정하여 전체 카드를 격상 */
 }
 
 .folderCard:hover {
@@ -94,7 +99,7 @@
 
 .menuContainer {
   position: relative;
-  z-index: 50;
+  z-index: 100; /* Increased from 50 */
 }
 
 .ellipsisBtn {
@@ -123,18 +128,18 @@
   top: 100%;
   right: 0;
   margin-top: 8px;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.95); /* opacity 살짝 증가 */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(0, 0, 0, 0.05); /* 경계선 더 명확하게 */
   border-radius: var(--radius-standard);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15); /* 그림자 더 깊게 */
   padding: 8px;
-  min-width: 120px;
+  min-width: 140px; /* 너비 살짝 증가 */
   display: flex;
   flex-direction: column;
   gap: 4px;
-  z-index: 100;
+  z-index: 200; /* Increased from 100 */
   animation: fadeIn 0.2s ease-out;
 }
 
