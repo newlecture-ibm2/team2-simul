@@ -29,6 +29,7 @@ public class PostController {
     private final DeletePostUseCase deletePostUseCase;
     private final UpdatePostUseCase updatePostUseCase;
     private final ReportPostUseCase reportPostUseCase;
+    private final GetPostLikesUseCase getPostLikesUseCase;
 
     @PostMapping
     public ResponseEntity<?> createPost(
@@ -97,6 +98,19 @@ public class PostController {
 
         ToggleLikeResponse response = togglePostLikeUseCase.toggleLike(postId, userId);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 게시물 좋아요 목록 조회 (GET /posts/{postId}/likes)
+     * - 누구나 열람 가능
+     */
+    @GetMapping("/{postId}/likes")
+    public ResponseEntity<Page<LikeUserResponse>> getPostLikes(
+            @PathVariable UUID postId,
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        Page<LikeUserResponse> likes = getPostLikesUseCase.getPostLikes(postId, pageable);
+        return ResponseEntity.ok(likes);
     }
 
     @PostMapping("/{postId}/report")

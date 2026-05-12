@@ -369,6 +369,14 @@
   object-fit: contain;
 }
 
+.clickableCount {
+  transition: opacity var(--transition-fast);
+}
+
+.clickableCount:hover {
+  opacity: 0.6;
+}
+
 .commentSection {
   border-top: 1px solid rgba(0, 0, 0, 0.05);
   padding-top: 24px;

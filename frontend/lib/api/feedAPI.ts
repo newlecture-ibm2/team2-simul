@@ -26,6 +26,12 @@ export interface Comment {
   replies: Comment[];
 }
 
+export interface LikeUser {
+  userId: string;
+  nickname: string;
+  profileImageUrl: string | null;
+}
+
 /** Spring Page 응답 타입 */
 export interface PageResponse<T> {
   content: T[];
@@ -69,6 +75,13 @@ export async function createPost(data: FormData) {
 
 export async function toggleLike(postId: string) {
   return apiClient(`/posts/${postId}/likes`, { method: 'POST' });
+}
+
+/** 게시물 좋아요 누른 사용자 목록 조회 */
+export async function getPostLikes(postId: string, page = 0, size = 20) {
+  return apiClient<PageResponse<LikeUser>>(`/posts/${postId}/likes`, {
+    params: { page: String(page), size: String(size) },
+  });
 }
 
 /** 게시물 수정 */

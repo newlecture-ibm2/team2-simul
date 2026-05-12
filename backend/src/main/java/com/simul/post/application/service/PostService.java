@@ -28,13 +28,16 @@ import java.util.*;
 import com.simul.post.application.port.in.GetPostDetailUseCase;
 import com.simul.post.application.port.in.DeletePostUseCase;
 import com.simul.post.application.port.in.UpdatePostUseCase;
+import com.simul.post.application.port.in.GetPostLikesUseCase;
 import com.simul.post.application.dto.PostDetailResponse;
 import com.simul.post.application.dto.UpdatePostCommand;
+import com.simul.post.application.dto.LikeUserResponse;
+import com.simul.post.domain.model.PostLike;
 // ... imports handled below by inserting at class declaration
 
 @Service
 @RequiredArgsConstructor
-public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetPostDetailUseCase, DeletePostUseCase, UpdatePostUseCase {
+public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetPostDetailUseCase, DeletePostUseCase, UpdatePostUseCase, GetPostLikesUseCase {
 
     private final PostRepositoryPort postRepositoryPort;
     private final PostLikePersistencePort postLikePersistencePort;
@@ -300,5 +303,46 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         if (command.getTags() != null) {
             attachTagsToPostUseCase.updateTags(command.getPostId(), command.getTags());
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<LikeUserResponse> getPostLikes(UUID postId, Pageable pageable) {
+        // 1. 게시물 존재 확인
+        postRepositoryPort.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("ERR-003: 찾을 수 없는 콘텐츠입니다."));
+
+        // 2. 좋아요 내역 조회 (페이징)
+        Page<PostLike> likes = postLikePersistencePort.findByPostId(postId, pageable);
+
+        if (likes.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        // 3. 좋아요 누른 사용자 ID 목록 추출
+        List<UUID> userIds = likes.getContent().stream()
+                .map(PostLike::getUserId)
+                .toList();
+
+        // 4. 사용자 정보 일괄 조회
+        Map<UUID, UserResponse> userMap = loadUserUseCase.loadUsers(userIds);
+
+        // 5. Response 매핑
+        return likes.map(like -> {
+            UserResponse user = userMap.get(like.getUserId());
+            if (user != null) {
+                return new LikeUserResponse(
+                        user.userId(),
+                        user.nickname(),
+                        user.profileImageUrl()
+                );
+            } else {
+                return new LikeUserResponse(
+                        like.getUserId(),
+                        "알 수 없는 사용자",
+                        null
+                );
+            }
+        });
     }
 }

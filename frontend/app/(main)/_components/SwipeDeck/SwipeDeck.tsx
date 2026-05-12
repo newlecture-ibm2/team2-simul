@@ -2,8 +2,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { getFeedPosts, FeedPost } from '../../../../lib/api/feedAPI';
+import { getFeedPosts, FeedPost, toggleLike } from '../../../../lib/api/feedAPI';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '../../../../lib/stores/useAuthStore';
+import { toast } from '@/lib/utils/toast';
 import styles from './SwipeDeck.module.css';
 
 // Dummy data using the specified images
@@ -32,6 +34,7 @@ export default function SwipeDeck() {
 
   const cardRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     async function loadPopularPosts() {
@@ -82,6 +85,17 @@ export default function SwipeDeck() {
     // Determine swipe direction based on dominant axis
     if (absX > absY && absX > SWIPE_THRESHOLD && dragOffset.x > 0) {
       // Swiped right (Like)
+      if (!isAuthenticated) {
+        toast.error('좋아요를 누르려면 로그인이 필요합니다.');
+        setDragOffset({ x: 0, y: 0 }); // Spring back
+        return;
+      }
+      
+      const currentPost = posts[((currentIndex % posts.length) + posts.length) % posts.length];
+      if (typeof currentPost.id === 'string' && !currentPost.id.startsWith('dummy')) {
+        toggleLike(currentPost.id).catch(err => console.error('좋아요 토글 실패:', err));
+      }
+
       setExitDirection('right');
       triggerTransition(1);
     } else if (absY > absX && absY > SWIPE_THRESHOLD) {

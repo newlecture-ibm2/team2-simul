@@ -13,6 +13,7 @@ import styles from './page.module.css';
 import CommentSection from './_components/CommentSection/CommentSection';
 import ReportModal from './_components/ReportModal/ReportModal';
 import DeleteConfirmModal from './_components/DeleteConfirmModal/DeleteConfirmModal';
+import LikeListModal from './_components/LikeListModal/LikeListModal';
 import { reportPost } from '../../../../lib/api/feedAPI';
 
 export interface PostDetailData {
@@ -47,6 +48,7 @@ export default function PostDetailPage() {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isReporting, setIsReporting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isLikeListModalOpen, setIsLikeListModalOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -381,8 +383,15 @@ export default function PostDetailPage() {
                 alt="Like" 
                 className={styles.statIcon} 
               />
-              <span>{likeCount}</span>
             </button>
+            <span 
+              className={styles.clickableCount} 
+              onClick={() => setIsLikeListModalOpen(true)}
+              style={{ fontWeight: 600, fontSize: '14px', cursor: 'pointer', marginRight: '16px' }}
+            >
+              좋아요 {likeCount}개
+            </span>
+            
             <div className={styles.statItem}>
               <img src="/icons/bubble.png" alt="Comment" className={styles.statIcon} />
               <span>0</span>
@@ -423,6 +432,12 @@ export default function PostDetailPage() {
         description="삭제된 게시물은 복구할 수 없습니다."
         onConfirm={confirmDeletePost}
         onCancel={() => setIsDeleteDialogOpen(false)}
+      />
+
+      <LikeListModal
+        isOpen={isLikeListModalOpen}
+        onClose={() => setIsLikeListModalOpen(false)}
+        postId={postId as string}
       />
     </div>
   );
