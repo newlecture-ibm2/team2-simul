@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type stylesType from '../page.module.css';
 
@@ -10,6 +10,7 @@ type CssModule = typeof stylesType;
 type Props = {
   className?: string;
   styles: CssModule;
+  jobId: string;
 };
 
 type TryonStatusEventResponse = {
@@ -20,17 +21,14 @@ type TryonStatusEventResponse = {
   credit_deducted?: boolean | null;
 };
 
-export default function ProcessingClient({ className, styles }: Props) {
+export default function ProcessingClient({ className, styles, jobId }: Props) {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [status, setStatus] = useState<TryonStatusEventResponse['status']>('processing');
   const [estimatedLeft, setEstimatedLeft] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const eventSourceRef = useRef<EventSource | null>(null);
-
-  const jobId = searchParams.get('job_id');
 
   const sseUrl = useMemo(() => {
     if (!jobId) return null;
