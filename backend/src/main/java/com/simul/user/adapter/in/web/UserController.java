@@ -1,5 +1,6 @@
 package com.simul.user.adapter.in.web;
 
+import com.simul.user.application.dto.UserProfileResponse;
 import com.simul.user.application.dto.UserResponse;
 import com.simul.user.application.port.in.LoadUserUseCase;
 import com.simul.user.application.port.in.UpdateUserUseCase;
@@ -14,10 +15,10 @@ import java.util.UUID;
  * 사용자 관리 API 컨트롤러
  *
  * 엔드포인트:
- * - GET /users/me      → 내 정보 조회
+ * - GET /users/me      → 내 프로필 조회 (팔로우 수 포함)
  * - PATCH /users/me    → 프로필 수정
  * - DELETE /users/me   → 회원 탈퇴
- * - GET /users/{id}    → 타인 프로필 조회
+ * - GET /users/{id}    → 타인 프로필 조회 (팔로우 수 + 팔로우 여부 포함)
  */
 @RestController
 @RequestMapping("/users")
@@ -38,12 +39,12 @@ public class UserController {
     }
 
     /**
-     * 내 정보 조회
+     * 내 프로필 조회 (팔로우 수 포함)
      * GET /users/me
      */
     @GetMapping("/me")
-    public ResponseEntity<UserResponse> getMyInfo(@AuthenticationPrincipal UUID userId) {
-        UserResponse response = loadUserUseCase.loadUser(userId);
+    public ResponseEntity<UserProfileResponse> getMyInfo(@AuthenticationPrincipal UUID userId) {
+        UserProfileResponse response = loadUserUseCase.loadUserProfile(userId, userId);
         return ResponseEntity.ok(response);
     }
 
@@ -78,12 +79,16 @@ public class UserController {
     }
 
     /**
-     * 타인 프로필 조회
+     * 타인 프로필 조회 (팔로우 수 + 팔로우 여부 포함)
      * GET /users/{userId}
+     * - 비로그인 사용자는 currentUserId가 null로 전달됨
      */
     @GetMapping("/{userId}")
-    public ResponseEntity<UserResponse> getUserInfo(@PathVariable UUID userId) {
-        UserResponse response = loadUserUseCase.loadUser(userId);
+    public ResponseEntity<UserProfileResponse> getUserInfo(
+        @AuthenticationPrincipal UUID currentUserId,
+        @PathVariable UUID userId
+    ) {
+        UserProfileResponse response = loadUserUseCase.loadUserProfile(userId, currentUserId);
         return ResponseEntity.ok(response);
     }
 }

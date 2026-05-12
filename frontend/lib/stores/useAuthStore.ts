@@ -2,12 +2,17 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export interface User {
-  id: string;
+  userId: string;
+  id?: string; // develop에서 사용된 id 호환용
   nickname: string;
-  email: string;
-  profileImage?: string;
+  name?: string;
+  email?: string;
+  profileImageUrl?: string;
   bio?: string;
   role?: string;
+  followerCount?: number;
+  followingCount?: number;
+  isFollowing?: boolean;
 }
 
 interface AuthState {

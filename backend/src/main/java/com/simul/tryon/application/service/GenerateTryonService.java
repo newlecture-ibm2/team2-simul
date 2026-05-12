@@ -18,10 +18,14 @@ import com.simul.tryon.application.port.out.TryonAiGenerationPort;
 import com.simul.tryon.application.port.out.TryonCreditPersistencePort;
 import com.simul.tryon.domain.model.BaseImage;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -35,6 +39,8 @@ public class GenerateTryonService implements GenerateTryonUseCase {
     private static final int TOTAL_DAILY = 5;
     private static final int ESTIMATED_SECONDS = 20;
     private static final int MAX_ITEM_IDS = 3;
+    private static final Duration AI_TIMEOUT = Duration.ofSeconds(30);
+    private static final int MAX_RETRY = 1;
 
     private final BaseImagePersistencePort baseImagePersistencePort;
     private final ClosetItemPersistencePort closetItemPersistencePort;
@@ -123,15 +129,16 @@ public class GenerateTryonService implements GenerateTryonUseCase {
                 .map(img -> new TryonAiGenerationPort.ImagePart(img.bytes(), img.mimeType()))
                 .toList();
 
+        TryonAiGenerationPort.TryonAiGenerationCommand aiCommand =
+                new TryonAiGenerationPort.TryonAiGenerationCommand(
+                        userImage.bytes(),
+                        userImage.mimeType(),
+                        clothingParts,
+                        prompt
+                );
+
         try {
-            TryonAiGenerationPort.TryonAiGenerationResult result = tryonAiGenerationPort.generate(
-                    new TryonAiGenerationPort.TryonAiGenerationCommand(
-                            userImage.bytes(),
-                            userImage.mimeType(),
-                            clothingParts,
-                            prompt
-                    )
-            );
+            TryonAiGenerationPort.TryonAiGenerationResult result = generateWithRetry(aiCommand);
 
             String resultImageUrl = binaryImageStoragePort.upload(result.resultImageBytes(), result.resultImageMimeType(), "tryon");
             post.markCompleted(resultImageUrl);
