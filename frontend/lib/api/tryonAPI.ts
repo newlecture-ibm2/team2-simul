@@ -1,14 +1,49 @@
 import { apiClient } from './client';
 
-/** 시착 생성 요청 */
-export async function createTryon(data: {
-  baseImageId: number;
-  clothImageId: number;
-}) {
-  return apiClient('/tryon', {
+export type TryonGenerateResponse = {
+  job_id: string;
+  status: 'processing' | 'completed' | 'failed';
+  estimated_seconds: number;
+};
+
+export type MyBaseImagesResponse = {
+  base_images: Array<{
+    base_image_id: string;
+    image_url: string;
+    created_at: string;
+  }>;
+};
+
+export type BaseImageUploadResponse = {
+  base_image_id: string;
+  image_url: string;
+};
+
+/** 시착 생성 요청 (기술서/백엔드 스펙: POST /tryon/generate) */
+export async function generateTryon(data: {
+  base_image_id: string;
+  item_id?: string;
+  item_ids?: string[];
+}): Promise<TryonGenerateResponse> {
+  return apiClient('/tryon/generate', {
     method: 'POST',
     body: JSON.stringify(data),
   });
+}
+
+/** 베이스 이미지 업로드 (POST /tryon/base-images) */
+export async function uploadBaseImage(file: File): Promise<BaseImageUploadResponse> {
+  const form = new FormData();
+  form.append('image', file);
+  return apiClient('/tryon/base-images', {
+    method: 'POST',
+    body: form,
+  });
+}
+
+/** 내 베이스 이미지 목록 조회 (GET /users/me/base-images) */
+export async function getMyBaseImages(): Promise<MyBaseImagesResponse> {
+  return apiClient('/users/me/base-images');
 }
 
 /** 시착 결과 조회 */

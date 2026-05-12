@@ -6,6 +6,7 @@ import com.simul.common.application.port.out.BinaryImageStoragePort;
 import com.simul.common.application.port.out.ImageReadPort;
 import com.simul.common.exception.BusinessException;
 import com.simul.common.exception.ErrorCode;
+import com.simul.notification.application.dto.TryonCompletedEvent;
 import com.simul.post.application.port.out.PostRepositoryPort;
 import com.simul.post.domain.model.Post;
 import com.simul.post.domain.model.PostStatus;
@@ -28,6 +29,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,6 +54,7 @@ public class GenerateTryonService implements GenerateTryonUseCase {
     private final BinaryImageStoragePort binaryImageStoragePort;
     private final DeductTryonCreditUseCase deductTryonCreditUseCase;
     private final SafeSearchPort safeSearchPort;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${simul.gemini.enabled:false}")
     private boolean geminiEnabled;
@@ -157,6 +160,9 @@ public class GenerateTryonService implements GenerateTryonUseCase {
                 item.incrementTryCount();
                 closetItemPersistencePort.save(item);
             }
+
+            // 시착 완료 알림 이벤트 발행
+            eventPublisher.publishEvent(new TryonCompletedEvent(post.getUserId(), post.getPostId()));
         } catch (BusinessException be) {
             post.markFailed();
             postRepositoryPort.save(post);

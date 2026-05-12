@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.never;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.simul.closet.application.port.out.ClosetItemPersistencePort;
 import com.simul.closet.domain.model.ClothingImage;
@@ -59,12 +60,13 @@ class GenerateTryonServiceTest {
         BinaryImageStoragePort binaryImageStoragePort = mock(BinaryImageStoragePort.class);
         DeductTryonCreditUseCase deductTryonCreditUseCase = mock(DeductTryonCreditUseCase.class);
         SafeSearchPort safeSearchPort = mock(SafeSearchPort.class);
+        ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
         Clock clock = Clock.fixed(Instant.parse("2026-05-11T01:00:00Z"), KST);
 
         when(creditPort.countByUserIdAndUsedAtBetween(any(), any(), any())).thenReturn(5L);
 
         GenerateTryonService service =
-                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase, safeSearchPort);
+                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase, safeSearchPort, eventPublisher);
 
         var command = GenerateTryonUseCase.GenerateTryonCommand.builder()
                 .userId(UUID.randomUUID())
@@ -89,6 +91,7 @@ class GenerateTryonServiceTest {
         BinaryImageStoragePort binaryImageStoragePort = mock(BinaryImageStoragePort.class);
         DeductTryonCreditUseCase deductTryonCreditUseCase = mock(DeductTryonCreditUseCase.class);
         SafeSearchPort safeSearchPort = mock(SafeSearchPort.class);
+        ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
         Clock clock = Clock.fixed(Instant.parse("2026-05-11T01:00:00Z"), KST);
 
         UUID userId = UUID.randomUUID();
@@ -116,7 +119,7 @@ class GenerateTryonServiceTest {
         when(postPort.save(any(Post.class))).thenReturn(saved);
 
         GenerateTryonService service =
-                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase, safeSearchPort);
+                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase, safeSearchPort, eventPublisher);
 
         var command = GenerateTryonUseCase.GenerateTryonCommand.builder()
                 .userId(userId)
@@ -141,6 +144,7 @@ class GenerateTryonServiceTest {
         BinaryImageStoragePort binaryImageStoragePort = mock(BinaryImageStoragePort.class);
         DeductTryonCreditUseCase deductTryonCreditUseCase = mock(DeductTryonCreditUseCase.class);
         SafeSearchPort safeSearchPort = mock(SafeSearchPort.class);
+        ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
         Clock clock = Clock.fixed(Instant.parse("2026-05-11T01:00:00Z"), KST);
 
         UUID userId = UUID.randomUUID();
@@ -177,7 +181,7 @@ class GenerateTryonServiceTest {
         when(postPort.save(any(Post.class))).thenReturn(saved);
 
         GenerateTryonService service =
-                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase, safeSearchPort);
+                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase, safeSearchPort, eventPublisher);
 
         var command = GenerateTryonUseCase.GenerateTryonCommand.builder()
                 .userId(userId)
@@ -200,10 +204,11 @@ class GenerateTryonServiceTest {
         BinaryImageStoragePort binaryImageStoragePort = mock(BinaryImageStoragePort.class);
         DeductTryonCreditUseCase deductTryonCreditUseCase = mock(DeductTryonCreditUseCase.class);
         SafeSearchPort safeSearchPort = mock(SafeSearchPort.class);
+        ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
         Clock clock = Clock.fixed(Instant.parse("2026-05-11T01:00:00Z"), KST);
 
         GenerateTryonService service =
-                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase, safeSearchPort);
+                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase, safeSearchPort, eventPublisher);
 
         var command = GenerateTryonUseCase.GenerateTryonCommand.builder()
                 .userId(UUID.randomUUID())
@@ -228,10 +233,11 @@ class GenerateTryonServiceTest {
         BinaryImageStoragePort binaryImageStoragePort = mock(BinaryImageStoragePort.class);
         DeductTryonCreditUseCase deductTryonCreditUseCase = mock(DeductTryonCreditUseCase.class);
         SafeSearchPort safeSearchPort = mock(SafeSearchPort.class);
+        ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
         Clock clock = Clock.fixed(Instant.parse("2026-05-11T01:00:00Z"), KST);
 
         GenerateTryonService service =
-                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase, safeSearchPort);
+                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase, safeSearchPort, eventPublisher);
 
         var command = GenerateTryonUseCase.GenerateTryonCommand.builder()
                 .userId(UUID.randomUUID())
@@ -256,6 +262,7 @@ class GenerateTryonServiceTest {
         BinaryImageStoragePort binaryImageStoragePort = mock(BinaryImageStoragePort.class);
         DeductTryonCreditUseCase deductTryonCreditUseCase = mock(DeductTryonCreditUseCase.class);
         SafeSearchPort safeSearchPort = mock(SafeSearchPort.class);
+        ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
         Clock clock = Clock.fixed(Instant.parse("2026-05-11T01:00:00Z"), KST);
 
         UUID userId = UUID.randomUUID();
@@ -292,7 +299,7 @@ class GenerateTryonServiceTest {
                 ));
 
         GenerateTryonService service =
-                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase, safeSearchPort);
+                new GenerateTryonService(baseImagePort, itemPort, postPort, creditPort, clock, imageReadPort, aiPort, binaryImageStoragePort, deductTryonCreditUseCase, safeSearchPort, eventPublisher);
         enableGemini(service);
 
         var command = GenerateTryonUseCase.GenerateTryonCommand.builder()
