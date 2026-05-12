@@ -177,6 +177,46 @@ public class GenerateTryonService implements GenerateTryonUseCase {
         }
     }
 
+    private TryonAiGenerationPort.TryonAiGenerationResult generateWithRetry(TryonAiGenerationPort.TryonAiGenerationCommand command) {
+        BusinessException lastBusinessException = null;
+
+        for (int attempt = 0; attempt <= MAX_RETRY; attempt++) {
+            try {
+                return generateWithTimeout(command);
+            } catch (BusinessException be) {
+                lastBusinessException = be;
+                if (shouldRetry(be) && attempt < MAX_RETRY) {
+                    continue;
+                }
+                throw be;
+            }
+        }
+
+        // Should be unreachable
+        throw lastBusinessException != null ? lastBusinessException : new BusinessException(ErrorCode.AI_GENERATION_FAILED);
+    }
+
+    private boolean shouldRetry(BusinessException be) {
+        return be.getErrorCode() == ErrorCode.AI_TIMEOUT || be.getErrorCode() == ErrorCode.AI_GENERATION_FAILED;
+    }
+
+    private TryonAiGenerationPort.TryonAiGenerationResult generateWithTimeout(TryonAiGenerationPort.TryonAiGenerationCommand command) {
+        try {
+            return CompletableFuture.supplyAsync(() -> tryonAiGenerationPort.generate(command))
+                    .orTimeout(AI_TIMEOUT.toSeconds(), TimeUnit.SECONDS)
+                    .join();
+        } catch (CompletionException ce) {
+            Throwable cause = ce.getCause();
+            if (cause instanceof java.util.concurrent.TimeoutException) {
+                throw new BusinessException(ErrorCode.AI_TIMEOUT);
+            }
+            if (cause instanceof BusinessException be) {
+                throw be;
+            }
+            throw ce;
+        }
+    }
+
     private String buildPromptForOrderedItems(int clothingCount) {
         String base = """
                 You are a virtual try-on image generator.
