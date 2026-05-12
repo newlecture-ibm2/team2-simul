@@ -105,8 +105,11 @@ public class CommentService implements LoadCommentUseCase, CreateCommentUseCase,
 
         Comment savedComment = commentPersistencePort.save(comment);
 
-        post.incrementCommentCount();
-        postPersistencePort.save(post);
+        // 댓글 카운트는 부모 댓글(depth=1)만 반영
+        if (parentCommentId == null) {
+            post.incrementCommentCount();
+            postPersistencePort.save(post);
+        }
 
         // 알림 생성 로직
         try {
@@ -140,10 +143,13 @@ public class CommentService implements LoadCommentUseCase, CreateCommentUseCase,
         comment.softDelete();
         commentPersistencePort.save(comment);
 
-        Post post = postPersistencePort.findById(comment.getPostId()).orElse(null);
-        if (post != null) {
-            post.decrementCommentCount();
-            postPersistencePort.save(post);
+        // 댓글 카운트는 부모 댓글(depth=1)만 반영
+        if (comment.getParentCommentId() == null) {
+            Post post = postPersistencePort.findById(comment.getPostId()).orElse(null);
+            if (post != null) {
+                post.decrementCommentCount();
+                postPersistencePort.save(post);
+            }
         }
     }
 

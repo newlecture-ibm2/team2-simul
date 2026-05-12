@@ -17,7 +17,8 @@ export default function CommentSection({ postId }: Props) {
   const queryClient = useQueryClient();
   const { user, isAuthenticated } = useAuthStore();
   const [content, setContent] = useState('');
-  const [replyingTo, setReplyingTo] = useState<{ id: string; nickname: string } | null>(null);
+  const [replyingToId, setReplyingToId] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState('');
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
@@ -34,7 +35,8 @@ export default function CommentSection({ postId }: Props) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', postId] });
       setContent('');
-      setReplyingTo(null);
+      setReplyContent('');
+      setReplyingToId(null);
       toast.success('댓글이 작성되었습니다.');
     },
     onError: (err: unknown) => {
@@ -82,8 +84,20 @@ export default function CommentSection({ postId }: Props) {
     }
     createMutation.mutate({
       postId,
-      content,
-      parentId: replyingTo?.id
+      content
+    });
+  };
+
+  const handleReplySubmit = (parentId: string) => {
+    if (!replyContent.trim()) return;
+    if (!isAuthenticated) {
+      toast.error('로그인이 필요합니다.');
+      return;
+    }
+    createMutation.mutate({
+      postId,
+      content: replyContent,
+      parentId
     });
   };
 
@@ -158,7 +172,7 @@ export default function CommentSection({ postId }: Props) {
               {!isReply && (
                 <button 
                   className={styles.actionBtn}
-                  onClick={() => setReplyingTo({ id: comment.commentId, nickname: comment.nickname })}
+                  onClick={() => setReplyingToId(comment.commentId)}
                 >
                   답글 달기
                 </button>
@@ -198,6 +212,47 @@ export default function CommentSection({ postId }: Props) {
             comments.map(comment => (
               <React.Fragment key={comment.commentId}>
                 {renderComment(comment)}
+                {replyingToId === comment.commentId && (
+                  <div className={styles.inlineReplyArea}>
+                    <div className={styles.inlineReplyHeader}>
+                      <span className={styles.inlineReplyLabel}>{comment.nickname}님에게 답글</span>
+                      <button className={styles.inlineReplyCancelBtn} onClick={() => {
+                        setReplyingToId(null);
+                        setReplyContent('');
+                      }}>✕</button>
+                    </div>
+                    <div className={styles.inputWrapper}>
+                      <textarea
+                        className={styles.textarea}
+                        placeholder="답글을 입력하세요..."
+                        value={replyContent}
+                        onChange={(e) => setReplyContent(e.target.value)}
+                        maxLength={200}
+                        rows={1}
+                        autoFocus
+                        onInput={(e) => {
+                          const target = e.target as HTMLTextAreaElement;
+                          target.style.height = 'auto';
+                          target.style.height = `${target.scrollHeight}px`;
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleReplySubmit(comment.commentId);
+                          }
+                        }}
+                      />
+                      <button 
+                        type="button" 
+                        className={styles.submitBtn}
+                        disabled={!replyContent.trim() || createMutation.isPending}
+                        onClick={() => handleReplySubmit(comment.commentId)}
+                      >
+                        {createMutation.isPending ? '...' : '↑'}
+                      </button>
+                    </div>
+                  </div>
+                )}
                 {comment.replies && comment.replies.length > 0 && (
                   <div className={styles.repliesToggleWrapper}>
                     <button 
@@ -216,12 +271,6 @@ export default function CommentSection({ postId }: Props) {
       )}
 
       <form className={styles.inputWrapper} onSubmit={handleSubmit}>
-        {replyingTo && (
-          <div className={styles.replyingToBanner}>
-            <span>{replyingTo.nickname}님에게 답글 남기는 중</span>
-            <button type="button" className={styles.cancelReply} onClick={() => setReplyingTo(null)}>✕</button>
-          </div>
-        )}
         <textarea
           className={styles.textarea}
           placeholder={isAuthenticated ? "댓글을 입력하세요..." : "로그인 후 댓글을 남겨보세요."}
