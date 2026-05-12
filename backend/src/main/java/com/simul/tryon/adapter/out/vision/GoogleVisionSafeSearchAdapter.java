@@ -13,9 +13,11 @@ import com.simul.common.exception.ErrorCode;
 import com.simul.tryon.application.port.out.SafeSearchPort;
 import java.io.IOException;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class GoogleVisionSafeSearchAdapter implements SafeSearchPort {
 
     @Override
@@ -23,6 +25,8 @@ public class GoogleVisionSafeSearchAdapter implements SafeSearchPort {
         if (imageBytes == null || imageBytes.length == 0) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "이미지 바이트가 비어있습니다.");
         }
+
+        log.info("[VISION] SafeSearch analyze start (bytes={})", imageBytes.length);
 
         try (ImageAnnotatorClient visionClient = ImageAnnotatorClient.create()) {
             Image image = Image.newBuilder().setContent(ByteString.copyFrom(imageBytes)).build();
@@ -44,11 +48,14 @@ public class GoogleVisionSafeSearchAdapter implements SafeSearchPort {
             }
 
             SafeSearchAnnotation safe = res.getSafeSearchAnnotation();
-            return new SafeSearchResult(
+            SafeSearchResult result = new SafeSearchResult(
                     mapLikelihood(safe.getAdult()),
                     mapLikelihood(safe.getViolence()),
                     mapLikelihood(safe.getRacy())
             );
+            log.info("[VISION] SafeSearch analyze done (adult={}, violence={}, racy={})",
+                    result.adult(), result.violence(), result.racy());
+            return result;
         } catch (IOException e) {
             throw new BusinessException(ErrorCode.VISION_API_FAILED, "Vision API 호출 중 오류가 발생했습니다.");
         }
@@ -66,4 +73,3 @@ public class GoogleVisionSafeSearchAdapter implements SafeSearchPort {
         };
     }
 }
-
