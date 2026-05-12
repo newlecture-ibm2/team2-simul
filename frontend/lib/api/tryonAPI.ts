@@ -6,6 +6,14 @@ export type TryonGenerateResponse = {
   estimated_seconds: number;
 };
 
+export type MyBaseImagesResponse = {
+  base_images: Array<{
+    base_image_id: string;
+    image_url: string;
+    created_at: string;
+  }>;
+};
+
 /** 시착 생성 요청 (기술서/백엔드 스펙: POST /tryon/generate) */
 export async function generateTryon(data: {
   base_image_id: string;
@@ -16,6 +24,11 @@ export async function generateTryon(data: {
     method: 'POST',
     body: JSON.stringify(data),
   });
+}
+
+/** 내 베이스 이미지 목록 조회 (GET /users/me/base-images) */
+export async function getMyBaseImages(): Promise<MyBaseImagesResponse> {
+  return apiClient('/users/me/base-images');
 }
 
 /** 시착 결과 조회 */

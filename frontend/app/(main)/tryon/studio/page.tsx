@@ -1,14 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/Button';
 import Toggle from './_components/Toggle/Toggle';
 import styles from './page.module.css';
-import { generateTryon } from '@/lib/api/tryonAPI';
+import { generateTryon, getMyBaseImages } from '@/lib/api/tryonAPI';
 
-const DUMMY_PEOPLE = ['/dummy.jpg', '/recent.jpg', '/temp.jpg'];
 const DUMMY_CLOTHES = [
   { id: 1, image: '/clothes.png' },
   { id: 2, image: '/clothes.png' },
@@ -21,11 +20,39 @@ export default function StudioPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'person' | 'clothes'>('clothes');
   const [clothesCategory, setClothesCategory] = useState<'top' | 'bottom'>('top');
-  const [selectedPerson, setSelectedPerson] = useState<string>(DUMMY_PEOPLE[0]);
+  const [baseImages, setBaseImages] = useState<Array<{ base_image_id: string; image_url: string }>>([]);
+  const [selectedBaseImageId, setSelectedBaseImageId] = useState<string>('');
   const [selectedClothes, setSelectedClothes] = useState<number[]>([]); // Store selected clothes IDs
-  const [baseImageId, setBaseImageId] = useState<string>('');
   const [itemIds, setItemIds] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const selectedPersonImageUrl = useMemo(() => {
+    const picked = baseImages.find(b => b.base_image_id === selectedBaseImageId);
+    return picked?.image_url || '/dummy.jpg';
+  }, [baseImages, selectedBaseImageId]);
+
+  useEffect(() => {
+    let canceled = false;
+    (async () => {
+      try {
+        const res = await getMyBaseImages();
+        const list = (res.base_images ?? []).map(b => ({
+          base_image_id: b.base_image_id,
+          image_url: b.image_url,
+        }));
+        if (canceled) return;
+        setBaseImages(list);
+        if (!selectedBaseImageId && list.length > 0) {
+          setSelectedBaseImageId(list[0].base_image_id);
+        }
+      } catch {
+        // ignore (toast will show from apiClient)
+      }
+    })();
+    return () => {
+      canceled = true;
+    };
+  }, [selectedBaseImageId]);
 
   const handleToggleCloth = (id: number) => {
     setSelectedClothes(prev => 
@@ -38,8 +65,8 @@ export default function StudioPage() {
   };
 
   const handleTryon = async () => {
-    if (!baseImageId.trim()) {
-      alert('개발자 입력(base_image_id)이 필요합니다.');
+    if (!selectedBaseImageId.trim()) {
+      alert('베이스 이미지를 선택해주세요.');
       return;
     }
 
@@ -56,7 +83,7 @@ export default function StudioPage() {
     setIsSubmitting(true);
     try {
       const res = await generateTryon({
-        base_image_id: baseImageId.trim(),
+        base_image_id: selectedBaseImageId.trim(),
         item_ids: parsedItemIds,
       });
 
@@ -71,7 +98,7 @@ export default function StudioPage() {
       {/* Main Preview Area (Background Layer) */}
       <div className={styles.previewContainer}>
         <div className={styles.mainImageWrapper}>
-          <img src={selectedPerson} alt="Selected Base Model" className={styles.mainImage} />
+          <img src={selectedPersonImageUrl} alt="Selected Base Model" className={styles.mainImage} />
           
           {/* Floating Selected Clothes Badges */}
           {selectedClothes.map((id, index) => {
@@ -112,15 +139,6 @@ export default function StudioPage() {
         <details style={{ width: '100%', marginBottom: 12 }}>
           <summary style={{ cursor: 'pointer' }}>개발자 입력 (임시)</summary>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={{ fontSize: 12, opacity: 0.7 }}>base_image_id (UUID)</span>
-              <input
-                value={baseImageId}
-                onChange={(e) => setBaseImageId(e.target.value)}
-                placeholder="예: 00000000-0000-0000-0000-000000000000"
-                style={{ padding: 10, borderRadius: 8, border: '1px solid rgba(0,0,0,0.15)' }}
-              />
-            </label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <span style={{ fontSize: 12, opacity: 0.7 }}>item_ids (UUID, 콤마 구분)</span>
               <input
@@ -165,17 +183,15 @@ export default function StudioPage() {
             </div>
           </div>
 
-          {/* Person List */}
-          {activeTab === 'person' && DUMMY_PEOPLE.map((imgSrc, i) => (
-            <div 
-              key={i} 
-              className={`${styles.itemCard} ${selectedPerson === imgSrc ? styles.selectedCard : ''}`}
-              onClick={() => setSelectedPerson(imgSrc)}
+        {/* Person List */}
+          {activeTab === 'person' && baseImages.map((img, i) => (
+            <div
+              key={img.base_image_id}
+              className={`${styles.itemCard} ${selectedBaseImageId === img.base_image_id ? styles.selectedCard : ''}`}
+              onClick={() => setSelectedBaseImageId(img.base_image_id)}
             >
-              <img src={imgSrc} alt={`Person ${i}`} className={styles.itemImage} />
-              {selectedPerson === imgSrc && (
-                <div className={styles.checkBadge}>✓</div>
-              )}
+              <img src={img.image_url} alt={`Person ${i}`} className={styles.itemImage} />
+              {selectedBaseImageId === img.base_image_id && <div className={styles.checkBadge}>✓</div>}
             </div>
           ))}
 
