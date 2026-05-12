@@ -1,0 +1,18 @@
+package com.simul.post.application.dto;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+public record CommentResponse(
+    UUID commentId,
+    UUID userId,
+    String nickname,
+    String profileImageUrl,
+    String content,
+    Integer depth,
+    LocalDateTime createdAt,
+    boolean isDeleted,
+    boolean isEdited,
+    List<CommentResponse> replies
+) {}

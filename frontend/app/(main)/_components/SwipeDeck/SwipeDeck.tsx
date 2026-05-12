@@ -2,8 +2,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { getFeedPosts, FeedPost } from '../../../../lib/api/feedAPI';
+import { getFeedPosts, FeedPost, toggleLike } from '../../../../lib/api/feedAPI';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '../../../../lib/stores/useAuthStore';
+import { toast } from '@/lib/utils/toast';
 import styles from './SwipeDeck.module.css';
 
 // Dummy data using the specified images
@@ -20,6 +22,7 @@ interface SwipePost {
   imageUrl: string;
   authorName: string;
   authorAvatar: string;
+  isLiked?: boolean;
 }
 
 export default function SwipeDeck() {
@@ -32,6 +35,7 @@ export default function SwipeDeck() {
 
   const cardRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     async function loadPopularPosts() {
@@ -42,7 +46,8 @@ export default function SwipeDeck() {
             id: p.postId,
             imageUrl: p.imageUrl || '/dummy.jpg',
             authorName: p.nickname || '알 수 없음',
-            authorAvatar: p.profileImageUrl || '/dummy.jpg'
+            authorAvatar: p.profileImageUrl || '/dummy.jpg',
+            isLiked: p.isLiked
           }));
           // 백엔드 데이터가 적을 수 있으므로, 기존의 예시 이미지(DUMMY_POSTS)를 뒤에 합쳐서 양을 늘립니다.
           setPosts([...mappedPosts, ...DUMMY_POSTS]);
@@ -82,6 +87,20 @@ export default function SwipeDeck() {
     // Determine swipe direction based on dominant axis
     if (absX > absY && absX > SWIPE_THRESHOLD && dragOffset.x > 0) {
       // Swiped right (Like)
+      if (!isAuthenticated) {
+        toast.error('좋아요를 누르려면 로그인이 필요합니다.');
+        setDragOffset({ x: 0, y: 0 }); // Spring back
+        return;
+      }
+      
+      const currentPost = posts[((currentIndex % posts.length) + posts.length) % posts.length];
+      if (typeof currentPost.id === 'string' && !currentPost.id.startsWith('dummy')) {
+        // 이미 좋아요를 누른 상태라면 API 호출 생략 (No-op)
+        if (!currentPost.isLiked) {
+          toggleLike(currentPost.id).catch(err => console.error('좋아요 토글 실패:', err));
+        }
+      }
+
       setExitDirection('right');
       triggerTransition(1);
     } else if (absY > absX && absY > SWIPE_THRESHOLD) {

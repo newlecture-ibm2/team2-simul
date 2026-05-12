@@ -35,4 +35,11 @@ public interface LoadFollowUseCase {
      * @param targetUserId 조회할 대상 사용자
      */
     java.util.List<com.simul.user.application.dto.FollowUserResponse> getFollowings(UUID currentUserId, UUID targetUserId);
+
+    /**
+     * 특정 사용자의 팔로워 ID 목록만 조회 (알림 발송용)
+     * @param userId 대상 사용자 ID
+     * @return 팔로워 UUID 목록
+     */
+    java.util.List<UUID> getFollowerIds(UUID userId);
 }
