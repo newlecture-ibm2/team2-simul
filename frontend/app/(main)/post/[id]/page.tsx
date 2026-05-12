@@ -374,7 +374,7 @@ export default function PostDetailPage() {
         title={confirmModal.title}
         description={confirmModal.description}
         confirmText={confirmModal.confirmText}
-        isDanger={true}
+        isDestructive={true}
         onConfirm={confirmModal.onConfirm}
         onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
       />

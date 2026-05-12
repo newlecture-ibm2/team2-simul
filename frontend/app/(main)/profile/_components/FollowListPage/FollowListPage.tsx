@@ -139,7 +139,7 @@ export default function FollowListPage({ userId, type }: FollowListPageProps) {
         title="언팔로우 하시겠습니까?"
         description="더 이상 이 사용자의 소식을 받지 않게 됩니다."
         confirmText="언팔로우"
-        isDanger={true}
+        isDestructive={true}
         onConfirm={handleConfirmUnfollow}
         onCancel={() => setConfirmModal({ ...confirmModal, isOpen: false })}
       />
