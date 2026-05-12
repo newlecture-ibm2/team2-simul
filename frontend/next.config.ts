@@ -3,12 +3,30 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
 
-  // /uploads/** 요청을 Spring Boot 백엔드로 프록시
+  // Proxy specific paths to Spring Boot backend (docker-compose only exposes frontend)
   async rewrites() {
+    const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
     return [
       {
-        source: '/uploads/:path*',
-        destination: `${process.env.BACKEND_URL || 'http://localhost:8080'}/uploads/:path*`,
+        source: "/uploads/:path*",
+        destination: `${backendUrl}/uploads/:path*`,
+      },
+      // Swagger/OpenAPI
+      {
+        source: "/api-docs/:path*",
+        destination: `${backendUrl}/api-docs/:path*`,
+      },
+      {
+        source: "/v3/api-docs/:path*",
+        destination: `${backendUrl}/v3/api-docs/:path*`,
+      },
+      {
+        source: "/swagger-ui.html",
+        destination: `${backendUrl}/swagger-ui.html`,
+      },
+      {
+        source: "/swagger-ui/:path*",
+        destination: `${backendUrl}/swagger-ui/:path*`,
       },
     ];
   },
