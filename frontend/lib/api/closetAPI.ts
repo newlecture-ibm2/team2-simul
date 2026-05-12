@@ -46,6 +46,18 @@ export async function getClosetItems(params?: GetClosetItemsParams): Promise<Clo
   return apiClient<ClosetItemListResponse>('/closet/items', { params: queryParams });
 }
 
+/** 특정 사용자의 옷장 아이템 목록 조회 */
+export async function getUserClosetItems(userId: string, params?: GetClosetItemsParams): Promise<ClosetItemListResponse> {
+  const queryParams: Record<string, string> = {};
+
+  if (params?.category) queryParams.category = params.category;
+  if (params?.sort) queryParams.sort = params.sort;
+  if (params?.page !== undefined) queryParams.page = String(params.page);
+  if (params?.size !== undefined) queryParams.size = String(params.size);
+
+  return apiClient<ClosetItemListResponse>(`/closet/items/users/${userId}`, { params: queryParams });
+}
+
 /** 옷장 아이템 상세 조회 */
 export async function getClosetItem(id: string): Promise<ClosetItemResponse> {
   return apiClient<ClosetItemResponse>(`/closet/items/${id}`);

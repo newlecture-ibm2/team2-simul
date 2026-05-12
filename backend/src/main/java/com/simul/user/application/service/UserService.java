@@ -14,6 +14,7 @@ import com.simul.user.application.port.out.UserPersistencePort;
 import com.simul.user.domain.model.Gender;
 import com.simul.user.domain.model.User;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -117,9 +118,10 @@ public class UserService implements LoadUserUseCase, RegisterUserUseCase, Update
      * - 팔로워/팔로잉 수 + 현재 로그인 사용자의 팔로우 여부
      */
     @Override
-    public UserProfileResponse loadUserProfile(UUID targetUserId, UUID currentUserId) {
+    @Transactional(readOnly = true)
+    public UserProfileResponse loadUserProfile(UUID targetUserId, UUID currentUserId, long postCount) {
         User user = userPersistencePort.findById(targetUserId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new com.simul.common.exception.BusinessException(com.simul.common.exception.ErrorCode.USER_NOT_FOUND));
 
         long followerCount = followPersistencePort.countFollowers(targetUserId);
         long followingCount = followPersistencePort.countFollowings(targetUserId);
@@ -129,6 +131,6 @@ public class UserService implements LoadUserUseCase, RegisterUserUseCase, Update
             isFollowing = followPersistencePort.exists(currentUserId, targetUserId);
         }
 
-        return UserProfileResponse.from(user, followerCount, followingCount, isFollowing);
+        return UserProfileResponse.from(user, followerCount, followingCount, postCount, isFollowing);
     }
 }

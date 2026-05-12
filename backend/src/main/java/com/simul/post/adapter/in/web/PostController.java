@@ -28,6 +28,7 @@ public class PostController {
     private final GetPostDetailUseCase getPostDetailUseCase;
     private final DeletePostUseCase deletePostUseCase;
     private final UpdatePostUseCase updatePostUseCase;
+    private final GetUserPostsUseCase getUserPostsUseCase;
 
     @PostMapping
     public ResponseEntity<?> createPost(
@@ -228,6 +229,41 @@ public class PostController {
                     "message", "게시물 수정 중 오류가 발생했습니다: " + e.getMessage()
             ));
         }
+    }
+
+    /**
+     * 특정 사용자의 게시물 목록 조회 (GET /posts/users/{userId})
+     * - 본인: 공개 + 비공개 모두 조회
+     * - 타인: 공개 게시물만 조회
+     */
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<Page<FeedPostResponse>> getUserPosts(
+            @AuthenticationPrincipal UUID currentUserId,
+            @PathVariable UUID userId,
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        Page<FeedPostResponse> posts = getUserPostsUseCase.getUserPosts(userId, currentUserId, pageable);
+        return ResponseEntity.ok(posts);
+    }
+
+    /**
+     * 내가 좋아요한 게시물 목록 조회 (GET /posts/liked)
+     * - 로그인 필수
+     */
+    @GetMapping("/liked")
+    public ResponseEntity<?> getLikedPosts(
+            @AuthenticationPrincipal UUID userId,
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "error_code", "ERR-001",
+                    "message", "로그인이 필요한 서비스입니다."
+            ));
+        }
+
+        Page<FeedPostResponse> posts = getUserPostsUseCase.getLikedPosts(userId, pageable);
+        return ResponseEntity.ok(posts);
     }
 }
 
