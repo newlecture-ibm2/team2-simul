@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, MouseEvent } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getPostDetail, updatePost } from '../../../../../lib/api/feedAPI';
 import { analyzeTags } from '../../../../../lib/api/tagAPI';
-import Modal from '../_components/Modal';
+import { toast } from '@/lib/utils/toast';
 import styles from './page.module.css';
 
 export interface PostDetailData {
@@ -31,29 +31,13 @@ export default function PostEditPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const [modalConfig, setModalConfig] = useState<{
-    isOpen: boolean;
-    title?: string;
-    message: string;
-    onConfirm: () => void;
-  }>({ isOpen: false, message: '', onConfirm: () => {} });
 
-  const openAlert = (message: string, onConfirm?: () => void) => {
-    setModalConfig({
-      isOpen: true,
-      message,
-      onConfirm: () => {
-        setModalConfig(prev => ({ ...prev, isOpen: false }));
-        if (onConfirm) onConfirm();
-      },
-    });
-  };
 
   // 기존 서버 이미지 URL + 새로 추가한 로컬 이미지를 구분
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const [newImages, setNewImages] = useState<File[]>([]);
   const [newImageUrls, setNewImageUrls] = useState<string[]>([]);
-  
+
   const [tags, setTags] = useState<string[]>([]);
   const [customTag, setCustomTag] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -120,7 +104,7 @@ export default function PostEditPage() {
   // ── 이미지 추가 ──
   const handleAddImageClick = () => {
     if (totalImageCount >= 5) {
-      openAlert('이미지는 최대 5장까지 첨부 가능합니다.');
+      toast.error('이미지는 최대 5장까지 첨부 가능합니다.');
       return;
     }
     fileInputRef.current?.click();
@@ -145,7 +129,7 @@ export default function PostEditPage() {
       } catch (err: unknown) {
         console.error('태그 분석 실패:', err);
         if (err instanceof Error && err.message.includes('429')) {
-          openAlert('사진을 너무 빠르게 많이 올리셨네요! 😅\n잠시만 기다렸다가 다시 올려주시면 자동 태그가 추출됩니다.');
+          toast.error('사진을 너무 빠르게 많이 올리셨네요! 😅\n잠시만 기다렸다가 다시 올려주시면 자동 태그가 추출됩니다.');
         }
       } finally {
         setIsAnalyzing(false);
@@ -178,12 +162,12 @@ export default function PostEditPage() {
       e.preventDefault();
       const newTag = customTag.trim().toLowerCase().replace(/^#/, '');
       if (!newTag) return;
-      
+
       if (tags.includes(newTag)) {
         setCustomTag('');
         return;
       }
-      
+
       setTags([...tags, newTag]);
       setCustomTag('');
     }
@@ -192,12 +176,12 @@ export default function PostEditPage() {
   // ── 저장 ──
   const handleUpdate = async () => {
     if (totalImageCount === 0) {
-      openAlert('최소 1장의 이미지가 필요합니다.');
+      toast.error('최소 1장의 이미지가 필요합니다.');
       return;
     }
 
     if (tags.length > 10) {
-      openAlert('태그는 최대 10개까지만 등록 가능합니다. 불필요한 태그를 지워주세요.');
+      toast.error('태그는 최대 10개까지만 등록 가능합니다. 불필요한 태그를 지워주세요.');
       return;
     }
     const formData = new FormData();
@@ -213,7 +197,7 @@ export default function PostEditPage() {
       router.replace(`/post/${postId}`);
     } catch (err: unknown) {
       console.error(err);
-      openAlert('게시물 수정에 실패했습니다.');
+      toast.error('게시물 수정에 실패했습니다.');
     } finally {
       setIsSaving(false);
     }
@@ -227,8 +211,8 @@ export default function PostEditPage() {
       <header className={styles.header}>
         <button onClick={() => router.back()} className={styles.cancelBtn}>취소</button>
         <h1 className={styles.title}>게시물 수정</h1>
-        <button 
-          onClick={handleUpdate} 
+        <button
+          onClick={handleUpdate}
           className={styles.submitBtn}
           disabled={isSaving}
         >
@@ -239,7 +223,7 @@ export default function PostEditPage() {
       <main className={styles.main}>
         {/* ── 이미지 캐러셀 (생성 페이지와 동일한 스타일) ── */}
         <div className={styles.carouselContainer}>
-          <div 
+          <div
             className={`${styles.imageScrollArea} ${isDragging ? styles.dragging : ''}`}
             ref={scrollRef}
             onMouseDown={handleMouseDown}
@@ -322,11 +306,11 @@ export default function PostEditPage() {
             <input
               type="text"
               className={styles.tagInput}
-                placeholder="태그 입력 후 Enter"
-                value={customTag}
-                onChange={(e) => setCustomTag(e.target.value)}
-                onKeyDown={handleAddCustomTag}
-              />
+              placeholder="태그 입력 후 Enter"
+              value={customTag}
+              onChange={(e) => setCustomTag(e.target.value)}
+              onKeyDown={handleAddCustomTag}
+            />
           </div>
         </div>
 
@@ -363,7 +347,6 @@ export default function PostEditPage() {
           </label>
         </div>
       </main>
-      <Modal {...modalConfig} />
     </div>
   );
 }

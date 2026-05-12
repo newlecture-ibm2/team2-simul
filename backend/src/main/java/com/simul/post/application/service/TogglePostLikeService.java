@@ -62,6 +62,7 @@ public class TogglePostLikeService implements TogglePostLikeUseCase {
         postRepositoryPort.save(post);
 
         // 5. 좋아요 시에만 알림 이벤트 발행 (좋아요 취소 시에는 알림 안 보냄)
+        // 헥사고날 규칙 및 이벤트 기반 구조를 위해 ApplicationEventPublisher 사용
         if (isLiked) {
             eventPublisher.publishEvent(new PostLikedEvent(userId, post.getUserId(), postId));
         }

@@ -58,6 +58,9 @@ public class Post extends BaseJpaEntity {
     @Column(name = "view_count", nullable = false)
     private Integer viewCount = 0;
 
+    @Column(name = "comment_count", columnDefinition = "integer default 0")
+    private Integer commentCount = 0;
+
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostImage> images = new ArrayList<>();
 
@@ -75,6 +78,7 @@ public class Post extends BaseJpaEntity {
         this.reportCount = reportCount != null ? reportCount : 0;
         this.likeCount = likeCount != null ? likeCount : 0;
         this.viewCount = viewCount != null ? viewCount : 0;
+        this.commentCount = 0;
     }
 
     public void addImage(PostImage image) {
@@ -94,6 +98,16 @@ public class Post extends BaseJpaEntity {
 
     public void incrementViewCount() {
         this.viewCount++;
+    }
+
+    public void incrementCommentCount() {
+        this.commentCount++;
+    }
+
+    public void decrementCommentCount() {
+        if (this.commentCount > 0) {
+            this.commentCount--;
+        }
     }
 
     public void update(String caption, Boolean isPublic) {
@@ -120,5 +134,12 @@ public class Post extends BaseJpaEntity {
 
     public void markFailed() {
         this.status = PostStatus.FAILED;
+    }
+
+    public void incrementReportCount() {
+        this.reportCount++;
+        if (this.reportCount >= 5) {
+            this.isBlinded = true;
+        }
     }
 }

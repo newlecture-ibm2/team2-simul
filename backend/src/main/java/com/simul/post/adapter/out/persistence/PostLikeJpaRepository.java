@@ -1,6 +1,8 @@
 package com.simul.post.adapter.out.persistence;
 
 import com.simul.post.domain.model.PostLike;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,4 +17,6 @@ public interface PostLikeJpaRepository extends JpaRepository<PostLike, UUID> {
 
     @Query("SELECT pl.postId FROM PostLike pl WHERE pl.userId = :userId AND pl.postId IN :postIds")
     List<UUID> findPostIdsByUserIdAndPostIdIn(@Param("userId") UUID userId, @Param("postIds") List<UUID> postIds);
+
+    Page<PostLike> findByPostIdOrderByCreatedAtDesc(UUID postId, Pageable pageable);
 }

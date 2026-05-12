@@ -1,4 +1,4 @@
-package com.simul.tag.domain.model;
+package com.simul.post.domain.model;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -12,34 +12,36 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(
-    name = "post_tags",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"post_id", "tag_id"})
-)
+@Table(name = "reports", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"post_id", "reporter_id"})
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
-public class PostTag {
+public class PostReport {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "post_tag_id")
-    private UUID id;
+    @Column(name = "report_id")
+    private UUID reportId;
 
     @Column(name = "post_id", nullable = false)
     private UUID postId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tag_id", nullable = false)
-    private Tag tag;
+    @Column(name = "reporter_id", nullable = false)
+    private UUID reporterId;
+
+    @Column(name = "reason", length = 200, nullable = false)
+    private String reason;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Builder
-    public PostTag(UUID postId, Tag tag) {
+    public PostReport(UUID postId, UUID reporterId, String reason) {
         this.postId = postId;
-        this.tag = tag;
+        this.reporterId = reporterId;
+        this.reason = reason;
     }
 }

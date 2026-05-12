@@ -3,6 +3,8 @@ package com.simul.post.adapter.out.persistence;
 import com.simul.post.application.port.out.PostLikePersistencePort;
 import com.simul.post.domain.model.PostLike;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -34,5 +36,10 @@ public class PostLikePersistenceAdapter implements PostLikePersistencePort {
             return Collections.emptySet();
         }
         return new HashSet<>(postLikeJpaRepository.findPostIdsByUserIdAndPostIdIn(userId, postIds));
+    }
+
+    @Override
+    public Page<PostLike> findByPostId(UUID postId, Pageable pageable) {
+        return postLikeJpaRepository.findByPostIdOrderByCreatedAtDesc(postId, pageable);
     }
 }
