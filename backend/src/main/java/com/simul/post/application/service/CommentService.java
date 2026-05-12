@@ -115,14 +115,6 @@ public class CommentService implements LoadCommentUseCase, CreateCommentUseCase,
         commentPersistencePort.save(comment);
     }
 
-    private CommentResponse mapToResponseWithReplies(Comment comment) {
-        List<CommentResponse> replies = commentPersistencePort.findRepliesByParentId(comment.getCommentId())
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
-
-        return createCommentResponse(comment, replies);
-    }
 
     private CommentResponse mapToResponse(Comment comment) {
         var userProfile = loadUserUseCase.loadUser(comment.getUserId());
