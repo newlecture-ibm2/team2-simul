@@ -60,4 +60,14 @@ public class PostPersistenceAdapter implements PostRepositoryPort {
     public Page<Post> findPublicPostsByUserId(UUID userId, Pageable pageable) {
         return postJpaRepository.findAllByUserIdAndIsPublicTrue(userId, pageable);
     }
+
+    @Override
+    public long countLikedPosts(UUID userId) {
+        return postJpaRepository.countLikedPosts(userId);
+    }
+
+    @Override
+    public Page<Post> findLikedPostsByUserId(UUID userId, Pageable pageable) {
+        return postJpaRepository.findLikedPostsByUserId(userId, pageable);
+    }
 }

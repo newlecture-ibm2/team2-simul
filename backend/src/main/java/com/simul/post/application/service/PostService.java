@@ -361,4 +361,40 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
     public long countUserPosts(UUID userId) {
         return postRepositoryPort.countByUserId(userId);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<FeedPostResponse> getLikedPosts(UUID userId, Pageable pageable) {
+        Page<Post> postsPage = postRepositoryPort.findLikedPostsByUserId(userId, pageable);
+        
+        if (postsPage.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        List<UUID> postIds = postsPage.getContent().stream().map(Post::getPostId).toList();
+        List<UUID> userIds = postsPage.getContent().stream().map(Post::getUserId).distinct().toList();
+
+        // 작성자 정보 및 태그 정보 일괄 조회 (성능 최적화)
+        Map<UUID, UserResponse> userMap = loadUserUseCase.loadUsers(userIds);
+        Map<UUID, List<String>> tagMap = loadTagsUseCase.loadTagsByPostIds(postIds);
+
+        return postsPage.map(post -> {
+            UserResponse author = userMap.get(post.getUserId());
+            List<String> postTags = tagMap.getOrDefault(post.getPostId(), Collections.emptyList());
+            String imageUrl = post.getImages().isEmpty() ? null : post.getImages().get(0).getImageUrl();
+            
+            return new FeedPostResponse(
+                    post.getPostId(),
+                    post.getUserId(),
+                    author != null ? author.nickname() : "Unknown",
+                    author != null ? author.profileImageUrl() : null,
+                    imageUrl,
+                    postTags,
+                    post.getCaption(),
+                    post.getLikeCount(),
+                    true, // 내가 좋아요한 목록이므로 항상 true
+                    post.getCreatedAt()
+            );
+        });
+    }
 }

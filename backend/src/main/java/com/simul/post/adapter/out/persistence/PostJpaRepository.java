@@ -4,6 +4,7 @@ import com.simul.post.domain.model.Post;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,4 +15,10 @@ public interface PostJpaRepository extends JpaRepository<Post, UUID> {
     long countByUserId(UUID userId);
     Page<Post> findAllByUserId(UUID userId, Pageable pageable);
     Page<Post> findAllByUserIdAndIsPublicTrue(UUID userId, Pageable pageable);
+
+    @Query("SELECT p FROM Post p JOIN PostLike l ON l.postId = p.postId WHERE l.userId = :userId AND p.deletedAt IS NULL")
+    Page<Post> findLikedPostsByUserId(UUID userId, Pageable pageable);
+
+    @Query("SELECT COUNT(p) FROM Post p JOIN PostLike l ON l.postId = p.postId WHERE l.userId = :userId AND p.deletedAt IS NULL")
+    long countLikedPosts(UUID userId);
 }

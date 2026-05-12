@@ -5,12 +5,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { getCurrentUser } from '@/lib/api/authAPI';
-import { getUserPosts } from '@/lib/api/feedAPI';
+import { getUserPosts, getLikedPosts, FeedPost } from '@/lib/api/feedAPI';
 import { useAuthStore, User } from '@/lib/stores/useAuthStore';
 import styles from './page.module.css';
 
 export default function ProfilePage() {
-  const [activeTab, setActiveTab] = useState<'게시물' | '옷장'>('게시물');
+  const [activeTab, setActiveTab] = useState<'게시물' | '좋아요'>('게시물');
   const router = useRouter();
   const { setUser } = useAuthStore();
 
@@ -25,6 +25,13 @@ export default function ProfilePage() {
     queryKey: ['userPosts', user?.userId],
     queryFn: () => user ? getUserPosts(user.userId) : Promise.reject('User not logged in'),
     enabled: !!user?.userId,
+  });
+
+  // 3. 내가 좋아요한 게시물 목록 조회
+  const { data: likedPostsData } = useQuery({
+    queryKey: ['likedPosts'],
+    queryFn: () => getLikedPosts(),
+    enabled: !!user?.userId && activeTab === '좋아요',
   });
 
   // 가져온 정보를 전역 스토어에 동기화
@@ -93,10 +100,10 @@ export default function ProfilePage() {
               게시물
             </button>
             <button 
-              className={`${styles.tabBtn} ${activeTab === '옷장' ? styles.activeTab : ''}`}
-              onClick={() => setActiveTab('옷장')}
+              className={`${styles.tabBtn} ${activeTab === '좋아요' ? styles.activeTab : ''}`}
+              onClick={() => setActiveTab('좋아요')}
             >
-              옷장
+              좋아요
             </button>
           </div>
 
@@ -119,11 +126,18 @@ export default function ProfilePage() {
               </div>
             )}
             
-            {activeTab === '옷장' && (
+            {activeTab === '좋아요' && (
               <div className={styles.postGrid}>
-                {Array.from({ length: 24 }, (_, i) => (
-                  <Link key={i} href="/closet" className={styles.gridItem}>
-                    <img src="/clothes.png" alt="Closet item" className={styles.gridImage} />
+                {likedPostsData?.content.length === 0 && (
+                  <div className={styles.emptyMsg}>좋아요한 게시물이 없습니다.</div>
+                )}
+                {likedPostsData?.content.map((post: FeedPost) => (
+                  <Link key={post.postId} href={`/post/${post.postId}`} className={styles.gridItem}>
+                    <img 
+                      src={post.imageUrl || "/recent.jpg"} 
+                      alt="Liked Post" 
+                      className={styles.gridImage} 
+                    />
                   </Link>
                 ))}
               </div>

@@ -84,6 +84,32 @@ public class ClosetItemController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * 특정 사용자의 옷장 아이템 목록 조회 (GET /closet/items/users/{userId})
+     */
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<ClosetItemListResponse> getUserItems(
+            @PathVariable UUID userId,
+            @RequestParam(required = false) Category category,
+            @RequestParam(defaultValue = "recent") String sort,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        log.info("Received request to get user items: userId={}, category={}, sort={}, page={}, size={}", 
+                 userId, category, sort, page, size);
+
+        GetItemsUseCase.GetItemsQuery query = GetItemsUseCase.GetItemsQuery.builder()
+                .userId(userId)
+                .category(category)
+                .sort(sort)
+                .page(page)
+                .size(size)
+                .build();
+
+        ClosetItemListResponse response = getItemsUseCase.getItems(query);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{itemId}")
     public ResponseEntity<ClosetItemResponse> getItem(@PathVariable UUID itemId) {
         log.info("Received request to get item: itemId={}", itemId);

@@ -19,4 +19,7 @@ public interface PostRepositoryPort {
     long countByUserId(UUID userId);
     Page<Post> findByUserId(UUID userId, Pageable pageable);
     Page<Post> findPublicPostsByUserId(UUID userId, Pageable pageable);
+
+    long countLikedPosts(UUID userId);
+    Page<Post> findLikedPostsByUserId(UUID userId, Pageable pageable);
 }

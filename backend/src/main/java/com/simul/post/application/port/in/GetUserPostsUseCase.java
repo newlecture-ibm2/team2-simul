@@ -25,4 +25,12 @@ public interface GetUserPostsUseCase {
      * @return 게시물 수
      */
     long countUserPosts(UUID userId);
+
+    /**
+     * 특정 유저가 좋아요한 게시물 목록 조회
+     * @param userId 유저 ID
+     * @param pageable 페이지네이션 정보
+     * @return 게시물 페이지
+     */
+    Page<FeedPostResponse> getLikedPosts(UUID userId, Pageable pageable);
 }
