@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import type stylesType from '../page.module.css';
 
 type CssModule = typeof stylesType;
@@ -137,6 +138,14 @@ export default function ProcessingClient({ className, styles }: Props) {
             {errorMessage}
           </div>
         )}
+
+        {!jobId && (
+          <div style={{ marginTop: 12 }}>
+            <Link href="/tryon/studio" style={{ textDecoration: 'underline' }}>
+              시착 스튜디오로 이동
+            </Link>
+          </div>
+        )}
       </div>
 
       <div className={styles.feedPreview}>
@@ -161,4 +170,3 @@ export default function ProcessingClient({ className, styles }: Props) {
     </div>
   );
 }
-
