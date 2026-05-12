@@ -28,6 +28,7 @@ public class PostController {
     private final GetPostDetailUseCase getPostDetailUseCase;
     private final DeletePostUseCase deletePostUseCase;
     private final UpdatePostUseCase updatePostUseCase;
+    private final ReportPostUseCase reportPostUseCase;
 
     @PostMapping
     public ResponseEntity<?> createPost(
@@ -96,6 +97,25 @@ public class PostController {
 
         ToggleLikeResponse response = togglePostLikeUseCase.toggleLike(postId, userId);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{postId}/report")
+    public ResponseEntity<?> reportPost(
+            @AuthenticationPrincipal UUID reporterId,
+            @PathVariable UUID postId,
+            @RequestBody ReportPostCommand command) {
+        if (reporterId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "error_code", "ERR-001",
+                    "message", "로그인이 필요한 서비스입니다."
+            ));
+        }
+
+        reportPostUseCase.reportPost(postId, reporterId, command.getReason());
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "게시물 신고가 접수되었습니다."
+        ));
     }
 
     /**

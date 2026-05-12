@@ -13,6 +13,7 @@ import java.util.UUID;
 @Table(name = "tags")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@org.hibernate.annotations.SQLRestriction("deleted_at IS NULL")
 public class Tag extends BaseJpaEntity {
 
     @Id

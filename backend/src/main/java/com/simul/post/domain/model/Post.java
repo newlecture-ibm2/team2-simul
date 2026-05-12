@@ -121,4 +121,11 @@ public class Post extends BaseJpaEntity {
     public void markFailed() {
         this.status = PostStatus.FAILED;
     }
+
+    public void incrementReportCount() {
+        this.reportCount++;
+        if (this.reportCount >= 5) {
+            this.isBlinded = true;
+        }
+    }
 }

@@ -24,7 +24,7 @@ export default function PostCreatePage() {
     title?: string;
     message: string;
     onConfirm: () => void;
-  }>({ isOpen: false, message: '', onConfirm: () => {} });
+  }>({ isOpen: false, message: '', onConfirm: () => { } });
 
   const openAlert = (message: string, onConfirm?: () => void) => {
     setModalConfig({
@@ -67,11 +67,11 @@ export default function PostCreatePage() {
     e.preventDefault();
     const x = e.pageX - scrollRef.current.offsetLeft;
     const walk = (x - startX) * 2; // 스크롤 속도
-    
+
     if (Math.abs(walk) > 10) {
       setHasDragged(true); // 실제 스크롤 발생
     }
-    
+
     scrollRef.current.scrollLeft = scrollLeft - walk;
   };
 
@@ -133,7 +133,7 @@ export default function PostCreatePage() {
       e.preventDefault();
       const newTag = customTag.trim().toLowerCase().replace(/^#/, '');
       if (!newTag) return;
-      
+
       if (tags.includes(newTag)) {
         return;
       }
@@ -147,7 +147,7 @@ export default function PostCreatePage() {
       openAlert('최소 1장의 이미지를 첨부해주세요.');
       return;
     }
-    
+
     if (tags.length > 10) {
       openAlert('태그는 최대 10개까지만 등록 가능합니다. 불필요한 태그를 지워주세요.');
       return;
@@ -176,7 +176,7 @@ export default function PostCreatePage() {
 
       {/* Image Carousel */}
       <div className={styles.carouselContainer}>
-        <div 
+        <div
           className={`${styles.imageScrollArea} ${isDragging ? styles.dragging : ''}`}
           ref={scrollRef}
           onMouseDown={handleMouseDown}
@@ -234,19 +234,19 @@ export default function PostCreatePage() {
               </button>
             </div>
           ))}
-            <input
-              type="text"
-              className={styles.tagInput}
-              placeholder="태그 입력 후 Enter"
-              value={customTag}
-              onChange={(e) => setCustomTag(e.target.value)}
-              onKeyDown={handleAddCustomTag}
-            />
-          </div>
-          <div className={`${styles.tagCountText} ${tags.length > 10 ? styles.tagCountError : ''}`}>
-            선택된 태그: {tags.length} / 10
-          </div>
+          <input
+            type="text"
+            className={styles.tagInput}
+            placeholder="태그 입력 후 Enter"
+            value={customTag}
+            onChange={(e) => setCustomTag(e.target.value)}
+            onKeyDown={handleAddCustomTag}
+          />
         </div>
+        <div className={`${styles.tagCountText} ${tags.length > 10 ? styles.tagCountError : ''}`}>
+          선택된 태그: {tags.length} / 10
+        </div>
+      </div>
 
       {/* Caption */}
       <div className={styles.formGroup}>

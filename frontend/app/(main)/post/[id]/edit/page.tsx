@@ -35,7 +35,7 @@ export default function PostEditPage() {
     title?: string;
     message: string;
     onConfirm: () => void;
-  }>({ isOpen: false, message: '', onConfirm: () => {} });
+  }>({ isOpen: false, message: '', onConfirm: () => { } });
 
   const openAlert = (message: string, onConfirm?: () => void) => {
     setModalConfig({
@@ -52,7 +52,7 @@ export default function PostEditPage() {
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const [newImages, setNewImages] = useState<File[]>([]);
   const [newImageUrls, setNewImageUrls] = useState<string[]>([]);
-  
+
   const [tags, setTags] = useState<string[]>([]);
   const [customTag, setCustomTag] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -177,12 +177,12 @@ export default function PostEditPage() {
       e.preventDefault();
       const newTag = customTag.trim().toLowerCase().replace(/^#/, '');
       if (!newTag) return;
-      
+
       if (tags.includes(newTag)) {
         setCustomTag('');
         return;
       }
-      
+
       setTags([...tags, newTag]);
       setCustomTag('');
     }
@@ -226,8 +226,8 @@ export default function PostEditPage() {
       <header className={styles.header}>
         <button onClick={() => router.back()} className={styles.cancelBtn}>취소</button>
         <h1 className={styles.title}>게시물 수정</h1>
-        <button 
-          onClick={handleUpdate} 
+        <button
+          onClick={handleUpdate}
           className={styles.submitBtn}
           disabled={isSaving}
         >
@@ -238,7 +238,7 @@ export default function PostEditPage() {
       <main className={styles.main}>
         {/* ── 이미지 캐러셀 (생성 페이지와 동일한 스타일) ── */}
         <div className={styles.carouselContainer}>
-          <div 
+          <div
             className={`${styles.imageScrollArea} ${isDragging ? styles.dragging : ''}`}
             ref={scrollRef}
             onMouseDown={handleMouseDown}
@@ -321,11 +321,11 @@ export default function PostEditPage() {
             <input
               type="text"
               className={styles.tagInput}
-                placeholder="태그 입력 후 Enter"
-                value={customTag}
-                onChange={(e) => setCustomTag(e.target.value)}
-                onKeyDown={handleAddCustomTag}
-              />
+              placeholder="태그 입력 후 Enter"
+              value={customTag}
+              onChange={(e) => setCustomTag(e.target.value)}
+              onKeyDown={handleAddCustomTag}
+            />
           </div>
         </div>
 

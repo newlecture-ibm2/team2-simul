@@ -1,0 +1,198 @@
+'use client';
+
+import React, { useState } from 'react';
+import styles from './CommentSection.module.css';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getComments, createComment, deleteComment, Comment } from '@/lib/api/feedAPI';
+import { useAuthStore } from '@/lib/stores/useAuthStore';
+import { toast } from '@/lib/utils/toast';
+import Link from 'next/link';
+import DeleteConfirmModal from '../DeleteConfirmModal/DeleteConfirmModal';
+
+interface Props {
+  postId: string;
+}
+
+export default function CommentSection({ postId }: Props) {
+  const queryClient = useQueryClient();
+  const { user, isAuthenticated } = useAuthStore();
+  const [content, setContent] = useState('');
+  const [replyingTo, setReplyingTo] = useState<{ id: string; nickname: string } | null>(null);
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
+
+  const { data: pageData, isLoading } = useQuery({
+    queryKey: ['comments', postId],
+    queryFn: () => getComments(postId, 0, 100),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: { postId: string; content: string; parentId?: string }) => 
+      createComment(data.postId, data.content, data.parentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', postId] });
+      setContent('');
+      setReplyingTo(null);
+      toast.success('댓글이 작성되었습니다.');
+    },
+    onError: (err: unknown) => {
+      const error = err as { response?: { status?: number } };
+      if (error?.response?.status === 401) {
+        toast.error('로그인이 필요합니다.');
+      } else if (error?.response?.status === 422) {
+        toast.error('댓글은 200자를 초과할 수 없습니다.');
+      } else {
+        toast.error('댓글 작성에 실패했습니다.');
+      }
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteComment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', postId] });
+      toast.success('댓글이 삭제되었습니다.');
+    },
+    onError: () => {
+      toast.error('댓글 삭제에 실패했습니다.');
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!content.trim()) return;
+    if (!isAuthenticated) {
+      toast.error('댓글을 작성하려면 로그인이 필요합니다.');
+      return;
+    }
+    createMutation.mutate({
+      postId,
+      content,
+      parentId: replyingTo?.id
+    });
+  };
+
+  const handleDelete = (commentId: string) => {
+    setDeletingCommentId(commentId);
+  };
+
+  const confirmDelete = () => {
+    if (deletingCommentId) {
+      deleteMutation.mutate(deletingCommentId);
+      setDeletingCommentId(null);
+    }
+  };
+
+  const comments = pageData?.content || [];
+
+  const renderComment = (comment: Comment, isReply = false) => {
+    const isOwner = isAuthenticated && user && String(user.id) === String(comment.userId);
+    const dateObj = new Date(comment.createdAt);
+    const dateStr = `${dateObj.getFullYear()}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
+
+    return (
+      <div key={comment.commentId} className={isReply ? styles.replyItem : styles.commentItem}>
+        <Link href={`/profile/${comment.userId}`} style={{textDecoration: 'none', color: 'inherit'}}>
+          {comment.profileImageUrl ? (
+            <img src={comment.profileImageUrl} alt="아바타" className={styles.avatar} />
+          ) : (
+            <div className={styles.avatar} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🧑</div>
+          )}
+        </Link>
+        <div className={styles.commentContent}>
+          <div className={styles.header}>
+            <Link href={`/profile/${comment.userId}`} style={{textDecoration: 'none', color: 'inherit'}}>
+              <span className={styles.nickname}>{comment.nickname}</span>
+            </Link>
+            <span className={styles.createdAt}>{dateStr}</span>
+          </div>
+          {comment.isDeleted ? (
+            <div className={styles.deletedText}>삭제된 댓글입니다.</div>
+          ) : (
+            <div className={styles.text}>{comment.content}</div>
+          )}
+          {!comment.isDeleted && (
+            <div className={styles.actions}>
+              {!isReply && (
+                <button 
+                  className={styles.actionBtn}
+                  onClick={() => setReplyingTo({ id: comment.commentId, nickname: comment.nickname })}
+                >
+                  답글 달기
+                </button>
+              )}
+              {isOwner && (
+                <button className={styles.actionBtn} onClick={() => handleDelete(comment.commentId)}>삭제</button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className={styles.container}>
+      <h3 className={styles.title}>댓글 {pageData?.totalElements || 0}</h3>
+      
+      {isLoading ? (
+        <div style={{ padding: '20px', textAlign: 'center' }}>댓글 불러오는 중...</div>
+      ) : (
+        <div className={styles.commentList}>
+          {comments.length === 0 ? (
+            <div style={{ textAlign: 'center', color: '#666', padding: '20px' }}>첫 번째 댓글을 남겨보세요!</div>
+          ) : (
+            comments.map(comment => (
+              <React.Fragment key={comment.commentId}>
+                {renderComment(comment)}
+                {comment.replies?.map(reply => renderComment(reply, true))}
+              </React.Fragment>
+            ))
+          )}
+        </div>
+      )}
+
+      <form className={styles.inputWrapper} onSubmit={handleSubmit}>
+        {replyingTo && (
+          <div className={styles.replyingToBanner}>
+            <span>{replyingTo.nickname}님에게 답글 남기는 중</span>
+            <button type="button" className={styles.cancelReply} onClick={() => setReplyingTo(null)}>✕</button>
+          </div>
+        )}
+        <textarea
+          className={styles.textarea}
+          placeholder={isAuthenticated ? "댓글을 입력하세요..." : "로그인 후 댓글을 남겨보세요."}
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          maxLength={200}
+          rows={1}
+          onInput={(e) => {
+            const target = e.target as HTMLTextAreaElement;
+            target.style.height = 'auto';
+            target.style.height = `${target.scrollHeight}px`;
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSubmit(e);
+            }
+          }}
+        />
+        <button 
+          type="submit" 
+          className={styles.submitBtn}
+          disabled={!content.trim() || createMutation.isPending}
+        >
+          {createMutation.isPending ? '...' : '↑'}
+        </button>
+      </form>
+
+      <DeleteConfirmModal
+        isOpen={deletingCommentId !== null}
+        title="댓글을 삭제하시겠습니까?"
+        description="삭제된 댓글은 복구할 수 없습니다."
+        onConfirm={confirmDelete}
+        onCancel={() => setDeletingCommentId(null)}
+      />
+    </div>
+  );
+}
