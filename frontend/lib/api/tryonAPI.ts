@@ -1,11 +1,18 @@
 import { apiClient } from './client';
 
-/** 시착 생성 요청 */
-export async function createTryon(data: {
-  baseImageId: number;
-  clothImageId: number;
-}) {
-  return apiClient('/tryon', {
+export type TryonGenerateResponse = {
+  job_id: string;
+  status: 'processing' | 'completed' | 'failed';
+  estimated_seconds: number;
+};
+
+/** 시착 생성 요청 (기술서/백엔드 스펙: POST /tryon/generate) */
+export async function generateTryon(data: {
+  base_image_id: string;
+  item_id?: string;
+  item_ids?: string[];
+}): Promise<TryonGenerateResponse> {
+  return apiClient('/tryon/generate', {
     method: 'POST',
     body: JSON.stringify(data),
   });

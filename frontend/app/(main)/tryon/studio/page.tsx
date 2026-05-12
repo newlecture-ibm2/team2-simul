@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Button from '@/components/Button';
 import Toggle from './_components/Toggle/Toggle';
 import styles from './page.module.css';
+import { generateTryon } from '@/lib/api/tryonAPI';
 
 const DUMMY_PEOPLE = ['/dummy.jpg', '/recent.jpg', '/temp.jpg'];
 const DUMMY_CLOTHES = [
@@ -16,10 +18,14 @@ const DUMMY_CLOTHES = [
 ];
 
 export default function StudioPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'person' | 'clothes'>('clothes');
   const [clothesCategory, setClothesCategory] = useState<'top' | 'bottom'>('top');
   const [selectedPerson, setSelectedPerson] = useState<string>(DUMMY_PEOPLE[0]);
   const [selectedClothes, setSelectedClothes] = useState<number[]>([]); // Store selected clothes IDs
+  const [baseImageId, setBaseImageId] = useState<string>('');
+  const [itemIds, setItemIds] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleToggleCloth = (id: number) => {
     setSelectedClothes(prev => 
@@ -29,7 +35,35 @@ export default function StudioPage() {
 
   const handleUploadClick = () => {
     // 임시: 업로드 클릭 시 아무 동작 안 함 (추후 모달 띄우기)
-    console.log(`${activeTab} 업로드 클릭`);
+  };
+
+  const handleTryon = async () => {
+    if (!baseImageId.trim()) {
+      alert('개발자 입력(base_image_id)이 필요합니다.');
+      return;
+    }
+
+    const parsedItemIds = itemIds
+      .split(',')
+      .map(v => v.trim())
+      .filter(Boolean);
+
+    if (parsedItemIds.length === 0) {
+      alert('개발자 입력(item_ids)이 최소 1개 필요합니다.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const res = await generateTryon({
+        base_image_id: baseImageId.trim(),
+        item_ids: parsedItemIds,
+      });
+
+      router.push(`/tryon/processing?job_id=${encodeURIComponent(res.job_id)}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -75,6 +109,29 @@ export default function StudioPage() {
 
       {/* Bottom Overlay (Gradient & Controls) */}
       <div className={styles.bottomOverlay}>
+        <details style={{ width: '100%', marginBottom: 12 }}>
+          <summary style={{ cursor: 'pointer' }}>개발자 입력 (임시)</summary>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span style={{ fontSize: 12, opacity: 0.7 }}>base_image_id (UUID)</span>
+              <input
+                value={baseImageId}
+                onChange={(e) => setBaseImageId(e.target.value)}
+                placeholder="예: 00000000-0000-0000-0000-000000000000"
+                style={{ padding: 10, borderRadius: 8, border: '1px solid rgba(0,0,0,0.15)' }}
+              />
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span style={{ fontSize: 12, opacity: 0.7 }}>item_ids (UUID, 콤마 구분)</span>
+              <input
+                value={itemIds}
+                onChange={(e) => setItemIds(e.target.value)}
+                placeholder="예: uuid1, uuid2, uuid3"
+                style={{ padding: 10, borderRadius: 8, border: '1px solid rgba(0,0,0,0.15)' }}
+              />
+            </label>
+          </div>
+        </details>
         {/* Controls Row */}
       <div className={styles.controlsRow}>
         <Toggle 
@@ -145,11 +202,9 @@ export default function StudioPage() {
 
         {/* Bottom Action */}
         <div className={styles.bottomAction}>
-          <Link href="/tryon/processing" style={{ width: '100%' }}>
-            <Button variant="large" fullWidth>
-              시착하기
-            </Button>
-          </Link>
+          <Button variant="large" fullWidth onClick={handleTryon} disabled={isSubmitting}>
+            {isSubmitting ? '시착 생성 중...' : '시착하기'}
+          </Button>
         </div>
       </div>
     </div>
