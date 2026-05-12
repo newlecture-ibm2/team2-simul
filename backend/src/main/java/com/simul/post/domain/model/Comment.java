@@ -14,7 +14,6 @@ import java.util.UUID;
 @Table(name = "comments")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@SQLRestriction("deleted_at IS NULL")
 public class Comment extends BaseJpaEntity {
 
     @Id
