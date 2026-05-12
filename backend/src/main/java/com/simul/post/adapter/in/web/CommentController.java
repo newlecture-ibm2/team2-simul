@@ -20,7 +20,6 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
 @Tag(name = "Comment", description = "댓글 관련 API")
 public class CommentController {
 
