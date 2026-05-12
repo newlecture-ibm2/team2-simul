@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './FolderCard.module.css';
-import DeleteConfirmModal from '../DeleteConfirmModal/DeleteConfirmModal';
+import ConfirmModal from '../ConfirmModal/ConfirmModal';
 
 interface FolderCardProps {
   id: string | number;
@@ -133,11 +133,13 @@ export default function FolderCard({
         <p className={styles.meta}>핀 {itemCount}개 · {lastUpdated}</p>
       </div>
 
-      <DeleteConfirmModal
+      <ConfirmModal
         isOpen={showDeleteConfirm}
-        count={1}
         title="폴더를 삭제하시겠습니까?"
         description={`'${title}' 폴더와 그 안의 정보가 삭제됩니다.\n(폴더 안의 실제 옷 아이템은 삭제되지 않습니다.)`}
+        confirmText="삭제"
+        cancelText="취소"
+        isDestructive={true}
         onConfirm={confirmDelete}
         onCancel={() => setShowDeleteConfirm(false)}
       />

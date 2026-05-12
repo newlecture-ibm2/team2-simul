@@ -7,7 +7,7 @@ import { getClosetCollection, ClosetItemResponse } from '@/lib/api/closetAPI';
 import { useClosetItems } from '../../_components/useClosetItems';
 import ClosetCard from '../../_components/ClosetCard/ClosetCard';
 import ClosetDetailModal from '../../_components/ClosetDetailModal/ClosetDetailModal';
-import DeleteConfirmModal from '../../_components/DeleteConfirmModal/DeleteConfirmModal';
+import ConfirmModal from '../../_components/ConfirmModal/ConfirmModal';
 import FolderMoveModal from '../../_components/FolderMoveModal/FolderMoveModal';
 import AddItemModal from './_components/AddItemModal/AddItemModal';
 import Toggle from '../../_components/Toggle/Toggle';
@@ -287,9 +287,13 @@ export default function FolderDetailPage() {
       )}
 
       {/* Delete Confirm Modal */}
-      <DeleteConfirmModal
+      <ConfirmModal
         isOpen={showDeleteModal}
-        count={selectedItems.size}
+        title="삭제하시겠습니까?"
+        description={`선택한 ${selectedItems.size}개의 아이템이 영구적으로 삭제됩니다.`}
+        confirmText="예"
+        cancelText="아니오"
+        isDestructive={true}
         onConfirm={() => {
           setItems(prev => prev.filter(item => !selectedItems.has(item.itemId)));
           setSelectedItems(new Set());

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import styles from './ClosetDetailModal.module.css';
 import Button from '@/components/Button';
 import Link from 'next/link';
-import DeleteConfirmModal from '../DeleteConfirmModal/DeleteConfirmModal';
+import ConfirmModal from '../ConfirmModal/ConfirmModal';
 import FolderMoveModal from '../FolderMoveModal/FolderMoveModal';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getClosetItem, updateClosetItem, deleteClosetItem } from '@/lib/api/closetAPI';
@@ -172,9 +172,13 @@ export default function ClosetDetailModal({ isOpen, onClose, itemId }: ClosetDet
         </div>
       )}
 
-      <DeleteConfirmModal 
+      <ConfirmModal 
         isOpen={showDeleteConfirm}
-        count={1}
+        title="삭제하시겠습니까?"
+        description="선택한 1개의 아이템이 영구적으로 삭제됩니다."
+        confirmText="예"
+        cancelText="아니오"
+        isDestructive={true}
         onConfirm={() => {
           deleteMutation.mutate();
         }}
