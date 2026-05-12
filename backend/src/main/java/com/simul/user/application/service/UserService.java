@@ -2,11 +2,14 @@ package com.simul.user.application.service;
 
 import com.simul.common.exception.BusinessException;
 import com.simul.common.exception.ErrorCode;
+import com.simul.user.application.dto.FollowCountResponse;
+import com.simul.user.application.dto.UserProfileResponse;
 import com.simul.user.application.dto.UserResponse;
 import com.simul.user.application.port.in.LoadUserUseCase;
 import com.simul.user.application.port.in.RegisterUserUseCase;
 import com.simul.user.application.port.in.UpdateUserUseCase;
 import com.simul.user.application.port.in.WithdrawUserUseCase;
+import com.simul.user.application.port.out.FollowPersistencePort;
 import com.simul.user.application.port.out.UserPersistencePort;
 import com.simul.user.domain.model.Gender;
 import com.simul.user.domain.model.User;
@@ -26,9 +29,11 @@ import java.util.stream.Collectors;
 public class UserService implements LoadUserUseCase, RegisterUserUseCase, UpdateUserUseCase, WithdrawUserUseCase {
 
     private final UserPersistencePort userPersistencePort;
+    private final FollowPersistencePort followPersistencePort;
 
-    public UserService(UserPersistencePort userPersistencePort) {
+    public UserService(UserPersistencePort userPersistencePort, FollowPersistencePort followPersistencePort) {
         this.userPersistencePort = userPersistencePort;
+        this.followPersistencePort = followPersistencePort;
     }
 
     /**
@@ -105,5 +110,25 @@ public class UserService implements LoadUserUseCase, RegisterUserUseCase, Update
         // soft delete logic is inside Persistence Adapter (via UserJpaEntity softDelete or similar)
         // Here we explicitly tell the domain it's inactive, and save will handle the rest.
         userPersistencePort.save(user);
+    }
+
+    /**
+     * 사용자 프로필 조회 (팔로우 정보 포함)
+     * - 팔로워/팔로잉 수 + 현재 로그인 사용자의 팔로우 여부
+     */
+    @Override
+    public UserProfileResponse loadUserProfile(UUID targetUserId, UUID currentUserId) {
+        User user = userPersistencePort.findById(targetUserId)
+            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        long followerCount = followPersistencePort.countFollowers(targetUserId);
+        long followingCount = followPersistencePort.countFollowings(targetUserId);
+
+        boolean isFollowing = false;
+        if (currentUserId != null && !currentUserId.equals(targetUserId)) {
+            isFollowing = followPersistencePort.exists(currentUserId, targetUserId);
+        }
+
+        return UserProfileResponse.from(user, followerCount, followingCount, isFollowing);
     }
 }

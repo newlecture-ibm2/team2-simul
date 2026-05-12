@@ -8,6 +8,9 @@ import com.simul.closet.application.port.in.GetItemUseCase;
 import com.simul.closet.application.port.in.GetItemsUseCase;
 import com.simul.closet.application.port.in.UpdateItemUseCase;
 import com.simul.closet.application.port.in.DeleteItemUseCase;
+import com.simul.closet.application.port.in.UpdateItemCollectionUseCase;
+import com.simul.closet.application.port.in.CopyItemsToCollectionUseCase;
+import com.simul.closet.application.port.in.RemoveItemFromCollectionUseCase;
 import com.simul.closet.domain.model.Category;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +32,9 @@ public class ClosetItemController {
     private final GetItemUseCase getItemUseCase;
     private final UpdateItemUseCase updateItemUseCase;
     private final DeleteItemUseCase deleteItemUseCase;
-    private final com.simul.closet.application.port.in.UpdateItemCollectionUseCase updateItemCollectionUseCase;
-    private final com.simul.closet.application.port.in.CopyItemsToCollectionUseCase copyItemsToCollectionUseCase;
+    private final UpdateItemCollectionUseCase updateItemCollectionUseCase;
+    private final CopyItemsToCollectionUseCase copyItemsToCollectionUseCase;
+    private final RemoveItemFromCollectionUseCase removeItemFromCollectionUseCase;
 
     @PostMapping
     public ResponseEntity<UUID> addItem(
@@ -122,25 +126,47 @@ public class ClosetItemController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{itemId}/collection")
-    public ResponseEntity<Void> updateItemCollection(
+    /** 아이템을 컬렉션에 추가 (매핑 생성) */
+    @PostMapping("/{itemId}/collections/{collectionId}")
+    public ResponseEntity<Void> addItemToCollection(
             @AuthenticationPrincipal UUID userId,
             @PathVariable UUID itemId,
-            @RequestBody com.simul.closet.adapter.in.web.dto.UpdateItemCollectionRequest request
+            @PathVariable UUID collectionId
     ) {
-        log.info("Received request to update item collection: itemId={}, collectionId={}", 
-                 itemId, request.getCollectionId());
+        log.info("Received request to add item to collection: itemId={}, collectionId={}", 
+                 itemId, collectionId);
 
-        com.simul.closet.application.port.in.UpdateItemCollectionUseCase.UpdateItemCollectionCommand command = com.simul.closet.application.port.in.UpdateItemCollectionUseCase.UpdateItemCollectionCommand.builder()
+        UpdateItemCollectionUseCase.UpdateItemCollectionCommand command = UpdateItemCollectionUseCase.UpdateItemCollectionCommand.builder()
                 .itemId(itemId)
                 .userId(userId)
-                .collectionId(request.getCollectionId())
+                .collectionId(collectionId)
                 .build();
 
         updateItemCollectionUseCase.updateItemCollection(command);
+        return ResponseEntity.ok().build();
+    }
+
+    /** 아이템을 컬렉션에서 제거 (매핑 삭제, 아이템 유지) */
+    @DeleteMapping("/{itemId}/collections/{collectionId}")
+    public ResponseEntity<Void> removeItemFromCollection(
+            @AuthenticationPrincipal UUID userId,
+            @PathVariable UUID itemId,
+            @PathVariable UUID collectionId
+    ) {
+        log.info("Received request to remove item from collection: itemId={}, collectionId={}", 
+                 itemId, collectionId);
+
+        RemoveItemFromCollectionUseCase.RemoveItemFromCollectionCommand command = RemoveItemFromCollectionUseCase.RemoveItemFromCollectionCommand.builder()
+                .itemId(itemId)
+                .userId(userId)
+                .collectionId(collectionId)
+                .build();
+
+        removeItemFromCollectionUseCase.removeItemFromCollection(command);
         return ResponseEntity.noContent().build();
     }
 
+    /** 아이템 여러개를 컬렉션에 추가 (대량) */
     @PatchMapping("/collection/bulk")
     public ResponseEntity<Void> bulkUpdateItemCollection(
             @AuthenticationPrincipal UUID userId,
@@ -149,7 +175,7 @@ public class ClosetItemController {
         log.info("Received request to bulk update item collection: itemIds={}, collectionId={}", 
                  request.getItemIds(), request.getCollectionId());
 
-        com.simul.closet.application.port.in.UpdateItemCollectionUseCase.BulkUpdateItemCollectionCommand command = com.simul.closet.application.port.in.UpdateItemCollectionUseCase.BulkUpdateItemCollectionCommand.builder()
+        UpdateItemCollectionUseCase.BulkUpdateItemCollectionCommand command = UpdateItemCollectionUseCase.BulkUpdateItemCollectionCommand.builder()
                 .itemIds(request.getItemIds())
                 .userId(userId)
                 .collectionId(request.getCollectionId())
@@ -159,6 +185,7 @@ public class ClosetItemController {
         return ResponseEntity.noContent().build();
     }
 
+    /** 아이템을 컬렉션에 복사 (같은 소유자: 매핑만, 다른 소유자: Deep Copy) */
     @PostMapping("/copy")
     public ResponseEntity<Void> copyItemsToCollection(
             @AuthenticationPrincipal UUID userId,
@@ -167,7 +194,7 @@ public class ClosetItemController {
         log.info("Received request to copy items to collection: itemIds={}, targetCollectionId={}", 
                  request.getItemIds(), request.getCollectionId());
 
-        com.simul.closet.application.port.in.CopyItemsToCollectionUseCase.CopyItemsToCollectionCommand command = com.simul.closet.application.port.in.CopyItemsToCollectionUseCase.CopyItemsToCollectionCommand.builder()
+        CopyItemsToCollectionUseCase.CopyItemsToCollectionCommand command = CopyItemsToCollectionUseCase.CopyItemsToCollectionCommand.builder()
                 .sourceItemIds(request.getItemIds())
                 .userId(userId)
                 .targetCollectionId(request.getCollectionId())

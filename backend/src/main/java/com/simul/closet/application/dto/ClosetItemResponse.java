@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -20,6 +21,6 @@ public class ClosetItemResponse {
     private Category category;
     private String memo;
     private Integer tryCount;
-    private UUID collectionId;
+    private List<UUID> collectionIds;
     private LocalDateTime createdAt;
 }

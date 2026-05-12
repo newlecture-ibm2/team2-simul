@@ -138,8 +138,8 @@
 }
 
 .liked .heartIcon {
-  fill: var(--color-primary);
-  stroke: var(--color-primary);
+  fill: var(--color-error);
+  stroke: var(--color-error);
 }
 
 .likeCount {
@@ -152,7 +152,7 @@
 }
 
 .liked .likeCount {
-  color: var(--color-primary);
+  color: var(--color-error);
 }
 
 .tagList {

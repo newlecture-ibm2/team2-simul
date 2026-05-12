@@ -4,7 +4,7 @@ import { useState } from 'react';
 import styles from './FolderMoveModal.module.css';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getClosetCollections, updateItemCollection } from '@/lib/api/closetAPI';
+import { getClosetCollections, addItemToCollection } from '@/lib/api/closetAPI';
 
 interface FolderMoveModalProps {
   isOpen: boolean;
@@ -36,8 +36,8 @@ export default function FolderMoveModal({
 
   const moveMutation = useMutation({
     mutationFn: async (targetFolderId: string | null) => {
-      // Move all itemIds to the targetFolderId
-      const promises = itemIds.map(id => updateItemCollection(id, targetFolderId));
+      if (!targetFolderId) return; // 컬렉션 미지정 시 아무것도 하지 않음
+      const promises = itemIds.map(id => addItemToCollection(id, targetFolderId));
       await Promise.all(promises);
     },
     onSuccess: () => {

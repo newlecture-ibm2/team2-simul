@@ -5,6 +5,7 @@ import com.simul.closet.application.dto.ClosetCollectionListResponse;
 import com.simul.closet.application.dto.ClosetCollectionResponse;
 import com.simul.closet.application.port.in.GetCollectionsUseCase;
 import com.simul.closet.application.port.out.ClosetCollectionPersistencePort;
+import com.simul.closet.application.port.out.CollectionItemPersistencePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
 public class GetCollectionsService implements GetCollectionsUseCase {
 
     private final ClosetCollectionPersistencePort closetCollectionPersistencePort;
-    private final com.simul.closet.application.port.out.ClosetItemPersistencePort closetItemPersistencePort;
+    private final CollectionItemPersistencePort collectionItemPersistencePort;
 
     @Override
     public ClosetCollectionListResponse getCollections(GetCollectionsQuery query) {
@@ -64,7 +65,7 @@ public class GetCollectionsService implements GetCollectionsUseCase {
 
         List<ClosetCollectionResponse> collectionResponses = collectionsPage.getContent().stream()
                 .map(dto -> {
-                    List<String> topImages = closetItemPersistencePort.findTopImageUrlsByCollectionId(dto.getCollection().getId(), 3);
+                    List<String> topImages = collectionItemPersistencePort.findTopImageUrlsByCollectionId(dto.getCollection().getId(), 3);
                     return ClosetCollectionResponse.builder()
                         .collectionId(dto.getCollection().getId())
                         .name(dto.getCollection().getName())
