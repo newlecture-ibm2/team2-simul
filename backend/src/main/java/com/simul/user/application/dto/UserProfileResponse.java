@@ -18,12 +18,13 @@ public record UserProfileResponse(
     String role,
     long followerCount,
     long followingCount,
+    long postCount,
     boolean isFollowing
 ) {
     /**
-     * User 엔티티 + 팔로우 정보 → UserProfileResponse 변환
+     * User 엔티티 + 팔로우 정보 + 게시물 수 → UserProfileResponse 변환
      */
-    public static UserProfileResponse from(User user, long followerCount, long followingCount, boolean isFollowing) {
+    public static UserProfileResponse from(User user, long followerCount, long followingCount, long postCount, boolean isFollowing) {
         return new UserProfileResponse(
             user.getUserId(),
             user.getNickname(),
@@ -35,6 +36,7 @@ public record UserProfileResponse(
             user.getRole().name(),
             followerCount,
             followingCount,
+            postCount,
             isFollowing
         );
     }

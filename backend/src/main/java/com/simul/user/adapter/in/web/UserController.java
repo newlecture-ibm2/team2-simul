@@ -27,15 +27,18 @@ public class UserController {
     private final LoadUserUseCase loadUserUseCase;
     private final UpdateUserUseCase updateUserUseCase;
     private final WithdrawUserUseCase withdrawUserUseCase;
+    private final com.simul.post.application.port.in.GetUserPostsUseCase getUserPostsUseCase;
 
     public UserController(
         LoadUserUseCase loadUserUseCase,
         UpdateUserUseCase updateUserUseCase,
-        WithdrawUserUseCase withdrawUserUseCase
+        WithdrawUserUseCase withdrawUserUseCase,
+        com.simul.post.application.port.in.GetUserPostsUseCase getUserPostsUseCase
     ) {
         this.loadUserUseCase = loadUserUseCase;
         this.updateUserUseCase = updateUserUseCase;
         this.withdrawUserUseCase = withdrawUserUseCase;
+        this.getUserPostsUseCase = getUserPostsUseCase;
     }
 
     /**
@@ -44,7 +47,8 @@ public class UserController {
      */
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> getMyInfo(@AuthenticationPrincipal UUID userId) {
-        UserProfileResponse response = loadUserUseCase.loadUserProfile(userId, userId);
+        long postCount = getUserPostsUseCase.countUserPosts(userId);
+        UserProfileResponse response = loadUserUseCase.loadUserProfile(userId, userId, postCount);
         return ResponseEntity.ok(response);
     }
 
@@ -88,7 +92,8 @@ public class UserController {
         @AuthenticationPrincipal UUID currentUserId,
         @PathVariable UUID userId
     ) {
-        UserProfileResponse response = loadUserUseCase.loadUserProfile(userId, currentUserId);
+        long postCount = getUserPostsUseCase.countUserPosts(userId);
+        UserProfileResponse response = loadUserUseCase.loadUserProfile(userId, currentUserId, postCount);
         return ResponseEntity.ok(response);
     }
 }

@@ -35,9 +35,11 @@ import com.simul.post.application.dto.LikeUserResponse;
 import com.simul.post.domain.model.PostLike;
 // ... imports handled below by inserting at class declaration
 
+import com.simul.post.application.port.in.GetUserPostsUseCase;
+
 @Service
 @RequiredArgsConstructor
-public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetPostDetailUseCase, DeletePostUseCase, UpdatePostUseCase, GetPostLikesUseCase {
+public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetPostDetailUseCase, DeletePostUseCase, UpdatePostUseCase, GetPostLikesUseCase, GetUserPostsUseCase {
 
     private final PostRepositoryPort postRepositoryPort;
     private final PostLikePersistencePort postLikePersistencePort;
@@ -219,6 +221,7 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
                 post.getLikeCount(),
                 post.getViewCount(),
                 isLiked,
+                post.getIsPublic(),
                 post.getCreatedAt()
         );
     }
@@ -307,6 +310,7 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
 
     @Override
     @Transactional(readOnly = true)
+<<<<<<< HEAD
     public Page<LikeUserResponse> getPostLikes(UUID postId, Pageable pageable) {
         // 1. 게시물 존재 확인
         postRepositoryPort.findById(postId)
@@ -343,6 +347,97 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
                         null
                 );
             }
+        });
+    }
+    public Page<FeedPostResponse> getUserPosts(UUID targetUserId, UUID currentUserId, Pageable pageable) {
+        Page<Post> postsPage;
+        
+        // 정렬 기준 추가 (최신순 우선)
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+
+        if (targetUserId.equals(currentUserId)) {
+            // 본인 프로필: 공개 + 비공개 모두 조회
+            postsPage = postRepositoryPort.findByUserId(targetUserId, sortedPageable);
+        } else {
+            // 타인 프로필: 공개 게시물만 조회
+            postsPage = postRepositoryPort.findPublicPostsByUserId(targetUserId, sortedPageable);
+        }
+
+        if (postsPage.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        List<UUID> postIds = postsPage.getContent().stream().map(Post::getPostId).toList();
+        
+        // 작성자 정보는 한 명(targetUserId)으로 고정되어 있으므로 별도 조회
+        UserResponse author = loadUserUseCase.loadUser(targetUserId);
+        Map<UUID, List<String>> tagMap = loadTagsUseCase.loadTagsByPostIds(postIds);
+
+        // 좋아요 여부 확인
+        Set<UUID> likedPostIds = currentUserId != null 
+                ? postLikePersistencePort.findLikedPostIdsByUserIdAndPostIds(currentUserId, postIds)
+                : Collections.emptySet();
+
+        return postsPage.map(post -> {
+            List<String> postTags = tagMap.getOrDefault(post.getPostId(), Collections.emptyList());
+            String imageUrl = post.getImages().isEmpty() ? null : post.getImages().get(0).getImageUrl();
+            
+            return new FeedPostResponse(
+                    post.getPostId(),
+                    post.getUserId(),
+                    author.nickname(),
+                    author.profileImageUrl(),
+                    imageUrl,
+                    postTags,
+                    post.getCaption(),
+                    post.getLikeCount(),
+                    likedPostIds.contains(post.getPostId()),
+                    post.getCreatedAt()
+            );
+        });
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countUserPosts(UUID userId) {
+        return postRepositoryPort.countByUserId(userId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<FeedPostResponse> getLikedPosts(UUID userId, Pageable pageable) {
+        Page<Post> postsPage = postRepositoryPort.findLikedPostsByUserId(userId, pageable);
+        
+        if (postsPage.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        List<UUID> postIds = postsPage.getContent().stream().map(Post::getPostId).toList();
+        List<UUID> userIds = postsPage.getContent().stream().map(Post::getUserId).distinct().toList();
+
+        // 작성자 정보 및 태그 정보 일괄 조회 (성능 최적화)
+        Map<UUID, UserResponse> userMap = loadUserUseCase.loadUsers(userIds);
+        Map<UUID, List<String>> tagMap = loadTagsUseCase.loadTagsByPostIds(postIds);
+
+        return postsPage.map(post -> {
+            UserResponse author = userMap.get(post.getUserId());
+            List<String> postTags = tagMap.getOrDefault(post.getPostId(), Collections.emptyList());
+            String imageUrl = post.getImages().isEmpty() ? null : post.getImages().get(0).getImageUrl();
+            
+            return new FeedPostResponse(
+                    post.getPostId(),
+                    post.getUserId(),
+                    author != null ? author.nickname() : "Unknown",
+                    author != null ? author.profileImageUrl() : null,
+                    imageUrl,
+                    postTags,
+                    post.getCaption(),
+                    post.getLikeCount(),
+                    true, // 내가 좋아요한 목록이므로 항상 true
+                    post.getCreatedAt()
+            );
+            );
         });
     }
 }

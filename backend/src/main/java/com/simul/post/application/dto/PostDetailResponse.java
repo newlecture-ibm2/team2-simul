@@ -15,6 +15,7 @@ public record PostDetailResponse(
         int likeCount,
         int viewCount,
         boolean isLiked,
+        boolean isPublic,
         LocalDateTime createdAt
 ) {
 }

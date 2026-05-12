@@ -10,6 +10,9 @@ import com.simul.post.application.port.in.LoadCommentUseCase;
 import com.simul.post.application.port.out.CommentPersistencePort;
 import com.simul.post.application.port.out.PostRepositoryPort;
 import com.simul.post.domain.model.Comment;
+import com.simul.notification.application.port.in.CreateNotificationUseCase;
+import com.simul.notification.domain.model.NotificationType;
+import com.simul.post.domain.model.Post;
 import com.simul.user.application.dto.UserResponse;
 import com.simul.user.application.port.in.LoadUserUseCase;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +37,7 @@ public class CommentService implements LoadCommentUseCase, CreateCommentUseCase,
     private final CommentPersistencePort commentPersistencePort;
     private final PostRepositoryPort postPersistencePort;
     private final LoadUserUseCase loadUserUseCase;
+    private final CreateNotificationUseCase createNotificationUseCase;
 
     @Override
     @Transactional(readOnly = true)
@@ -73,7 +77,7 @@ public class CommentService implements LoadCommentUseCase, CreateCommentUseCase,
     @Transactional
     public CommentResponse createComment(UUID postId, UUID userId, CreateCommentCommand command) {
         // 1. Verify Post
-        postPersistencePort.findById(postId).orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
+        Post post = postPersistencePort.findById(postId).orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
 
         int depth = 1;
         UUID parentCommentId = command.getParentCommentId();
@@ -99,7 +103,21 @@ public class CommentService implements LoadCommentUseCase, CreateCommentUseCase,
 
         Comment savedComment = commentPersistencePort.save(comment);
 
-        // TODO: Notification creation will be added here
+        // 알림 생성 로직
+        try {
+            String nickname = loadUserUseCase.loadUser(userId).nickname();
+            createNotificationUseCase.createNotification(
+                    CreateNotificationUseCase.CreateNotificationCommand.builder()
+                            .actorId(userId)
+                            .recipientId(post.getUserId())
+                            .type(NotificationType.COMMENT)
+                            .referenceId(postId)
+                            .message(nickname + "님이 회원님의 게시물에 댓글을 남겼습니다.")
+                            .build()
+            );
+        } catch (Exception e) {
+            // 알림 전송 실패가 메인 비즈니스 로직을 방해하지 않도록 처리
+        }
 
         return mapToResponse(savedComment);
     }

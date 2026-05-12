@@ -49,8 +49,11 @@ axiosInstance.interceptors.response.use(
       errorMessage = (error.response.data as any).message;
     }
 
-    // 자동으로 에러 토스트 띄우기 (401 갱신 실패 등은 제외)
-    if (error.response?.status !== 401) {
+    // 자동으로 에러 토스트 띄우기 (401 갱신 실패 및 내 정보 조회 에러 등은 제외)
+    if (
+      error.response?.status !== 401 && 
+      originalRequest?.url !== '/users/me'
+    ) {
       toast.error(errorMessage);
     }
 

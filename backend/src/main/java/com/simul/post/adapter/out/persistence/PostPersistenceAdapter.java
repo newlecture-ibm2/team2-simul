@@ -45,4 +45,29 @@ public class PostPersistenceAdapter implements PostRepositoryPort {
         if (userIds == null || userIds.isEmpty()) return Page.empty(pageable);
         return postJpaRepository.findAllByUserIdInAndIsPublicTrueAndIsBlindedFalse(userIds, pageable);
     }
+
+    @Override
+    public long countByUserId(UUID userId) {
+        return postJpaRepository.countByUserId(userId);
+    }
+
+    @Override
+    public Page<Post> findByUserId(UUID userId, Pageable pageable) {
+        return postJpaRepository.findAllByUserId(userId, pageable);
+    }
+
+    @Override
+    public Page<Post> findPublicPostsByUserId(UUID userId, Pageable pageable) {
+        return postJpaRepository.findAllByUserIdAndIsPublicTrue(userId, pageable);
+    }
+
+    @Override
+    public long countLikedPosts(UUID userId) {
+        return postJpaRepository.countLikedPosts(userId);
+    }
+
+    @Override
+    public Page<Post> findLikedPostsByUserId(UUID userId, Pageable pageable) {
+        return postJpaRepository.findLikedPostsByUserId(userId, pageable);
+    }
 }

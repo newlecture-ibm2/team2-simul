@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getUserProfile, followUser, unfollowUser } from '@/lib/api/userAPI';
+import { getUserPosts, FeedPost } from '@/lib/api/feedAPI';
+import { getUserClosetItems, ClosetItemResponse } from '@/lib/api/closetAPI';
 import { useAuthStore, User } from '@/lib/stores/useAuthStore';
 import { toast } from '@/lib/utils/toast';
 import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
@@ -32,6 +34,20 @@ export default function UserProfilePage() {
     queryKey: ['userProfile', userId],
     queryFn: () => getUserProfile(userId),
     enabled: !!userId,
+  });
+
+  // 해당 사용자의 게시물 목록 조회
+  const { data: postsData } = useQuery({
+    queryKey: ['userPosts', userId],
+    queryFn: () => getUserPosts(userId),
+    enabled: !!userId && activeTab === '게시물',
+  });
+
+  // 해당 사용자의 옷장 목록 조회
+  const { data: closetData } = useQuery({
+    queryKey: ['userCloset', userId],
+    queryFn: () => getUserClosetItems(userId),
+    enabled: !!userId && activeTab === '옷장',
   });
 
   const followMutation = useMutation({
@@ -153,7 +169,7 @@ export default function UserProfilePage() {
                 <span className={styles.statText}>팔로워</span>
               </div>
               <div className={styles.statItem}>
-                <span className={styles.statNum}>0</span>
+                <span className={styles.statNum}>{user?.postCount || 0}</span>
                 <span className={styles.statText}>게시물</span>
               </div>
             </div>
@@ -181,9 +197,16 @@ export default function UserProfilePage() {
           <div className={styles.gridContent}>
             {activeTab === '게시물' && (
               <div className={styles.postGrid}>
-                {Array.from({ length: 12 }, (_, i) => (
-                  <Link key={i} href={`/post/${i + 1}`} className={styles.gridItem}>
-                    <img src="/recent.jpg" alt="Post" className={styles.gridImage} />
+                {postsData?.content.length === 0 && (
+                  <div className={styles.emptyMsg}>게시물이 없습니다.</div>
+                )}
+                {postsData?.content.map((post: FeedPost) => (
+                  <Link key={post.postId} href={`/post/${post.postId}`} className={styles.gridItem}>
+                    <img 
+                      src={post.imageUrl || "/recent.jpg"} 
+                      alt="Post" 
+                      className={styles.gridImage} 
+                    />
                   </Link>
                 ))}
               </div>
@@ -191,9 +214,16 @@ export default function UserProfilePage() {
             
             {activeTab === '옷장' && (
               <div className={styles.postGrid}>
-                {Array.from({ length: 12 }, (_, i) => (
-                  <Link key={i} href="/closet" className={styles.gridItem}>
-                    <img src="/clothes.png" alt="Closet item" className={styles.gridImage} />
+                {closetData?.items.length === 0 && (
+                  <div className={styles.emptyMsg}>등록된 옷장 아이템이 없습니다.</div>
+                )}
+                {closetData?.items.map((item: ClosetItemResponse) => (
+                  <Link key={item.itemId} href="/closet" className={styles.gridItem}>
+                    <img 
+                      src={item.imageUrl} 
+                      alt="Closet item" 
+                      className={styles.gridImage} 
+                    />
                   </Link>
                 ))}
               </div>
@@ -207,7 +237,7 @@ export default function UserProfilePage() {
         title="언팔로우 하시겠습니까?"
         description={`${user?.nickname}님의 소식을 더 이상 받지 않게 됩니다.`}
         confirmText="언팔로우"
-        isDanger={true}
+        isDestructive={true}
         onConfirm={() => {
           unfollowMutation.mutate();
           setIsUnfollowModalOpen(false);
