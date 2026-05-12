@@ -10,6 +10,7 @@ import com.simul.post.application.port.in.LoadCommentUseCase;
 import com.simul.post.application.port.out.CommentPersistencePort;
 import com.simul.post.application.port.out.PostRepositoryPort;
 import com.simul.post.domain.model.Comment;
+import com.simul.user.application.dto.UserResponse;
 import com.simul.user.application.port.in.LoadUserUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,11 +19,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -41,24 +44,24 @@ public class CommentService implements LoadCommentUseCase, CreateCommentUseCase,
         // 2. Load Parent Comments
         Page<Comment> parentComments = commentPersistencePort.findParentCommentsByPostId(postId, pageable);
 
-        // 3. Load all replies for these parents in one go (or per parent if preferred, but let's optimize)
-        // For simplicity and to maintain current structure, we'll keep the reply fetch but batch the users.
-        
-        // Collect all user IDs from parents and their replies
-        java.util.Set<UUID> userIds = new java.util.HashSet<>();
-        parentComments.forEach(c -> {
+        // 3. 유저 정보 일괄 조회를 위해 ID 수집 및 대댓글 미리 조회
+        Set<UUID> userIds = new HashSet<>();
+        Map<UUID, List<Comment>> repliesMap = new HashMap<>();
+
+        for (Comment c : parentComments.getContent()) {
             userIds.add(c.getUserId());
             List<Comment> replies = commentPersistencePort.findRepliesByParentId(c.getCommentId());
+            repliesMap.put(c.getCommentId(), replies);
             replies.forEach(r -> userIds.add(r.getUserId()));
-        });
+        }
 
         // Batch load all users
-        java.util.Map<UUID, com.simul.user.application.dto.UserResponse> userMap = 
-            loadUserUseCase.loadUsers(new java.util.ArrayList<>(userIds));
+        Map<UUID, UserResponse> userMap = 
+            loadUserUseCase.loadUsers(new ArrayList<>(userIds));
 
         // 4. Map to DTO
         return parentComments.map(c -> {
-            List<Comment> replies = commentPersistencePort.findRepliesByParentId(c.getCommentId());
+            List<Comment> replies = repliesMap.getOrDefault(c.getCommentId(), List.of());
             List<CommentResponse> replyDtos = replies.stream()
                     .map(r -> createCommentResponse(r, List.of(), userMap))
                     .collect(Collectors.toList());
@@ -80,7 +83,7 @@ public class CommentService implements LoadCommentUseCase, CreateCommentUseCase,
                     .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
             
             // Only allow 2 depth
-            if (parentComment.getDepth() >= 2) {
+            if (parentComment.getDepth() != null && parentComment.getDepth() >= 2) {
                 parentCommentId = parentComment.getParentCommentId();
             }
             depth = 2;
@@ -117,13 +120,13 @@ public class CommentService implements LoadCommentUseCase, CreateCommentUseCase,
 
 
     private CommentResponse mapToResponse(Comment comment) {
-        var userProfile = loadUserUseCase.loadUser(comment.getUserId());
-        java.util.Map<UUID, com.simul.user.application.dto.UserResponse> userMap = java.util.Map.of(comment.getUserId(), userProfile);
+        UserResponse userProfile = loadUserUseCase.loadUser(comment.getUserId());
+        Map<UUID, UserResponse> userMap = Map.of(comment.getUserId(), userProfile);
         return createCommentResponse(comment, List.of(), userMap);
     }
 
     private CommentResponse createCommentResponse(Comment comment, List<CommentResponse> replies, 
-                                                java.util.Map<UUID, com.simul.user.application.dto.UserResponse> userMap) {
+                                                 Map<UUID, UserResponse> userMap) {
         boolean isDeleted = comment.getDeletedAt() != null;
         String content = isDeleted ? "삭제된 댓글입니다." : comment.getContent();
         

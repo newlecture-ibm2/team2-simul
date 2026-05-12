@@ -10,7 +10,7 @@ public record CommentResponse(
     String nickname,
     String profileImageUrl,
     String content,
-    int depth,
+    Integer depth,
     LocalDateTime createdAt,
     boolean isDeleted,
     List<CommentResponse> replies
