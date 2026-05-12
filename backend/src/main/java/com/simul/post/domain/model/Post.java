@@ -138,7 +138,7 @@ public class Post extends BaseJpaEntity {
 
     public void incrementReportCount() {
         this.reportCount++;
-        if (this.reportCount >= 5) {
+        if (this.reportCount >= 10) {
             this.isBlinded = true;
         }
     }

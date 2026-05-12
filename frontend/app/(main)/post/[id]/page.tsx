@@ -263,36 +263,45 @@ export default function PostDetailPage() {
           <button className={styles.iconBtn} aria-label="공유하기">
             <img src="/icons/square.and.arrow.up.png" alt="Share" className={styles.icon} />
           </button>
-          {isOwner && (
-            <div className={styles.menuWrapper} ref={menuRef}>
-              <button 
-                className={styles.iconBtn} 
-                onClick={() => setShowMenu(!showMenu)}
-                aria-label="더보기"
-              >
-                <img src="/icons/ellipsis.png" alt="More" className={styles.icon} />
-              </button>
-              {showMenu && (
-                <div className={styles.dropdownMenu}>
-                  <button 
-                    className={styles.menuItem} 
-                    onClick={() => { setShowMenu(false); router.push(`/post/${postId}/edit`); }}
-                  >
-                    <img src="/icons/pencil.png" alt="" className={styles.menuIcon} />
-                    <span>수정하기</span>
-                  </button>
-                  <div className={styles.menuDivider} />
+          <div className={styles.menuWrapper} ref={menuRef}>
+            <button 
+              className={styles.iconBtn} 
+              onClick={() => setShowMenu(!showMenu)}
+              aria-label="더보기"
+            >
+              <img src="/icons/ellipsis.png" alt="More" className={styles.icon} />
+            </button>
+            {showMenu && (
+              <div className={styles.dropdownMenu}>
+                {isOwner ? (
+                  <>
+                    <button 
+                      className={styles.menuItem} 
+                      onClick={() => { setShowMenu(false); router.push(`/post/${postId}/edit`); }}
+                    >
+                      <img src="/icons/pencil.png" alt="" className={styles.menuIcon} />
+                      <span>수정하기</span>
+                    </button>
+                    <div className={styles.menuDivider} />
+                    <button 
+                      className={`${styles.menuItem} ${styles.menuItemDanger}`} 
+                      onClick={handleDelete}
+                    >
+                      <img src="/icons/trash.png" alt="" className={styles.menuIcon} />
+                      <span>삭제하기</span>
+                    </button>
+                  </>
+                ) : (
                   <button 
                     className={`${styles.menuItem} ${styles.menuItemDanger}`} 
-                    onClick={handleDelete}
+                    onClick={() => { setShowMenu(false); setIsReportModalOpen(true); }}
                   >
-                    <img src="/icons/trash.png" alt="" className={styles.menuIcon} />
-                    <span>삭제하기</span>
+                    <span>🚨 신고하기</span>
                   </button>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -408,10 +417,6 @@ export default function PostDetailPage() {
             postId={postId as string} 
             onLoginRequired={() => setIsLoginSheetOpen(true)}
           />
-          
-          {(!isAuthenticated || (user && String(user.id) !== String(post.userId))) && (
-            <button className={styles.reportBtn} onClick={() => setIsReportModalOpen(true)}>🚨 게시물 신고하기</button>
-          )}
         </div>
       </div>
 
