@@ -1,0 +1,41 @@
+package com.simul.user.application.dto;
+
+import com.simul.user.domain.model.User;
+import java.util.UUID;
+
+/**
+ * 사용자 프로필 응답 DTO (팔로우 정보 포함)
+ * - 타인 프로필 조회 시 팔로워/팔로잉 수 및 팔로우 여부를 포함
+ */
+public record UserProfileResponse(
+    UUID userId,
+    String nickname,
+    String name,
+    String gender,
+    String bio,
+    String profileImageUrl,
+    boolean isPublic,
+    String role,
+    long followerCount,
+    long followingCount,
+    boolean isFollowing
+) {
+    /**
+     * User 엔티티 + 팔로우 정보 → UserProfileResponse 변환
+     */
+    public static UserProfileResponse from(User user, long followerCount, long followingCount, boolean isFollowing) {
+        return new UserProfileResponse(
+            user.getUserId(),
+            user.getNickname(),
+            user.getName(),
+            user.getGender().name(),
+            user.getBio(),
+            user.getProfileImageUrl(),
+            user.isPublic(),
+            user.getRole().name(),
+            followerCount,
+            followingCount,
+            isFollowing
+        );
+    }
+}
