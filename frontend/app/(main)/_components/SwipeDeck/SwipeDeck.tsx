@@ -22,6 +22,7 @@ interface SwipePost {
   imageUrl: string;
   authorName: string;
   authorAvatar: string;
+  isLiked?: boolean;
 }
 
 export default function SwipeDeck() {
@@ -45,7 +46,8 @@ export default function SwipeDeck() {
             id: p.postId,
             imageUrl: p.imageUrl || '/dummy.jpg',
             authorName: p.nickname || '알 수 없음',
-            authorAvatar: p.profileImageUrl || '/dummy.jpg'
+            authorAvatar: p.profileImageUrl || '/dummy.jpg',
+            isLiked: p.isLiked
           }));
           // 백엔드 데이터가 적을 수 있으므로, 기존의 예시 이미지(DUMMY_POSTS)를 뒤에 합쳐서 양을 늘립니다.
           setPosts([...mappedPosts, ...DUMMY_POSTS]);
@@ -93,7 +95,10 @@ export default function SwipeDeck() {
       
       const currentPost = posts[((currentIndex % posts.length) + posts.length) % posts.length];
       if (typeof currentPost.id === 'string' && !currentPost.id.startsWith('dummy')) {
-        toggleLike(currentPost.id).catch(err => console.error('좋아요 토글 실패:', err));
+        // 이미 좋아요를 누른 상태라면 API 호출 생략 (No-op)
+        if (!currentPost.isLiked) {
+          toggleLike(currentPost.id).catch(err => console.error('좋아요 토글 실패:', err));
+        }
       }
 
       setExitDirection('right');
