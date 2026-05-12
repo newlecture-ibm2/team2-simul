@@ -141,4 +141,10 @@ public class FollowService implements FollowUserUseCase, UnfollowUserUseCase, Lo
             );
         }).toList();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.List<UUID> getFollowerIds(UUID userId) {
+        return followPersistencePort.getFollowerIds(userId);
+    }
 }

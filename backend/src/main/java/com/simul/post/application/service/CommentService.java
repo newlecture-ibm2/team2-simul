@@ -2,6 +2,7 @@ package com.simul.post.application.service;
 
 import com.simul.common.exception.BusinessException;
 import com.simul.common.exception.ErrorCode;
+import com.simul.notification.application.dto.CommentCreatedEvent;
 import com.simul.post.application.dto.CommentResponse;
 import com.simul.post.application.dto.CreateCommentCommand;
 import com.simul.post.application.port.in.CreateCommentUseCase;
@@ -10,12 +11,11 @@ import com.simul.post.application.port.in.LoadCommentUseCase;
 import com.simul.post.application.port.out.CommentPersistencePort;
 import com.simul.post.application.port.out.PostRepositoryPort;
 import com.simul.post.domain.model.Comment;
-import com.simul.notification.application.port.in.CreateNotificationUseCase;
-import com.simul.notification.domain.model.NotificationType;
 import com.simul.post.domain.model.Post;
 import com.simul.user.application.dto.UserResponse;
 import com.simul.user.application.port.in.LoadUserUseCase;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -39,7 +39,7 @@ public class CommentService implements LoadCommentUseCase, CreateCommentUseCase,
     private final CommentPersistencePort commentPersistencePort;
     private final PostRepositoryPort postPersistencePort;
     private final LoadUserUseCase loadUserUseCase;
-    private final CreateNotificationUseCase createNotificationUseCase;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional(readOnly = true)
@@ -111,21 +111,9 @@ public class CommentService implements LoadCommentUseCase, CreateCommentUseCase,
             postPersistencePort.save(post);
         }
 
-        // 알림 생성 로직
-        try {
-            String nickname = loadUserUseCase.loadUser(userId).nickname();
-            createNotificationUseCase.createNotification(
-                    CreateNotificationUseCase.CreateNotificationCommand.builder()
-                            .actorId(userId)
-                            .recipientId(post.getUserId())
-                            .type(NotificationType.COMMENT)
-                            .referenceId(postId)
-                            .message(nickname + "님이 회원님의 게시물에 댓글을 남겼습니다.")
-                            .build()
-            );
-        } catch (Exception e) {
-            // 알림 전송 실패가 메인 비즈니스 로직을 방해하지 않도록 처리
-        }
+        // 2. 알림 이벤트 발행 (헥사고날 규칙 및 이벤트 기반 구조를 위해 ApplicationEventPublisher 사용)
+        // 게시물 작성자(post.getUserId())에게 댓글 알림을 보냄
+        eventPublisher.publishEvent(new CommentCreatedEvent(userId, post.getUserId(), postId));
 
         return mapToResponse(savedComment);
     }

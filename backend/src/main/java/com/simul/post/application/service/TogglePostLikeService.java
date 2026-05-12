@@ -1,15 +1,14 @@
 package com.simul.post.application.service;
 
+import com.simul.notification.application.dto.PostLikedEvent;
 import com.simul.post.application.dto.ToggleLikeResponse;
 import com.simul.post.application.port.in.TogglePostLikeUseCase;
 import com.simul.post.application.port.out.PostLikePersistencePort;
 import com.simul.post.application.port.out.PostRepositoryPort;
-import com.simul.notification.application.port.in.CreateNotificationUseCase;
-import com.simul.notification.domain.model.NotificationType;
 import com.simul.post.domain.model.Post;
 import com.simul.post.domain.model.PostLike;
-import com.simul.user.application.port.in.LoadUserUseCase;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,8 +28,7 @@ public class TogglePostLikeService implements TogglePostLikeUseCase {
 
     private final PostRepositoryPort postRepositoryPort;
     private final PostLikePersistencePort postLikePersistencePort;
-    private final CreateNotificationUseCase createNotificationUseCase;
-    private final LoadUserUseCase loadUserUseCase;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -58,27 +56,16 @@ public class TogglePostLikeService implements TogglePostLikeUseCase {
             postLikePersistencePort.save(newLike);
             post.incrementLikeCount();
             isLiked = true;
-
-            // 알림 생성 로직
-            try {
-                String nickname = loadUserUseCase.loadUser(userId).nickname();
-                createNotificationUseCase.createNotification(
-                        CreateNotificationUseCase.CreateNotificationCommand.builder()
-                                .actorId(userId)
-                                .recipientId(post.getUserId())
-                                .type(NotificationType.LIKE)
-                                .referenceId(postId)
-                                .message(nickname + "님이 회원님의 게시물을 좋아합니다.")
-                                .build()
-                );
-            } catch (Exception e) {
-                // 알림 전송 실패가 메인 비즈니스 로직(좋아요)을 방해하지 않도록 처리
-                // log.error("좋아요 알림 전송 실패", e);
-            }
         }
 
         // 4. 변경된 likeCount 반영
         postRepositoryPort.save(post);
+
+        // 5. 좋아요 시에만 알림 이벤트 발행 (좋아요 취소 시에는 알림 안 보냄)
+        // 헥사고날 규칙 및 이벤트 기반 구조를 위해 ApplicationEventPublisher 사용
+        if (isLiked) {
+            eventPublisher.publishEvent(new PostLikedEvent(userId, post.getUserId(), postId));
+        }
 
         return new ToggleLikeResponse(isLiked, post.getLikeCount());
     }
