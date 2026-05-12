@@ -8,7 +8,7 @@ import { toggleLike, getPostDetail, deletePost } from '../../../../lib/api/feedA
 import { checkIsFollowing, followUser, unfollowUser } from '@/lib/api/userAPI';
 import { useAuthStore } from '../../../../lib/stores/useAuthStore';
 import { toast } from '@/lib/utils/toast';
-import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
+import ConfirmModal from './_components/ConfirmModal/ConfirmModal';
 import styles from './page.module.css';
 import CommentSection from './_components/CommentSection/CommentSection';
 import ReportModal from './_components/ReportModal/ReportModal';
