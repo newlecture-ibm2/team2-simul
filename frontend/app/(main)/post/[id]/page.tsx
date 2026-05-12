@@ -29,6 +29,8 @@ export interface PostDetailData {
   viewCount: number;
   commentCount: number;
   isLiked: boolean;
+  reportCount: number;
+  isWarned: boolean;
   createdAt: string;
 }
 
@@ -345,6 +347,15 @@ export default function PostDetailPage() {
             </div>
           )}
         </div>
+
+          {post.isWarned && (
+            <div className={styles.warningBanner}>
+              <span className={styles.warningIcon}>⚠️</span>
+              <span className={styles.warningText}>
+                이 게시물은 다수의 신고가 접수되었습니다. 커뮤니티 가이드를 위반한 경우 블라인드 처리될 수 있습니다.
+              </span>
+            </div>
+          )}
 
         <div className={styles.contentSection}>
           <div className={styles.authorRow}>

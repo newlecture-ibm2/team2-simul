@@ -17,6 +17,8 @@ public record PostDetailResponse(
         int commentCount,
         boolean isLiked,
         boolean isPublic,
+        int reportCount,
+        boolean isWarned,
         LocalDateTime createdAt
 ) {
 }

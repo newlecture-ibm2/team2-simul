@@ -43,7 +43,7 @@ export default function ReportModal({ isOpen, onClose, onSubmit, isSubmitting }:
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <h3 className={styles.title}>게시물 신고하기</h3>
         <p className={styles.description}>
-          해당 게시물이 커뮤니티 가이드를 위반했다고 생각되시면 신고해주세요. 누적 5회 이상 신고된 게시물은 자동으로 블라인드 처리됩니다.
+          해당 게시물이 커뮤니티 가이드를 위반했다고 생각되시면 신고해주세요. 누적 10회 이상 신고된 게시물은 자동으로 블라인드 처리됩니다.
         </p>
         
         <div className={styles.reasonList}>
