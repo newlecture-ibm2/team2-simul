@@ -3,10 +3,10 @@ package com.simul.post.application.service;
 import com.simul.common.exception.BusinessException;
 import com.simul.common.exception.ErrorCode;
 import com.simul.post.application.port.in.ReportPostUseCase;
-import com.simul.post.application.port.out.PostReportPersistencePort;
+import com.simul.post.application.port.out.ReportPersistencePort;
 import com.simul.post.application.port.out.PostRepositoryPort;
 import com.simul.post.domain.model.Post;
-import com.simul.post.domain.model.PostReport;
+import com.simul.post.domain.model.Report;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +18,7 @@ import java.util.UUID;
 public class ReportService implements ReportPostUseCase {
 
     private final PostRepositoryPort postRepositoryPort;
-    private final PostReportPersistencePort postReportPersistencePort;
+    private final ReportPersistencePort reportPersistencePort;
 
     @Override
     @Transactional
@@ -26,16 +26,16 @@ public class ReportService implements ReportPostUseCase {
         Post post = postRepositoryPort.findById(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
 
-        if (postReportPersistencePort.existsByPostIdAndReporterId(postId, reporterId)) {
+        if (reportPersistencePort.existsByPostIdAndReporterId(postId, reporterId)) {
             throw new BusinessException(ErrorCode.DUPLICATE_REPORT);
         }
 
-        PostReport report = PostReport.builder()
+        Report report = Report.builder()
                 .postId(postId)
                 .reporterId(reporterId)
                 .reason(reason)
                 .build();
-        postReportPersistencePort.save(report);
+        reportPersistencePort.save(report);
 
         post.incrementReportCount();
         postRepositoryPort.save(post);

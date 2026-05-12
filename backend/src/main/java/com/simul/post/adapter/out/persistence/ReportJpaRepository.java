@@ -1,13 +1,13 @@
 package com.simul.post.adapter.out.persistence;
 
-import com.simul.post.domain.model.PostReport;
+import com.simul.post.domain.model.Report;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
 @Repository
-public interface PostReportJpaRepository extends JpaRepository<PostReport, UUID> {
+public interface ReportJpaRepository extends JpaRepository<Report, UUID> {
     boolean existsByPostIdAndReporterId(UUID postId, UUID reporterId);
     int countByPostId(UUID postId);
 }

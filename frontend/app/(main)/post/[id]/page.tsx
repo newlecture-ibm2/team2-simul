@@ -15,6 +15,7 @@ import ReportModal from './_components/ReportModal/ReportModal';
 import DeleteConfirmModal from './_components/DeleteConfirmModal/DeleteConfirmModal';
 import LikeListModal from './_components/LikeListModal/LikeListModal';
 import { reportPost } from '../../../../lib/api/feedAPI';
+import LoginRequiredBottomSheet from './_components/LoginRequiredBottomSheet';
 
 export interface PostDetailData {
   postId: string;
@@ -50,6 +51,7 @@ export default function PostDetailPage() {
   const [isReporting, setIsReporting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLikeListModalOpen, setIsLikeListModalOpen] = useState(false);
+  const [isLoginSheetOpen, setIsLoginSheetOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -94,7 +96,7 @@ export default function PostDetailPage() {
 
   const handleFollowToggle = () => {
     if (!isAuthenticated) {
-      toast.error('로그인이 필요합니다.');
+      setIsLoginSheetOpen(true);
       return;
     }
     if (isFollowingAuthor) {
@@ -182,7 +184,7 @@ export default function PostDetailPage() {
 
   const handleLike = async () => {
     if (!isAuthenticated) {
-      toast.error('좋아요를 누르려면 로그인이 필요합니다.');
+      setIsLoginSheetOpen(true);
       return;
     }
 
@@ -223,7 +225,7 @@ export default function PostDetailPage() {
 
   const handleReport = async (reason: string) => {
     if (!isAuthenticated) {
-      toast.error('로그인이 필요한 서비스입니다.');
+      setIsLoginSheetOpen(true);
       setIsReportModalOpen(false);
       return;
     }
@@ -402,7 +404,10 @@ export default function PostDetailPage() {
             </div>
           </div>
           
-          <CommentSection postId={postId as string} />
+          <CommentSection 
+            postId={postId as string} 
+            onLoginRequired={() => setIsLoginSheetOpen(true)}
+          />
           
           {(!isAuthenticated || (user && String(user.id) !== String(post.userId))) && (
             <button className={styles.reportBtn} onClick={() => setIsReportModalOpen(true)}>🚨 게시물 신고하기</button>
@@ -439,6 +444,11 @@ export default function PostDetailPage() {
         isOpen={isLikeListModalOpen}
         onClose={() => setIsLikeListModalOpen(false)}
         postId={postId as string}
+      />
+
+      <LoginRequiredBottomSheet
+        isOpen={isLoginSheetOpen}
+        onClose={() => setIsLoginSheetOpen(false)}
       />
     </div>
   );
