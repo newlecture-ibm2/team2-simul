@@ -207,7 +207,7 @@ export default function UserProfilePage() {
         title="언팔로우 하시겠습니까?"
         description={`${user?.nickname}님의 소식을 더 이상 받지 않게 됩니다.`}
         confirmText="언팔로우"
-        isDanger={true}
+        isDestructive={true}
         onConfirm={() => {
           unfollowMutation.mutate();
           setIsUnfollowModalOpen(false);
