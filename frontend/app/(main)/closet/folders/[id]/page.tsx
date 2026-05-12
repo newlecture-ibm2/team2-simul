@@ -2,12 +2,12 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { getClosetCollection, ClosetItemResponse } from '@/lib/api/closetAPI';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getClosetCollection, ClosetItemResponse, updateClosetCollection, addClosetItem, removeItemFromCollection } from '@/lib/api/closetAPI';
 import { useClosetItems } from '../../_components/useClosetItems';
 import ClosetCard from '../../_components/ClosetCard/ClosetCard';
 import ClosetDetailModal from '../../_components/ClosetDetailModal/ClosetDetailModal';
-import DeleteConfirmModal from '../../_components/DeleteConfirmModal/DeleteConfirmModal';
+import ConfirmModal from '../../_components/ConfirmModal/ConfirmModal';
 import FolderMoveModal from '../../_components/FolderMoveModal/FolderMoveModal';
 import AddItemModal from './_components/AddItemModal/AddItemModal';
 import Toggle from '../../_components/Toggle/Toggle';
@@ -21,6 +21,7 @@ const ITEMS_PER_PAGE = 20;
 export default function FolderDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const queryClient = useQueryClient();
   const folderId = params.id as string;
   const searchParams = useSearchParams();
   const isEditInitial = searchParams.get('edit') === 'true';
@@ -148,14 +149,22 @@ export default function FolderDetailPage() {
               className={styles.titleInput}
               value={folderTitle}
               onChange={(e) => setFolderTitle(e.target.value)}
-              onBlur={() => {
+              onBlur={async () => {
                 if (!folderTitle.trim()) {
                   if (collection) setFolderTitle(collection.name);
                   setShowAlert(true);
                   return;
                 }
-                // TODO: updateClosetCollection API call
-                console.log(`Renaming folder ${folderId} to ${folderTitle}`);
+                try {
+                  const formData = new FormData();
+                  formData.append('name', folderTitle.trim());
+                  await updateClosetCollection(folderId, formData);
+                  queryClient.invalidateQueries({ queryKey: ['closetCollection', folderId] });
+                  queryClient.invalidateQueries({ queryKey: ['closetCollections'] });
+                } catch (error) {
+                  console.error('Failed to rename folder:', error);
+                  if (collection) setFolderTitle(collection.name);
+                }
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
@@ -248,9 +257,18 @@ export default function FolderDetailPage() {
       <ClosetAddModal 
         isOpen={isClosetAddModalOpen}
         onClose={() => setIsClosetAddModalOpen(false)}
-        onSave={(data) => {
-          console.log('Saving new item from folder page:', data);
-          // TODO: API integration
+        onSave={async (formData) => {
+          try {
+            formData.append('collectionId', folderId);
+            await addClosetItem(formData);
+            setIsClosetAddModalOpen(false);
+            queryClient.invalidateQueries({ queryKey: ['closetItems'] });
+            queryClient.invalidateQueries({ queryKey: ['closetCollection', folderId] });
+            refetchItems();
+          } catch (error) {
+            console.error('Failed to add item:', error);
+            alert('아이템 추가에 실패했습니다.');
+          }
         }}
       />
 
@@ -287,14 +305,29 @@ export default function FolderDetailPage() {
       )}
 
       {/* Delete Confirm Modal */}
-      <DeleteConfirmModal
+      <ConfirmModal
         isOpen={showDeleteModal}
-        count={selectedItems.size}
-        onConfirm={() => {
-          setItems(prev => prev.filter(item => !selectedItems.has(item.itemId)));
-          setSelectedItems(new Set());
-          setShowDeleteModal(false);
-          refetchItems();
+        title="삭제하시겠습니까?"
+        description={`선택한 ${selectedItems.size}개의 아이템이 영구적으로 삭제됩니다.`}
+        confirmText="예"
+        cancelText="아니오"
+        isDestructive={true}
+        onConfirm={async () => {
+          try {
+            const promises = Array.from(selectedItems).map(itemId =>
+              removeItemFromCollection(itemId, folderId)
+            );
+            await Promise.all(promises);
+            setItems(prev => prev.filter(item => !selectedItems.has(item.itemId)));
+            setSelectedItems(new Set());
+            setShowDeleteModal(false);
+            queryClient.invalidateQueries({ queryKey: ['closetCollection', folderId] });
+            queryClient.invalidateQueries({ queryKey: ['closetCollections'] });
+            refetchItems();
+          } catch (error) {
+            console.error('Failed to remove items from collection:', error);
+            alert('아이템 제거에 실패했습니다.');
+          }
         }}
         onCancel={() => setShowDeleteModal(false)}
       />

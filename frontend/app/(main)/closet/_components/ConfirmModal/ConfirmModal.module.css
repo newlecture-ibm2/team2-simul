@@ -50,28 +50,6 @@
   z-index: 0;
 }
 
-.iconWrapper {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 16px;
-}
-
-.warningIcon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-circle);
-  background: #fff0f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.warningIcon img {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-}
-
 .title {
   font-size: 18px;
   font-weight: 700;
@@ -86,6 +64,7 @@
   color: var(--color-text-secondary);
   margin: 0 0 24px;
   line-height: 1.5;
+  white-space: pre-wrap;
 }
 
 .actions {
@@ -114,10 +93,19 @@
 }
 
 .confirmBtn {
+  background: var(--color-green, #d1dc55);
+  color: #fff;
+}
+
+.confirmBtn:hover {
+  background: var(--color-green-hover, #4a6724);
+}
+
+.destructiveBtn {
   background: #ff4b4b;
   color: white;
 }
 
-.confirmBtn:hover {
+.destructiveBtn:hover {
   background: #e03e3e;
 }
