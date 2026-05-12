@@ -2,6 +2,7 @@ package com.simul.notification.adapter.in.web;
 
 import com.simul.notification.application.dto.NotificationResponse;
 import com.simul.notification.application.port.in.LoadNotificationUseCase;
+import com.simul.notification.application.port.in.MarkNotificationReadUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,8 +19,10 @@ import java.util.UUID;
  * [Hexagonal - Input Adapter (Web)]
  * 알림 REST API 컨트롤러
  *
- * - GET /notifications         : 알림 목록 조회 (미읽음 우선, 최신순, 페이지네이션)
- * - GET /notifications/unread-count : 미읽음 알림 수 조회 (헤더 배지용)
+ * - GET    /notifications              : 알림 목록 조회 (미읽음 우선, 최신순, 페이지네이션)
+ * - GET    /notifications/unread-count  : 미읽음 알림 수 조회 (헤더 배지용)
+ * - PATCH  /notifications/{id}/read     : 개별 알림 읽음 처리
+ * - PATCH  /notifications/read-all      : 전체 알림 읽음 처리
  */
 @RestController
 @RequestMapping("/notifications")
@@ -27,6 +30,7 @@ import java.util.UUID;
 public class NotificationController {
 
     private final LoadNotificationUseCase loadNotificationUseCase;
+    private final MarkNotificationReadUseCase markNotificationReadUseCase;
 
     /**
      * 알림 목록 조회
@@ -69,6 +73,49 @@ public class NotificationController {
         long unreadCount = loadNotificationUseCase.getUnreadCount(userId);
         return ResponseEntity.ok(Map.of(
                 "unread_count", unreadCount
+        ));
+    }
+
+    /**
+     * 개별 알림 읽음 처리
+     * - 로그인 필수
+     * - 본인의 알림만 읽음 처리 가능
+     */
+    @PatchMapping("/{id}/read")
+    public ResponseEntity<?> markAsRead(
+            @AuthenticationPrincipal UUID userId,
+            @PathVariable("id") UUID notificationId
+    ) {
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "error_code", "ERR-001",
+                    "message", "로그인이 필요한 서비스입니다."
+            ));
+        }
+
+        markNotificationReadUseCase.markAsRead(notificationId, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 전체 알림 읽음 처리
+     * - 로그인 필수
+     * - 수신자의 모든 미읽음 알림을 읽음 처리
+     */
+    @PatchMapping("/read-all")
+    public ResponseEntity<?> markAllAsRead(
+            @AuthenticationPrincipal UUID userId
+    ) {
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "error_code", "ERR-001",
+                    "message", "로그인이 필요한 서비스입니다."
+            ));
+        }
+
+        int updatedCount = markNotificationReadUseCase.markAllAsRead(userId);
+        return ResponseEntity.ok(Map.of(
+                "updated_count", updatedCount
         ));
     }
 }
