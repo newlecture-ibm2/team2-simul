@@ -1,15 +1,17 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Button from '@/components/Button';
 import styles from './page.module.css';
 
 export default function TryonResultPage() {
   const [viewMode, setViewMode] = useState<'result' | 'original'>('result');
+  const searchParams = useSearchParams();
 
-  const originalImg = '/dummy.jpg'; // Mock
-  const resultImg = '/recent.jpg'; // Mock
+  const originalImg = '/dummy.jpg'; // TODO: base image 연동
+  const resultImg = searchParams.get('result_image_url') || '/recent.jpg';
 
   return (
     <div className={styles.resultPage}>
