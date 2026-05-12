@@ -1,6 +1,6 @@
 .container {
   margin-top: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
   padding-top: 20px;
 }
 
@@ -81,17 +81,25 @@
 }
 
 .actionBtn:hover {
-  color: #fff;
+  color: var(--color-text-primary);
 }
 
 .inputWrapper {
   display: flex;
   gap: 10px;
   align-items: flex-end;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.04);
   padding: 12px;
   border-radius: 20px;
   position: relative;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.inputWrapper:focus-within {
+  background: var(--color-surface-white);
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(149, 179, 88, 0.1);
 }
 
 .replyingToBanner {
@@ -117,7 +125,7 @@
   flex: 1;
   background: none;
   border: none;
-  color: #fff;
+  color: var(--color-text-primary);
   font-size: 14px;
   resize: none;
   min-height: 20px;
@@ -126,7 +134,7 @@
 }
 
 .textarea::placeholder {
-  color: #666;
+  color: var(--color-text-disabled);
 }
 
 .submitBtn {
