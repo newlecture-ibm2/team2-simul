@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 import Button from '@/components/Button';
 import Toggle from './_components/Toggle/Toggle';
 import styles from './page.module.css';
-import { generateTryon, getMyBaseImages, uploadBaseImage } from '@/lib/api/tryonAPI';
-import { addClosetItem, getClosetItems } from '@/lib/api/closetAPI';
+import { deleteBaseImage, generateTryon, getMyBaseImages, uploadBaseImage } from '@/lib/api/tryonAPI';
+import { addClosetItem, deleteClosetItem, getClosetItems } from '@/lib/api/closetAPI';
 
 type ClosetItemSummary = {
   itemId: string;
@@ -149,6 +149,29 @@ export default function StudioPage() {
       setIsUploadingBaseImage(false);
       if (baseImageInputRef.current) baseImageInputRef.current.value = '';
     }
+  };
+
+  const handleDeleteBaseImage = async (baseImageId: string) => {
+    if (!confirm('이 베이스 이미지를 삭제할까요?')) return;
+    await deleteBaseImage(baseImageId);
+    const next = baseImages.filter((b) => b.base_image_id !== baseImageId);
+    setBaseImages(next);
+    if (selectedBaseImageId === baseImageId) {
+      setSelectedBaseImageId(next[0]?.base_image_id ?? '');
+    }
+  };
+
+  const handleDeleteClosetItem = async (itemId: string) => {
+    if (!confirm('이 옷 아이템을 삭제할까요?')) return;
+    await deleteClosetItem(itemId);
+    setClosetItems((prev) => prev.filter((it) => it.itemId !== itemId));
+    setSelectedClothesByCategory((prev) => {
+      const next: Partial<Record<ClothesCategoryBackend, SelectedCloth>> = { ...prev };
+      (Object.keys(next) as ClothesCategoryBackend[]).forEach((cat) => {
+        if (next[cat]?.itemId === itemId) delete next[cat];
+      });
+      return next;
+    });
   };
 
   const handleTryon = async () => {
@@ -308,6 +331,18 @@ export default function StudioPage() {
                     onClick={() => setSelectedBaseImageId(img.base_image_id)}
                   >
                     <img src={img.image_url} alt={`Person ${i}`} className={styles.itemImage} />
+                    <button
+                      type="button"
+                      className={styles.deleteBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void handleDeleteBaseImage(img.base_image_id);
+                      }}
+                      aria-label="베이스 이미지 삭제"
+                      title="삭제"
+                    >
+                      ✕
+                    </button>
                     {selectedBaseImageId === img.base_image_id && <div className={styles.checkBadge}>✓</div>}
                   </div>
                 ))}
@@ -334,6 +369,18 @@ export default function StudioPage() {
                     <div className={styles.clothContent}>
                       <img src={cloth.imageUrl} alt={`Cloth ${cloth.itemId}`} className={styles.itemImage} />
                     </div>
+                    <button
+                      type="button"
+                      className={styles.deleteBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void handleDeleteClosetItem(cloth.itemId);
+                      }}
+                      aria-label="옷 아이템 삭제"
+                      title="삭제"
+                    >
+                      ✕
+                    </button>
                     {isSelected && <div className={styles.checkBadge}>✓</div>}
                   </div>
                 );
