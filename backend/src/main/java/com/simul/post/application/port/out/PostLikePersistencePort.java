@@ -1,6 +1,8 @@
 package com.simul.post.application.port.out;
 
 import com.simul.post.domain.model.PostLike;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 import java.util.Set;
@@ -23,4 +25,9 @@ public interface PostLikePersistencePort {
      * (피드 목록에서 isLiked 여부를 일괄 조회할 때 사용)
      */
     Set<UUID> findLikedPostIdsByUserIdAndPostIds(UUID userId, java.util.List<UUID> postIds);
+
+    /**
+     * 특정 게시물에 좋아요를 누른 내역 조회 (페이징)
+     */
+    Page<PostLike> findByPostId(UUID postId, Pageable pageable);
 }

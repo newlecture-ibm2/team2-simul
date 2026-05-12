@@ -14,6 +14,25 @@ export interface FeedPost {
   createdAt: string;
 }
 
+export interface Comment {
+  commentId: string;
+  userId: string;
+  nickname: string;
+  profileImageUrl: string | null;
+  content: string;
+  depth: number;
+  createdAt: string;
+  isDeleted: boolean;
+  isEdited: boolean;
+  replies: Comment[];
+}
+
+export interface LikeUser {
+  userId: string;
+  nickname: string;
+  profileImageUrl: string | null;
+}
+
 /** Spring Page 응답 타입 */
 export interface PageResponse<T> {
   content: T[];
@@ -83,6 +102,13 @@ export async function toggleLike(postId: string) {
   return apiClient(`/posts/${postId}/likes`, { method: 'POST' });
 }
 
+/** 게시물 좋아요 누른 사용자 목록 조회 */
+export async function getPostLikes(postId: string, page = 0, size = 20) {
+  return apiClient<PageResponse<LikeUser>>(`/posts/${postId}/likes`, {
+    params: { page: String(page), size: String(size) },
+  });
+}
+
 /** 게시물 수정 */
 export async function updatePost(postId: string, data: FormData) {
   return apiClient(`/posts/${postId}`, {
@@ -96,10 +122,38 @@ export async function deletePost(postId: string) {
   return apiClient(`/posts/${postId}`, { method: 'DELETE' });
 }
 
+/** 댓글 목록 조회 */
+export async function getComments(postId: string, page = 0, size = 20) {
+  return apiClient<PageResponse<Comment>>(`/posts/${postId}/comments`, {
+    params: { page: String(page), size: String(size) },
+  });
+}
+
 /** 댓글 작성 */
-export async function createComment(postId: string, content: string) {
-  return apiClient(`/posts/${postId}/comments`, {
+export async function createComment(postId: string, content: string, parentCommentId?: string) {
+  return apiClient<Comment>(`/posts/${postId}/comments`, {
     method: 'POST',
+    body: JSON.stringify({ content, parentCommentId }),
+  });
+}
+
+/** 댓글 수정 */
+export async function updateComment(commentId: string, content: string) {
+  return apiClient<Comment>(`/comments/${commentId}`, {
+    method: 'PATCH',
     body: JSON.stringify({ content }),
+  });
+}
+
+/** 댓글 삭제 */
+export async function deleteComment(commentId: string) {
+  return apiClient(`/comments/${commentId}`, { method: 'DELETE' });
+}
+
+/** 게시물 신고 */
+export async function reportPost(postId: string, reason: string) {
+  return apiClient(`/posts/${postId}/report`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
   });
 }

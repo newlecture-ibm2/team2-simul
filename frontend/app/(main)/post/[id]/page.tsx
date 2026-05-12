@@ -8,8 +8,13 @@ import { toggleLike, getPostDetail, deletePost } from '../../../../lib/api/feedA
 import { checkIsFollowing, followUser, unfollowUser } from '@/lib/api/userAPI';
 import { useAuthStore } from '../../../../lib/stores/useAuthStore';
 import { toast } from '@/lib/utils/toast';
-import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
+import ConfirmModal from './_components/ConfirmModal/ConfirmModal';
 import styles from './page.module.css';
+import CommentSection from './_components/CommentSection/CommentSection';
+import ReportModal from './_components/ReportModal/ReportModal';
+import DeleteConfirmModal from './_components/DeleteConfirmModal/DeleteConfirmModal';
+import LikeListModal from './_components/LikeListModal/LikeListModal';
+import { reportPost } from '../../../../lib/api/feedAPI';
 
 export interface PostDetailData {
   postId: string;
@@ -21,6 +26,7 @@ export interface PostDetailData {
   caption: string;
   likeCount: number;
   viewCount: number;
+  commentCount: number;
   isLiked: boolean;
   createdAt: string;
 }
@@ -39,6 +45,11 @@ export default function PostDetailPage() {
   const postId = params.id as string;
   const { isAuthenticated, user } = useAuthStore();
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
+
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isLikeListModalOpen, setIsLikeListModalOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -194,24 +205,43 @@ export default function PostDetailPage() {
 
   const handleDelete = async () => {
     setShowMenu(false);
-    setConfirmModal({
-      isOpen: true,
-      title: '게시물을 삭제하시겠습니까?',
-      description: '삭제된 게시물은 복구할 수 없습니다.',
-      confirmText: '삭제',
-      onConfirm: async () => {
-        try {
-          await deletePost(postId);
-          toast.success('게시물이 삭제되었습니다.');
-          router.push('/');
-        } catch (err) {
-          console.error('삭제 실패:', err);
-          toast.error('삭제에 실패했습니다.');
-        } finally {
-          setConfirmModal(prev => ({ ...prev, isOpen: false }));
-        }
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeletePost = async () => {
+    try {
+      await deletePost(postId);
+      toast.success('게시물이 삭제되었습니다.');
+      router.push('/');
+    } catch (err) {
+      console.error('삭제 실패:', err);
+      toast.error('삭제에 실패했습니다.');
+    } finally {
+      setIsDeleteDialogOpen(false);
+    }
+  };
+
+  const handleReport = async (reason: string) => {
+    if (!isAuthenticated) {
+      toast.error('로그인이 필요한 서비스입니다.');
+      setIsReportModalOpen(false);
+      return;
+    }
+    setIsReporting(true);
+    try {
+      await reportPost(postId as string, reason);
+      toast.success('게시물 신고가 접수되었습니다.');
+      setIsReportModalOpen(false);
+    } catch (err: unknown) {
+      const error = err as { response?: { status?: number } };
+      if (error?.response?.status === 422) {
+        toast.error('이미 신고한 게시물입니다.');
+      } else {
+        toast.error('신고 접수에 실패했습니다.');
       }
-    });
+    } finally {
+      setIsReporting(false);
+    }
   };
 
   if (isLoading) return <div className={styles.container}><div style={{padding: '20px', textAlign: 'center'}}>로딩 중...</div></div>;
@@ -354,18 +384,29 @@ export default function PostDetailPage() {
                 alt="Like" 
                 className={styles.statIcon} 
               />
-              <span>{likeCount}</span>
             </button>
+            <span 
+              className={styles.clickableCount} 
+              onClick={() => setIsLikeListModalOpen(true)}
+              style={{ fontWeight: 600, fontSize: '14px', cursor: 'pointer', marginRight: '16px' }}
+            >
+              좋아요 {likeCount}개
+            </span>
+            
             <div className={styles.statItem}>
               <img src="/icons/bubble.png" alt="Comment" className={styles.statIcon} />
-              <span>0</span>
+              <span>{post.commentCount || 0}</span>
             </div>
             <div className={styles.statItem} style={{marginLeft: 'auto', color: '#999', fontSize: '13px'}}>
                조회 {post.viewCount}
             </div>
           </div>
           
-          <button className={styles.reportBtn}>🚨 게시물 신고하기</button>
+          <CommentSection postId={postId as string} />
+          
+          {(!isAuthenticated || (user && String(user.id) !== String(post.userId))) && (
+            <button className={styles.reportBtn} onClick={() => setIsReportModalOpen(true)}>🚨 게시물 신고하기</button>
+          )}
         </div>
       </div>
 
@@ -374,9 +415,30 @@ export default function PostDetailPage() {
         title={confirmModal.title}
         description={confirmModal.description}
         confirmText={confirmModal.confirmText}
-        isDestructive={true}
+        isDanger={true}
         onConfirm={confirmModal.onConfirm}
         onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
+
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        onSubmit={handleReport}
+        isSubmitting={isReporting}
+      />
+
+      <DeleteConfirmModal
+        isOpen={isDeleteDialogOpen}
+        title="게시물을 삭제하시겠습니까?"
+        description="삭제된 게시물은 복구할 수 없습니다."
+        onConfirm={confirmDeletePost}
+        onCancel={() => setIsDeleteDialogOpen(false)}
+      />
+
+      <LikeListModal
+        isOpen={isLikeListModalOpen}
+        onClose={() => setIsLikeListModalOpen(false)}
+        postId={postId as string}
       />
     </div>
   );
