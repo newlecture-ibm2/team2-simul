@@ -1,6 +1,7 @@
 package com.simul.post.application.service;
 
 import com.simul.common.application.service.FileStorageService;
+import com.simul.notification.application.dto.PostCreatedEvent;
 import com.simul.post.application.dto.CreatePostCommand;
 import com.simul.post.application.dto.FeedPostResponse;
 import com.simul.post.application.port.in.CreatePostUseCase;
@@ -15,6 +16,7 @@ import com.simul.tag.application.port.in.LoadTagsUseCase;
 import com.simul.user.application.dto.UserResponse;
 import com.simul.user.application.port.in.LoadUserUseCase;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -44,6 +46,7 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
     private final AttachTagsToPostUseCase attachTagsToPostUseCase;
     private final LoadUserUseCase loadUserUseCase;
     private final LoadTagsUseCase loadTagsUseCase;
+    private final ApplicationEventPublisher eventPublisher;
 
     // ... existing createPost method ...
     @Override
@@ -99,6 +102,11 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         // 5. 태그 매핑 (N:M)
         if (tags != null && !tags.isEmpty()) {
             attachTagsToPostUseCase.attachTags(savedPost.getPostId(), tags);
+        }
+
+        // 6. 공개 게시물인 경우 팔로워들에게 알림 이벤트 발행
+        if (Boolean.TRUE.equals(command.getIsPublic())) {
+            eventPublisher.publishEvent(new PostCreatedEvent(savedPost.getUserId(), savedPost.getPostId()));
         }
 
         return savedPost;
