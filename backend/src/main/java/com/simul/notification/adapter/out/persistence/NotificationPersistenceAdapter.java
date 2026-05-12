@@ -7,7 +7,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -43,7 +42,12 @@ public class NotificationPersistenceAdapter implements NotificationPersistencePo
     }
 
     @Override
-    public int deleteOlderThan(LocalDateTime cutoffDate) {
-        return notificationJpaRepository.deleteOlderThan(cutoffDate);
+    public void deleteById(UUID notificationId) {
+        notificationJpaRepository.deleteById(notificationId);
+    }
+
+    @Override
+    public int deleteAllByRecipientId(UUID recipientId) {
+        return notificationJpaRepository.deleteAllByRecipientId(recipientId);
     }
 }

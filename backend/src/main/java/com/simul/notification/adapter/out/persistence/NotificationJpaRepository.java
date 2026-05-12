@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 public interface NotificationJpaRepository extends JpaRepository<Notification, UUID> {
@@ -32,8 +31,8 @@ public interface NotificationJpaRepository extends JpaRepository<Notification, U
            "WHERE n.recipientId = :recipientId AND n.isRead = false")
     int markAllAsReadByRecipientId(@Param("recipientId") UUID recipientId);
 
-    /** 30일 이전 알림 물리 삭제 (스케줄러용) */
+    /** 사용자의 알림 전체 삭제 */
     @Modifying
-    @Query("DELETE FROM Notification n WHERE n.createdAt < :cutoffDate")
-    int deleteOlderThan(@Param("cutoffDate") LocalDateTime cutoffDate);
+    @Query("DELETE FROM Notification n WHERE n.recipientId = :recipientId")
+    int deleteAllByRecipientId(@Param("recipientId") UUID recipientId);
 }

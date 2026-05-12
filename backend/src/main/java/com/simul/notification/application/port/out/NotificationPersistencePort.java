@@ -4,7 +4,6 @@ import com.simul.notification.domain.model.Notification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,6 +25,9 @@ public interface NotificationPersistencePort {
     /** 전체 읽음 처리 */
     int markAllAsRead(UUID recipientId);
 
-    /** 30일 이전 알림 물리 삭제 */
-    int deleteOlderThan(LocalDateTime cutoffDate);
+    /** 개별 알림 삭제 */
+    void deleteById(UUID notificationId);
+
+    /** 사용자의 알림 전체 삭제 */
+    int deleteAllByRecipientId(UUID recipientId);
 }
