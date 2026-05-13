@@ -7,6 +7,7 @@ import com.simul.user.application.dto.UserProfileResponse;
 import com.simul.user.application.dto.UserResponse;
 import com.simul.user.application.port.in.LoadUserUseCase;
 import com.simul.user.application.port.in.RegisterUserUseCase;
+import com.simul.user.application.port.in.SuspendUserUseCase;
 import com.simul.user.application.port.in.UpdateUserUseCase;
 import com.simul.user.application.port.in.WithdrawUserUseCase;
 import com.simul.user.application.port.out.FollowPersistencePort;
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
  * - UserPersistencePort(Output Port)를 통해 DB에 접근
  */
 @Service
-public class UserService implements LoadUserUseCase, RegisterUserUseCase, UpdateUserUseCase, WithdrawUserUseCase {
+public class UserService implements LoadUserUseCase, RegisterUserUseCase, UpdateUserUseCase, WithdrawUserUseCase, SuspendUserUseCase {
 
     private final UserPersistencePort userPersistencePort;
     private final FollowPersistencePort followPersistencePort;
@@ -110,6 +111,15 @@ public class UserService implements LoadUserUseCase, RegisterUserUseCase, Update
         user.deactivate();
         // soft delete logic is inside Persistence Adapter (via UserJpaEntity softDelete or similar)
         // Here we explicitly tell the domain it's inactive, and save will handle the rest.
+        userPersistencePort.save(user);
+    }
+
+    @Override
+    public void suspendUser(UUID userId) {
+        User user = userPersistencePort.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        user.suspend();
         userPersistencePort.save(user);
     }
 

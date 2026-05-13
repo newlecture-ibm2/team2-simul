@@ -57,4 +57,11 @@ public class User {
     public void deactivate() {
         this.isActive = false;
     }
+
+    /**
+     * 관리자에 의한 악성 유저 정지
+     */
+    public void suspend() {
+        this.isActive = false;
+    }
 }
