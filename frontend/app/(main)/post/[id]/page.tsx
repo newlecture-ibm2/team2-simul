@@ -71,6 +71,15 @@ export default function PostDetailPage() {
 
   const queryClient = useQueryClient();
 
+  // Fetch live comment count to keep stats row synced with CommentSection
+  const { data: commentsData } = useQuery({
+    queryKey: ['comments', postId],
+    // CommentSection will do the actual fetching, we just subscribe to the cached data here.
+    // If it's not cached yet, we rely on post.commentCount.
+    enabled: false, 
+  });
+  const displayCommentCount = commentsData?.totalElements ?? post?.commentCount ?? 0;
+
   // Fetch follow status if we have the author's userId
   const { data: followStatus } = useQuery({
     queryKey: ['isFollowing', post?.userId],
@@ -199,6 +208,7 @@ export default function PostDetailPage() {
     try {
       if (postId !== 'dummy' && !postId.startsWith('dummy')) {
          await toggleLike(postId);
+         queryClient.invalidateQueries({ queryKey: ['postLikes', postId] });
       }
     } catch (err) {
       setIsLiked(previousIsLiked);
@@ -371,7 +381,7 @@ export default function PostDetailPage() {
               </div>
             </Link>
             
-            {(!isAuthenticated || (user && String(user.userId) !== String(post.userId))) && (
+            {(!isAuthenticated || !isOwner) && (
               <button 
                 className={styles.followBtn} 
                 onClick={handleFollowToggle}
@@ -417,7 +427,7 @@ export default function PostDetailPage() {
             
             <div className={styles.statItem}>
               <img src="/icons/bubble.png" alt="Comment" className={styles.statIcon} />
-              <span>{post.commentCount || 0}</span>
+              <span>{displayCommentCount}</span>
             </div>
             <div className={styles.statItem} style={{marginLeft: 'auto', color: '#999', fontSize: '13px'}}>
                조회 {post.viewCount}
