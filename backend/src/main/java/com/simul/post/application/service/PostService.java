@@ -231,6 +231,8 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
                 post.getCommentCount(),
                 isLiked,
                 post.getIsPublic(),
+                post.getReportCount(),
+                post.isWarned(),
                 post.getCreatedAt()
         );
     }

@@ -123,4 +123,23 @@ public class NotificationEventListener {
 
         log.info("FOLLOW_POST 알림 {}명에게 생성 완료: postId={}", followerIds.size(), event.postId());
     }
+
+    /**
+     * 게시물 신고 누적 10회 블라인드 이벤트 → REPORT_BLIND 알림 생성
+     */
+    @Async
+    @EventListener
+    public void handleReportBlinded(com.simul.notification.application.dto.ReportBlindedEvent event) {
+        log.info("블라인드 이벤트 수신: postId={}, ownerId={}", event.postId(), event.postOwnerId());
+
+        createNotificationUseCase.createNotification(
+                CreateNotificationUseCase.CreateNotificationCommand.builder()
+                        .actorId(null)
+                        .recipientId(event.postOwnerId())
+                        .type(NotificationType.REPORT_BLIND)
+                        .referenceId(event.postId())
+                        .message("회원님의 게시물이 커뮤니티 가이드 위반 신고 누적으로 블라인드 처리되었습니다.")
+                        .build()
+        );
+    }
 }
