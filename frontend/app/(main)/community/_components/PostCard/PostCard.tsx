@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { toggleLike } from '../../../../lib/api/feedAPI';
-import { useAuthStore } from '../../../../lib/stores/useAuthStore';
+import { toggleLike } from '@/lib/api/feedAPI';
+import { useAuthStore } from '@/lib/stores/useAuthStore';
 import styles from './PostCard.module.css';
 
 interface PostCardProps {

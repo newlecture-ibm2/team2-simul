@@ -1,0 +1,6 @@
+.pageContainer {
+  padding: 0px 0 var(--space-page-y) 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
