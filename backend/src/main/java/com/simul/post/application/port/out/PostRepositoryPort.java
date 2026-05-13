@@ -25,5 +25,5 @@ public interface PostRepositoryPort {
 
     Page<Post> findByCaption(String caption, Pageable pageable);
     Page<Post> findByTagName(String tagName, Pageable pageable);
-    Page<Post> findByTagNameOrCaption(String query, Pageable pageable);
+    Page<Post> findByTagNameOrCaption(String tagQuery, String captionQuery, Pageable pageable);
 }

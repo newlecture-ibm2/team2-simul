@@ -38,9 +38,9 @@ export default function Header() {
         </Link>
 
         <div className={styles.rightIcons}>
-          <button className={styles.iconBtn} aria-label="검색">
+          <Link href="/search" className={styles.iconBtn} aria-label="검색">
             <img src="/icons/magnifyingglass.png" alt="검색 아이콘" className={styles.iconImage} />
-          </button>
+          </Link>
           <button
             className={styles.iconBtn}
             aria-label="알림"

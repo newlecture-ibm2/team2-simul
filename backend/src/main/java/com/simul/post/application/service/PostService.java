@@ -479,13 +479,19 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sortObj);
 
         Page<Post> postsPage;
+        
+        // 검색어에서 맨 앞의 '#' 제거 (태그 검색용)
+        String tagQuery = query.startsWith("#") ? query.substring(1) : query;
+        // 본문 검색용은 그대로 사용
+        String captionQuery = query;
+
         if ("tag".equalsIgnoreCase(type)) {
-            postsPage = postRepositoryPort.findByTagName(query, sortedPageable);
+            postsPage = postRepositoryPort.findByTagName(tagQuery, sortedPageable);
         } else if ("caption".equalsIgnoreCase(type)) {
-            postsPage = postRepositoryPort.findByCaption(query, sortedPageable);
+            postsPage = postRepositoryPort.findByCaption(captionQuery, sortedPageable);
         } else {
             // "all" or default
-            postsPage = postRepositoryPort.findByTagNameOrCaption(query, sortedPageable);
+            postsPage = postRepositoryPort.findByTagNameOrCaption(tagQuery, captionQuery, sortedPageable);
         }
 
         if (postsPage.isEmpty()) {

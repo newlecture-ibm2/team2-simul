@@ -93,7 +93,7 @@ export default function SearchBar({ initialQuery = '', onSearch }: SearchBarProp
         <input
           type="text"
           className={styles.input}
-          placeholder="태그나 본문 검색..."
+          placeholder="Search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => {

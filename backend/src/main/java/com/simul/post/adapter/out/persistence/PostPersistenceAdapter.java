@@ -82,7 +82,7 @@ public class PostPersistenceAdapter implements PostRepositoryPort {
     }
 
     @Override
-    public Page<Post> findByTagNameOrCaption(String query, Pageable pageable) {
-        return postJpaRepository.findByTagNameOrCaption(query, pageable);
+    public Page<Post> findByTagNameOrCaption(String tagQuery, String captionQuery, Pageable pageable) {
+        return postJpaRepository.findByTagNameOrCaption(tagQuery, captionQuery, pageable);
     }
 }
