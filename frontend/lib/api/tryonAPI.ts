@@ -46,6 +46,11 @@ export async function getMyBaseImages(): Promise<MyBaseImagesResponse> {
   return apiClient('/users/me/base-images');
 }
 
+/** 베이스 이미지 삭제 (DELETE /tryon/base-images/{baseImageId}) */
+export async function deleteBaseImage(baseImageId: string): Promise<void> {
+  return apiClient(`/tryon/base-images/${baseImageId}`, { method: 'DELETE' });
+}
+
 /** 시착 결과 조회 */
 export async function getTryonResult(id: number) {
   return apiClient(`/tryon/${id}`);
