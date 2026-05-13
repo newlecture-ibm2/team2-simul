@@ -162,4 +162,12 @@ public class Post extends BaseJpaEntity {
         }
         return false; // 블라인드 미발동
     }
+
+    public void blind() {
+        this.isBlinded = true;
+    }
+
+    public void unblind() {
+        this.isBlinded = false;
+    }
 }
