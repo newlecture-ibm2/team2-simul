@@ -22,4 +22,8 @@ public interface PostRepositoryPort {
 
     long countLikedPosts(UUID userId);
     Page<Post> findLikedPostsByUserId(UUID userId, Pageable pageable);
+
+    Page<Post> findByCaption(String caption, Pageable pageable);
+    Page<Post> findByTagName(String tagName, Pageable pageable);
+    Page<Post> findByTagNameOrCaption(String tagQuery, String captionQuery, Pageable pageable);
 }

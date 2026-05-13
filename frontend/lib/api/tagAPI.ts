@@ -14,3 +14,17 @@ export async function analyzeTags(imageFile: File): Promise<AnalyzeTagsResponse>
     body: formData,
   });
 }
+
+export interface TagResponse {
+  tagId: string;
+  name: string;
+  category: string | null;
+  usageCount: number;
+}
+
+/** 태그 자동완성 검색 */
+export async function searchTags(query: string): Promise<TagResponse[]> {
+  return apiClient<TagResponse[]>(`/tags/search?q=${encodeURIComponent(query)}`, {
+    method: 'GET',
+  });
+}

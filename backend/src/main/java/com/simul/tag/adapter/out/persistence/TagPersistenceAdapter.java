@@ -47,4 +47,12 @@ public class TagPersistenceAdapter implements TagPersistencePort {
         if (postIds == null || postIds.isEmpty()) return List.of();
         return postTagJpaRepository.findByPostIdIn(postIds);
     }
+
+    @Override
+    public List<Tag> findTagsByNamePrefix(String prefix, int limit) {
+        return tagJpaRepository.findByNameStartingWithIgnoreCaseOrderByUsageCountDesc(
+                prefix, 
+                org.springframework.data.domain.PageRequest.of(0, limit)
+        );
+    }
 }

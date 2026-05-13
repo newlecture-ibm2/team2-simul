@@ -40,10 +40,11 @@ import com.simul.post.domain.model.PostLike;
 import com.simul.post.application.port.in.GetUserPostsUseCase;
 import com.simul.post.application.port.in.BlindPostUseCase;
 import com.simul.post.application.port.in.UnblindPostUseCase;
+import com.simul.post.application.port.in.SearchPostUseCase;
 
 @Service
 @RequiredArgsConstructor
-public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetPostDetailUseCase, DeletePostUseCase, UpdatePostUseCase, GetPostLikesUseCase, GetUserPostsUseCase, BlindPostUseCase, UnblindPostUseCase {
+public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetPostDetailUseCase, DeletePostUseCase, UpdatePostUseCase, GetPostLikesUseCase, GetUserPostsUseCase, BlindPostUseCase, UnblindPostUseCase, SearchPostUseCase {
 
     private final PostRepositoryPort postRepositoryPort;
     private final PostLikePersistencePort postLikePersistencePort;
@@ -468,5 +469,63 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
                 .orElseThrow(() -> new IllegalArgumentException("ERR-003: 찾을 수 없는 콘텐츠입니다."));
         post.unblind();
         postRepositoryPort.save(post);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<FeedPostResponse> searchPosts(String query, String type, UUID currentUserId, Pageable pageable) {
+        // 정렬 기준 설정: 정확도/검색 로직 특성 상 최신순이 기본이나, 필요에 따라 정렬 가능
+        Sort sortObj = Sort.by(Sort.Direction.DESC, "createdAt");
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sortObj);
+
+        Page<Post> postsPage;
+        
+        // 검색어에서 맨 앞의 '#' 제거 (태그 검색용)
+        String tagQuery = query.startsWith("#") ? query.substring(1) : query;
+        // 본문 검색용은 그대로 사용
+        String captionQuery = query;
+
+        if ("tag".equalsIgnoreCase(type)) {
+            postsPage = postRepositoryPort.findByTagName(tagQuery, sortedPageable);
+        } else if ("caption".equalsIgnoreCase(type)) {
+            postsPage = postRepositoryPort.findByCaption(captionQuery, sortedPageable);
+        } else {
+            // "all" or default
+            postsPage = postRepositoryPort.findByTagNameOrCaption(tagQuery, captionQuery, sortedPageable);
+        }
+
+        if (postsPage.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        List<UUID> postIds = postsPage.getContent().stream().map(Post::getPostId).toList();
+        List<UUID> userIds = postsPage.getContent().stream().map(Post::getUserId).distinct().toList();
+
+        Map<UUID, UserResponse> userMap = loadUserUseCase.loadUsers(userIds);
+        Map<UUID, List<String>> tagMap = loadTagsUseCase.loadTagsByPostIds(postIds);
+
+        // 로그인한 유저의 좋아요 여부를 일괄 조회
+        Set<UUID> likedPostIds = currentUserId != null
+                ? postLikePersistencePort.findLikedPostIdsByUserIdAndPostIds(currentUserId, postIds)
+                : Collections.emptySet();
+
+        return postsPage.map(post -> {
+            UserResponse user = userMap.get(post.getUserId());
+            List<String> postTags = tagMap.getOrDefault(post.getPostId(), Collections.emptyList());
+            String imageUrl = post.getImages().isEmpty() ? null : post.getImages().get(0).getImageUrl();
+
+            return new FeedPostResponse(
+                    post.getPostId(),
+                    post.getUserId(),
+                    user != null ? user.nickname() : "Unknown",
+                    user != null ? user.profileImageUrl() : null,
+                    imageUrl,
+                    postTags,
+                    post.getCaption(),
+                    post.getLikeCount(),
+                    likedPostIds.contains(post.getPostId()),
+                    post.getCreatedAt()
+            );
+        });
     }
 }

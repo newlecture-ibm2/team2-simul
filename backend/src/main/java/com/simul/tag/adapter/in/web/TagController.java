@@ -25,6 +25,7 @@ import io.github.bucket4j.Bucket;
 public class TagController {
 
     private final AnalyzeImageTagsUseCase analyzeImageTagsUseCase;
+    private final com.simul.tag.application.port.in.SearchTagUseCase searchTagUseCase;
     private final TagRateLimiterService tagRateLimiterService;
 
     /**
@@ -61,5 +62,22 @@ public class TagController {
                     "detail", e.getMessage()
             ));
         }
+    }
+
+    /**
+     * 태그 자동완성 검색
+     * @param query 검색어 (필수)
+     * @return 매칭되는 태그 리스트 (사용량 순 정렬, 최대 10개)
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<com.simul.tag.application.dto.TagResponse>> searchTags(
+            @RequestParam("q") String query) {
+        
+        if (query == null || query.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        List<com.simul.tag.application.dto.TagResponse> responses = searchTagUseCase.searchTags(query);
+        return ResponseEntity.ok(responses);
     }
 }
