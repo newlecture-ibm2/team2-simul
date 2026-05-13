@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toggleLike, getPostDetail, deletePost } from '../../../../lib/api/feedAPI';
+import { toggleLike, getPostDetail, deletePost, getComments } from '../../../../lib/api/feedAPI';
 import { checkIsFollowing, followUser, unfollowUser } from '@/lib/api/userAPI';
 import { useAuthStore } from '../../../../lib/stores/useAuthStore';
 import { toast } from '@/lib/utils/toast';
@@ -74,9 +74,8 @@ export default function PostDetailPage() {
   // Fetch live comment count to keep stats row synced with CommentSection
   const { data: commentsData } = useQuery({
     queryKey: ['comments', postId],
-    // CommentSection will do the actual fetching, we just subscribe to the cached data here.
-    // If it's not cached yet, we rely on post.commentCount.
-    enabled: false, 
+    queryFn: () => getComments(postId, 0, 100),
+    enabled: !!postId, 
   });
   const displayCommentCount = commentsData?.totalElements ?? post?.commentCount ?? 0;
 
