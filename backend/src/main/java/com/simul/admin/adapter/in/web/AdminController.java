@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import com.simul.post.application.port.in.BlindPostUseCase;
 import com.simul.post.application.port.in.UnblindPostUseCase;
+import com.simul.user.application.port.in.SuspendUserUseCase;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import java.util.UUID;
@@ -24,6 +25,7 @@ public class AdminController {
     private final GetReportsUseCase getReportsUseCase;
     private final BlindPostUseCase blindPostUseCase;
     private final UnblindPostUseCase unblindPostUseCase;
+    private final SuspendUserUseCase suspendUserUseCase;
 
     @GetMapping("/reports")
     public ResponseEntity<Page<ReportResponse>> getReports(
@@ -45,6 +47,12 @@ public class AdminController {
     @PatchMapping("/posts/{postId}/unblind")
     public ResponseEntity<Void> unblindPost(@PathVariable UUID postId) {
         unblindPostUseCase.unblindPost(postId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/users/{userId}/suspend")
+    public ResponseEntity<Void> suspendUser(@PathVariable UUID userId) {
+        suspendUserUseCase.suspendUser(userId);
         return ResponseEntity.ok().build();
     }
 }
