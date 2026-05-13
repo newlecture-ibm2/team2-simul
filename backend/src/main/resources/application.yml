@@ -52,6 +52,6 @@ simul:
       path: ./uploads/images/
       url-prefix: /uploads/images/
   gemini:
-    enabled: ${GEMINI_ENABLED:false}
+    enabled: ${GEMINI_ENABLED:true}
     api-key: ${GEMINI_API_KEY:}
     model: ${GEMINI_MODEL:gemini-2.5-flash-image}
