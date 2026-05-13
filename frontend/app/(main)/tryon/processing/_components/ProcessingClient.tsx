@@ -26,7 +26,9 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
 
   const [status, setStatus] = useState<TryonStatusEventResponse['status']>('processing');
   const [estimatedLeft, setEstimatedLeft] = useState<number | null>(null);
+  const [estimatedTotal, setEstimatedTotal] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [reconnectTick, setReconnectTick] = useState(0);
 
   const eventSourceRef = useRef<EventSource | null>(null);
 
@@ -38,10 +40,10 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
 
   const progressPercent = useMemo(() => {
     if (estimatedLeft == null) return null;
-    const total = 20; // backend estimate
+    const total = estimatedTotal ?? Math.max(estimatedLeft, 20);
     const clampedLeft = Math.min(total, Math.max(0, estimatedLeft));
     return Math.round(((total - clampedLeft) / total) * 100);
-  }, [estimatedLeft]);
+  }, [estimatedLeft, estimatedTotal]);
 
   useEffect(() => {
     if (!sseUrl) return;
@@ -49,12 +51,17 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
 
     const es = new EventSource(sseUrl);
     eventSourceRef.current = es;
+    setErrorMessage(null);
 
     const onStatus = (e: MessageEvent) => {
       try {
         const payload: TryonStatusEventResponse = JSON.parse(e.data);
         setStatus(payload.status);
-        setEstimatedLeft(payload.estimated_seconds_left ?? null);
+        const left = payload.estimated_seconds_left ?? null;
+        setEstimatedLeft(left);
+        if (left != null && estimatedTotal == null) {
+          setEstimatedTotal(Math.max(1, left));
+        }
 
         if (payload.status === 'completed') {
           es.close();
@@ -100,7 +107,12 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
       es.close();
       if (eventSourceRef.current === es) eventSourceRef.current = null;
     };
-  }, [router, sseUrl]);
+  }, [router, sseUrl, reconnectTick, estimatedTotal]);
+
+  const handleReconnect = () => {
+    setErrorMessage(null);
+    setReconnectTick((v) => v + 1);
+  };
 
   return (
     <div className={className}>
@@ -132,9 +144,32 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
         </span>
 
         {errorMessage && (
-          <div className={styles.subtitle} style={{ marginTop: 12 }}>
-            {errorMessage}
-          </div>
+          <>
+            <div className={styles.subtitle} style={{ marginTop: 12 }}>
+              {errorMessage}
+            </div>
+            {jobId && (
+              <div style={{ marginTop: 12 }}>
+                <button
+                  type="button"
+                  onClick={handleReconnect}
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(255,255,255,0.35)',
+                    background: 'rgba(255,255,255,0.12)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    color: 'var(--color-text-primary)',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  다시 시도
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {!jobId && (

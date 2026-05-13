@@ -11,9 +11,10 @@ import DeleteConfirmModal from '../DeleteConfirmModal/DeleteConfirmModal';
 
 interface Props {
   postId: string;
+  onLoginRequired?: () => void;
 }
 
-export default function CommentSection({ postId }: Props) {
+export default function CommentSection({ postId, onLoginRequired }: Props) {
   const queryClient = useQueryClient();
   const { user, isAuthenticated } = useAuthStore();
   const [content, setContent] = useState('');
@@ -42,7 +43,8 @@ export default function CommentSection({ postId }: Props) {
     onError: (err: unknown) => {
       const error = err as { response?: { status?: number } };
       if (error?.response?.status === 401) {
-        toast.error('로그인이 필요합니다.');
+        if (onLoginRequired) onLoginRequired();
+        else toast.error('로그인이 필요합니다.');
       } else if (error?.response?.status === 422) {
         toast.error('댓글은 200자를 초과할 수 없습니다.');
       } else {
@@ -79,7 +81,8 @@ export default function CommentSection({ postId }: Props) {
     e.preventDefault();
     if (!content.trim()) return;
     if (!isAuthenticated) {
-      toast.error('댓글을 작성하려면 로그인이 필요합니다.');
+      if (onLoginRequired) onLoginRequired();
+      else toast.error('댓글을 작성하려면 로그인이 필요합니다.');
       return;
     }
     createMutation.mutate({
@@ -91,7 +94,8 @@ export default function CommentSection({ postId }: Props) {
   const handleReplySubmit = (parentId: string) => {
     if (!replyContent.trim()) return;
     if (!isAuthenticated) {
-      toast.error('로그인이 필요합니다.');
+      if (onLoginRequired) onLoginRequired();
+      else toast.error('로그인이 필요합니다.');
       return;
     }
     createMutation.mutate({

@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 import Button from '@/components/Button';
 import Toggle from './_components/Toggle/Toggle';
 import styles from './page.module.css';
-import { generateTryon, getMyBaseImages, uploadBaseImage } from '@/lib/api/tryonAPI';
-import { addClosetItem, getClosetItems } from '@/lib/api/closetAPI';
+import { deleteBaseImage, generateTryon, getMyBaseImages, uploadBaseImage } from '@/lib/api/tryonAPI';
+import { addClosetItem, deleteClosetItem, getClosetItems } from '@/lib/api/closetAPI';
 
 type ClosetItemSummary = {
   itemId: string;
@@ -15,20 +15,37 @@ type ClosetItemSummary = {
   category: string | null;
 };
 
+type ClothesCategoryUi = 'top' | 'bottom' | 'accessory';
+type ClothesCategoryBackend = 'TOP' | 'BOTTOM' | 'ACCESSORY';
+type SelectedCloth = { itemId: string; imageUrl: string };
+
 export default function StudioPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'person' | 'clothes'>('clothes');
-  const [clothesCategory, setClothesCategory] = useState<'top' | 'bottom'>('top');
+  const [clothesCategory, setClothesCategory] = useState<ClothesCategoryUi>('top');
   const [baseImages, setBaseImages] = useState<Array<{ base_image_id: string; image_url: string }>>([]);
   const [selectedBaseImageId, setSelectedBaseImageId] = useState<string>('');
   const [closetItems, setClosetItems] = useState<ClosetItemSummary[]>([]);
-  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
-  const [itemIds, setItemIds] = useState<string>(''); // fallback/manual
+  const [selectedClothesByCategory, setSelectedClothesByCategory] = useState<
+    Partial<Record<ClothesCategoryBackend, SelectedCloth>>
+  >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingBaseImage, setIsUploadingBaseImage] = useState(false);
   const [isUploadingClothes, setIsUploadingClothes] = useState(false);
   const baseImageInputRef = useRef<HTMLInputElement | null>(null);
   const clothesImageInputRef = useRef<HTMLInputElement | null>(null);
+
+  const toBackendCategory = (ui: ClothesCategoryUi): ClothesCategoryBackend => {
+    if (ui === 'top') return 'TOP';
+    if (ui === 'bottom') return 'BOTTOM';
+    return 'ACCESSORY';
+  };
+
+  const clothesCategoryLabel = (ui: ClothesCategoryUi) => {
+    if (ui === 'top') return '상의';
+    if (ui === 'bottom') return '하의';
+    return '악세서리';
+  };
 
   const selectedPersonImageUrl = useMemo(() => {
     const picked = baseImages.find(b => b.base_image_id === selectedBaseImageId);
@@ -48,7 +65,7 @@ export default function StudioPage() {
   };
 
   const refreshClosetItems = async () => {
-    const category = clothesCategory === 'top' ? 'TOP' : 'BOTTOM';
+    const category = toBackendCategory(clothesCategory);
     const res = await getClosetItems({ category, sort: 'recent', page: 0, size: 20 });
     setClosetItems(
       (res.items ?? []).map((it) => ({
@@ -86,7 +103,7 @@ export default function StudioPage() {
     let canceled = false;
     (async () => {
       try {
-        const category = clothesCategory === 'top' ? 'TOP' : 'BOTTOM';
+        const category = toBackendCategory(clothesCategory);
         const res = await getClosetItems({ category, sort: 'recent', page: 0, size: 20 });
         if (canceled) return;
         setClosetItems(
@@ -105,14 +122,15 @@ export default function StudioPage() {
     };
   }, [clothesCategory]);
 
-  const handleToggleCloth = (itemId: string) => {
-    setSelectedItemIds((prev) => {
-      if (prev.includes(itemId)) return prev.filter((v) => v !== itemId);
-      if (prev.length >= 3) {
-        alert('옷은 최대 3개까지 선택할 수 있어요.');
-        return prev;
+  const handleToggleCloth = (cloth: ClosetItemSummary) => {
+    const category = toBackendCategory(clothesCategory);
+    setSelectedClothesByCategory((prev) => {
+      const current = prev[category];
+      if (current?.itemId === cloth.itemId) {
+        const { [category]: _, ...rest } = prev;
+        return rest;
       }
-      return [...prev, itemId];
+      return { ...prev, [category]: { itemId: cloth.itemId, imageUrl: cloth.imageUrl } };
     });
   };
 
@@ -139,22 +157,41 @@ export default function StudioPage() {
     }
   };
 
+  const handleDeleteBaseImage = async (baseImageId: string) => {
+    if (!confirm('이 베이스 이미지를 삭제할까요?')) return;
+    await deleteBaseImage(baseImageId);
+    const next = baseImages.filter((b) => b.base_image_id !== baseImageId);
+    setBaseImages(next);
+    if (selectedBaseImageId === baseImageId) {
+      setSelectedBaseImageId(next[0]?.base_image_id ?? '');
+    }
+  };
+
+  const handleDeleteClosetItem = async (itemId: string) => {
+    if (!confirm('이 옷 아이템을 삭제할까요?')) return;
+    await deleteClosetItem(itemId);
+    setClosetItems((prev) => prev.filter((it) => it.itemId !== itemId));
+    setSelectedClothesByCategory((prev) => {
+      const next: Partial<Record<ClothesCategoryBackend, SelectedCloth>> = { ...prev };
+      (Object.keys(next) as ClothesCategoryBackend[]).forEach((cat) => {
+        if (next[cat]?.itemId === itemId) delete next[cat];
+      });
+      return next;
+    });
+  };
+
   const handleTryon = async () => {
     if (!selectedBaseImageId.trim()) {
       alert('베이스 이미지를 선택해주세요.');
       return;
     }
 
-    const parsedItemIds =
-      selectedItemIds.length > 0
-        ? selectedItemIds
-        : itemIds
-            .split(',')
-            .map((v) => v.trim())
-            .filter(Boolean);
+    const parsedItemIds = (['TOP', 'BOTTOM', 'ACCESSORY'] as const)
+      .map((cat) => selectedClothesByCategory[cat]?.itemId)
+      .filter((v): v is string => Boolean(v));
 
     if (parsedItemIds.length === 0) {
-      alert('개발자 입력(item_ids)이 최소 1개 필요합니다.');
+      alert('옷을 최소 1개 선택해주세요.');
       return;
     }
 
@@ -179,20 +216,22 @@ export default function StudioPage() {
           <img src={selectedPersonImageUrl} alt="Selected Base Model" className={styles.mainImage} />
           
           {/* Floating Selected Clothes Badges */}
-          {selectedItemIds.map((id, index) => {
-            const cloth = closetItems.find((c) => c.itemId === id);
+          {(['TOP', 'BOTTOM', 'ACCESSORY'] as const).map((cat, index) => {
+            const cloth = selectedClothesByCategory[cat];
             if (!cloth) return null;
-            // 각 옷 타입별로 임의의 위치 지정 (레퍼런스 참고)
-            const positionStyle = 
-              index === 0 ? { top: '30%', left: '20%' } : 
-              index === 1 ? { top: '50%', right: '20%' } : 
+            const positionStyle =
+              index === 0 ? { top: '30%', left: '20%' } :
+              index === 1 ? { top: '50%', right: '20%' } :
               { bottom: '20%', left: '30%' };
 
             return (
-              <div key={id} className={styles.floatingBadge} style={positionStyle}>
+              <div key={cat} className={styles.floatingBadge} style={positionStyle}>
                 <button 
                   className={styles.removeBadgeBtn}
-                  onClick={() => handleToggleCloth(id)}
+                  onClick={() => setSelectedClothesByCategory((prev) => {
+                    const { [cat]: _, ...rest } = prev;
+                    return rest;
+                  })}
                 >
                   <span className={styles.removeIcon}>✕</span>
                 </button>
@@ -234,7 +273,7 @@ export default function StudioPage() {
             try {
               const form = new FormData();
               form.append('imageFile', file);
-              form.append('category', clothesCategory === 'top' ? 'TOP' : 'BOTTOM');
+              form.append('category', toBackendCategory(clothesCategory));
               await addClosetItem(form);
               await refreshClosetItems();
             } finally {
@@ -243,21 +282,6 @@ export default function StudioPage() {
             }
           }}
         />
-
-        <details style={{ width: '100%', marginBottom: 12 }}>
-          <summary style={{ cursor: 'pointer' }}>개발자 입력 (임시)</summary>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={{ fontSize: 12, opacity: 0.7 }}>item_ids (UUID, 콤마 구분)</span>
-              <input
-                value={selectedItemIds.length > 0 ? selectedItemIds.join(', ') : itemIds}
-                onChange={(e) => setItemIds(e.target.value)}
-                placeholder="예: uuid1, uuid2, uuid3"
-                style={{ padding: 10, borderRadius: 8, border: '1px solid rgba(0,0,0,0.15)' }}
-              />
-            </label>
-          </div>
-        </details>
         {/* Controls Row */}
       <div className={styles.controlsRow}>
         <Toggle 
@@ -273,10 +297,11 @@ export default function StudioPage() {
           <Toggle 
             options={[
               { id: 'top', label: '상의' },
-              { id: 'bottom', label: '하의' }
+              { id: 'bottom', label: '하의' },
+              { id: 'accessory', label: '악세서리' }
             ]}
             activeId={clothesCategory}
-            onChange={(id) => setClothesCategory(id as 'top' | 'bottom')}
+            onChange={(id) => setClothesCategory(id as ClothesCategoryUi)}
           />
         )}
       </div>
@@ -312,6 +337,18 @@ export default function StudioPage() {
                     onClick={() => setSelectedBaseImageId(img.base_image_id)}
                   >
                     <img src={img.image_url} alt={`Person ${i}`} className={styles.itemImage} />
+                    <button
+                      type="button"
+                      className={styles.deleteBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void handleDeleteBaseImage(img.base_image_id);
+                      }}
+                      aria-label="베이스 이미지 삭제"
+                      title="삭제"
+                    >
+                      ✕
+                    </button>
                     {selectedBaseImageId === img.base_image_id && <div className={styles.checkBadge}>✓</div>}
                   </div>
                 ))}
@@ -323,20 +360,33 @@ export default function StudioPage() {
             <>
               {closetItems.length === 0 && (
                 <div style={{ padding: '12px 4px', fontSize: 12, opacity: 0.7 }}>
-                  옷 아이템이 없습니다. + 버튼으로 업로드해주세요.
+                  {clothesCategoryLabel(clothesCategory)}가 선택되지 않았습니다.
                 </div>
               )}
               {closetItems.map((cloth) => {
-                const isSelected = selectedItemIds.includes(cloth.itemId);
+                const currentCategory = toBackendCategory(clothesCategory);
+                const isSelected = selectedClothesByCategory[currentCategory]?.itemId === cloth.itemId;
                 return (
                   <div
                     key={cloth.itemId}
                     className={`${styles.itemCard} ${isSelected ? styles.selectedCard : ''}`}
-                    onClick={() => handleToggleCloth(cloth.itemId)}
+                    onClick={() => handleToggleCloth(cloth)}
                   >
                     <div className={styles.clothContent}>
                       <img src={cloth.imageUrl} alt={`Cloth ${cloth.itemId}`} className={styles.itemImage} />
                     </div>
+                    <button
+                      type="button"
+                      className={styles.deleteBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void handleDeleteClosetItem(cloth.itemId);
+                      }}
+                      aria-label="옷 아이템 삭제"
+                      title="삭제"
+                    >
+                      ✕
+                    </button>
                     {isSelected && <div className={styles.checkBadge}>✓</div>}
                   </div>
                 );
