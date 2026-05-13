@@ -146,6 +146,7 @@
 
 .dragging {
   cursor: grabbing !important;
+  scroll-snap-type: none;
 }
 
 .imageSlide {
