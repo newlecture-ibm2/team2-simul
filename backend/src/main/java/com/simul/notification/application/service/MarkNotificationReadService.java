@@ -6,6 +6,8 @@ import com.simul.notification.application.port.in.MarkNotificationReadUseCase;
 import com.simul.notification.application.port.out.NotificationPersistencePort;
 import com.simul.notification.domain.model.Notification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,10 @@ public class MarkNotificationReadService implements MarkNotificationReadUseCase 
 
     @Override
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "recentNotifications", key = "#userId.toString()"),
+        @CacheEvict(value = "unreadCount", key = "#userId.toString()")
+    })
     public void markAsRead(UUID notificationId, UUID userId) {
         Notification notification = notificationPersistencePort.findById(notificationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
@@ -39,6 +45,10 @@ public class MarkNotificationReadService implements MarkNotificationReadUseCase 
 
     @Override
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "recentNotifications", key = "#userId.toString()"),
+        @CacheEvict(value = "unreadCount", key = "#userId.toString()")
+    })
     public int markAllAsRead(UUID userId) {
         return notificationPersistencePort.markAllAsRead(userId);
     }

@@ -6,9 +6,11 @@ import com.simul.notification.application.port.out.NotificationPersistencePort;
 import com.simul.notification.application.port.out.NotificationSsePort;
 import com.simul.notification.domain.model.Notification;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -20,6 +22,10 @@ public class CreateNotificationService implements CreateNotificationUseCase {
     private final NotificationSsePort notificationSsePort;
 
     @Override
+    @Caching(evict = {
+        @CacheEvict(value = "recentNotifications", key = "#command.recipientId.toString()"),
+        @CacheEvict(value = "unreadCount", key = "#command.recipientId.toString()")
+    })
     public void createNotification(CreateNotificationCommand command) {
         // 핵심 규칙: 본인 활동에 대한 알림은 생성하지 않음
         if (command.getActorId() != null

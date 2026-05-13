@@ -35,4 +35,9 @@ public interface NotificationJpaRepository extends JpaRepository<Notification, U
     @Modifying
     @Query("DELETE FROM Notification n WHERE n.recipientId = :recipientId")
     int deleteAllByRecipientId(@Param("recipientId") UUID recipientId);
+
+    /** 지정된 날짜 이전의 알림 벌크 삭제 */
+    @Modifying
+    @Query("DELETE FROM Notification n WHERE n.createdAt < :cutoffDate")
+    int deleteByCreatedAtBefore(@Param("cutoffDate") java.time.LocalDateTime cutoffDate);
 }
