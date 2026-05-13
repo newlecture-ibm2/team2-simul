@@ -27,6 +27,7 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
   const [status, setStatus] = useState<TryonStatusEventResponse['status']>('processing');
   const [estimatedLeft, setEstimatedLeft] = useState<number | null>(null);
   const [estimatedTotal, setEstimatedTotal] = useState<number | null>(null);
+  const [zeroLeftTick, setZeroLeftTick] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [reconnectTick, setReconnectTick] = useState(0);
 
@@ -40,10 +41,11 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
 
   const progressPercent = useMemo(() => {
     if (estimatedLeft == null) return null;
+    if (status === 'processing' && estimatedLeft === 0) return 95;
     const total = estimatedTotal ?? Math.max(estimatedLeft, 20);
     const clampedLeft = Math.min(total, Math.max(0, estimatedLeft));
     return Math.round(((total - clampedLeft) / total) * 100);
-  }, [estimatedLeft, estimatedTotal]);
+  }, [estimatedLeft, estimatedTotal, status]);
 
   useEffect(() => {
     if (!sseUrl) return;
@@ -61,6 +63,12 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
         setEstimatedLeft(left);
         if (left != null && estimatedTotal == null) {
           setEstimatedTotal(Math.max(1, left));
+        }
+        if (payload.status === 'processing') {
+          if (left === 0) setZeroLeftTick((v) => v + 1);
+          else setZeroLeftTick(0);
+        } else {
+          setZeroLeftTick(0);
         }
 
         if (payload.status === 'completed') {
@@ -132,7 +140,11 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
             <>
               결과 생성중... 잠시만 기다려 주세요.
               <br />
-              {estimatedLeft != null ? `예상 ${estimatedLeft}초 남음` : '보통 10~30초 정도 소요됩니다.'}
+              {estimatedLeft == null
+                ? '보통 10~30초 정도 소요됩니다.'
+                : estimatedLeft === 0
+                  ? '마무리 중입니다… 잠시만 더 기다려주세요.'
+                  : `예상 ${estimatedLeft}초 남음`}
             </>
           ) : (
             <>
@@ -142,6 +154,34 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
             </>
           )}
         </span>
+
+        {!errorMessage && jobId && estimatedLeft === 0 && zeroLeftTick >= 10 && (
+          <div className={styles.subtitle} style={{ marginTop: 12 }}>
+            예상보다 오래 걸리고 있어요. 잠시 후에도 계속되면 아래 버튼으로 다시 연결해보세요.
+          </div>
+        )}
+
+        {!errorMessage && jobId && estimatedLeft === 0 && zeroLeftTick >= 10 && (
+          <div style={{ marginTop: 12 }}>
+            <button
+              type="button"
+              onClick={handleReconnect}
+              style={{
+                padding: '10px 14px',
+                borderRadius: 10,
+                border: '1px solid rgba(255,255,255,0.35)',
+                background: 'rgba(255,255,255,0.12)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                color: 'var(--color-text-primary)',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              다시 시도
+            </button>
+          </div>
+        )}
 
         {errorMessage && (
           <>
