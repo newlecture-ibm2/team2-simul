@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { SplashLogo } from './_components/SplashLogo';
+import { SplashLogo } from './_components/SplashLogo/SplashLogo';
 import styles from './page.module.css';
 
 export default function SplashPage() {
