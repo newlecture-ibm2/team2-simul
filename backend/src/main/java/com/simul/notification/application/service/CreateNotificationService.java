@@ -1,7 +1,9 @@
 package com.simul.notification.application.service;
 
 import com.simul.notification.application.port.in.CreateNotificationUseCase;
+import com.simul.notification.application.dto.NotificationResponse;
 import com.simul.notification.application.port.out.NotificationPersistencePort;
+import com.simul.notification.application.port.out.NotificationSsePort;
 import com.simul.notification.domain.model.Notification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CreateNotificationService implements CreateNotificationUseCase {
 
     private final NotificationPersistencePort notificationPersistencePort;
+    private final NotificationSsePort notificationSsePort;
 
     @Override
     public void createNotification(CreateNotificationCommand command) {
@@ -34,9 +37,16 @@ public class CreateNotificationService implements CreateNotificationUseCase {
                 .message(command.getMessage())
                 .build();
 
-        notificationPersistencePort.save(notification);
+        Notification savedNotification = notificationPersistencePort.save(notification);
 
-        log.info("알림 생성 완료: type={}, recipientId={}, actorId={}, referenceId={}",
+        // 실시간 전송 (SSE)
+        notificationSsePort.send(
+                command.getRecipientId(),
+                NotificationResponse.from(savedNotification),
+                "notification"
+        );
+
+        log.info("알림 생성 및 실시간 전송 완료: type={}, recipientId={}, actorId={}, referenceId={}",
                 command.getType(), command.getRecipientId(),
                 command.getActorId(), command.getReferenceId());
     }
