@@ -14,13 +14,22 @@ type Props = {
 
 export default function ResultClient({ className, resultImageUrl, jobId }: Props) {
   const router = useRouter();
-  const resultImg = useMemo(() => resultImageUrl ?? null, [resultImageUrl]);
+  const mockEnabled = useMemo(() => {
+    return process.env.NEXT_PUBLIC_MOCK_TRYON_RESULT === 'true' || process.env.NODE_ENV !== 'production';
+  }, []);
+
+  const resultImg = useMemo(() => {
+    if (resultImageUrl) return resultImageUrl;
+    if (mockEnabled) return '/recent.jpg';
+    return null;
+  }, [mockEnabled, resultImageUrl]);
 
   useEffect(() => {
     if (resultImg) return;
     if (!jobId) return;
+    if (mockEnabled) return;
     router.replace(`/tryon/processing?job_id=${encodeURIComponent(jobId)}`);
-  }, [jobId, resultImg, router]);
+  }, [jobId, mockEnabled, resultImg, router]);
 
   const handleDownload = async () => {
     if (!resultImg) return;
@@ -48,7 +57,7 @@ export default function ResultClient({ className, resultImageUrl, jobId }: Props
         {resultImg ? (
           <>
             <img src={resultImg} alt="Result" className={styles.mainImage} />
-            <div className={styles.viewBadge}>결과</div>
+            <div className={styles.viewBadge}>{resultImageUrl ? '결과' : '목업'}</div>
           </>
         ) : (
           <div style={{ padding: 24, color: 'var(--color-text-secondary)', fontSize: 14 }}>
