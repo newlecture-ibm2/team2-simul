@@ -51,6 +51,8 @@ simul:
     local:
       path: ./uploads/images/
       url-prefix: /uploads/images/
+  vision:
+    enabled: ${VISION_ENABLED:true}
   gemini:
     enabled: ${GEMINI_ENABLED:false}
     api-key: ${GEMINI_API_KEY:}
