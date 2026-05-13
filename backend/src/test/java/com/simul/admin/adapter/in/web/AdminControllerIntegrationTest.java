@@ -3,6 +3,9 @@ package com.simul.admin.adapter.in.web;
 import com.simul.post.domain.model.Post;
 import com.simul.post.domain.model.PostStatus;
 import com.simul.post.adapter.out.persistence.PostJpaRepository;
+import com.simul.user.application.port.out.UserPersistencePort;
+import com.simul.user.adapter.out.persistence.UserJpaRepository;
+import com.simul.user.domain.model.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +39,12 @@ public class AdminControllerIntegrationTest {
 
     @Autowired
     private PostJpaRepository postJpaRepository;
+
+    @Autowired
+    private UserPersistencePort userPersistencePort;
+
+    @Autowired
+    private UserJpaRepository userJpaRepository;
 
     @Test
     @DisplayName("관리자가 특정 게시물을 강제 블라인드 처리할 수 있어야 한다")
@@ -92,5 +101,33 @@ public class AdminControllerIntegrationTest {
         // then
         Post updatedPost = postJpaRepository.findById(savedPost.getPostId()).orElseThrow();
         assertThat(updatedPost.getIsBlinded()).isFalse();
+    }
+
+    @Test
+    @DisplayName("관리자가 특정 사용자를 정지(비활성화)할 수 있어야 한다")
+    void suspendUser_success() throws Exception {
+        // given
+        User testUser = User.builder()
+                .provider("kakao")
+                .providerId("test-kakao-123")
+                .nickname("정지대상유저")
+                .build();
+        User savedUser = userPersistencePort.save(testUser);
+
+        UUID adminUserId = UUID.randomUUID();
+        UsernamePasswordAuthenticationToken adminAuth = new UsernamePasswordAuthenticationToken(
+                adminUserId, null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+
+        // when
+        mockMvc.perform(patch("/admin/users/" + savedUser.getUserId() + "/suspend")
+                        .with(authentication(adminAuth))
+                        .with(csrf()))
+                .andDo(print())
+                .andExpect(status().isOk());
+
+        // then
+        var updatedUserEntity = userJpaRepository.findById(savedUser.getUserId()).orElseThrow();
+        assertThat(updatedUserEntity.isActive()).isFalse();
+        assertThat(updatedUserEntity.getDeletedAt()).isNotNull();
     }
 }

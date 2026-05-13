@@ -38,7 +38,25 @@ public class CommentPersistenceAdapter implements CommentPersistencePort {
     }
 
     @Override
+    public List<Comment> findRepliesByParentIds(List<UUID> parentIds) {
+        if (parentIds == null || parentIds.isEmpty()) {
+            return List.of();
+        }
+        return commentJpaRepository.findByParentCommentIdInOrderByCreatedAtAsc(parentIds);
+    }
+
+    @Override
+    public boolean hasNonDeletedReplies(UUID parentCommentId) {
+        return commentJpaRepository.existsByParentCommentIdAndDeletedAtIsNull(parentCommentId);
+    }
+
+    @Override
     public int countByPostId(UUID postId) {
         return commentJpaRepository.countByPostId(postId);
+    }
+
+    @Override
+    public int countActiveByPostId(UUID postId) {
+        return commentJpaRepository.countByPostIdAndDeletedAtIsNull(postId);
     }
 }

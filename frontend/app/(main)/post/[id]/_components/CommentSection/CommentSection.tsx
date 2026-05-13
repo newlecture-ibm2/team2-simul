@@ -124,9 +124,26 @@ export default function CommentSection({ postId, onLoginRequired }: Props) {
   const comments = pageData?.content || [];
 
   const renderComment = (comment: Comment, isReply = false) => {
-    const isOwner = isAuthenticated && user && String(user.id) === String(comment.userId);
+    if (!comment) return null;
+
+    const isOwner = isAuthenticated && user && (
+      String(user.id) === String(comment.userId) ||
+      String(user.userId) === String(comment.userId)
+    );
     const dateObj = new Date(comment.createdAt);
     const dateStr = `${dateObj.getFullYear()}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
+
+    // 삭제된 댓글: 작성자 정보 숨김 (유튜브 스타일)
+    if (comment.isDeleted) {
+      return (
+        <div key={comment.commentId} className={isReply ? styles.replyItem : styles.commentItem}>
+          <div className={styles.avatar} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.4 }}>🧑</div>
+          <div className={styles.commentContent}>
+            <div className={styles.deletedText}>삭제된 댓글입니다.</div>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div key={comment.commentId} className={isReply ? styles.replyItem : styles.commentItem}>
@@ -146,9 +163,7 @@ export default function CommentSection({ postId, onLoginRequired }: Props) {
               {dateStr} {comment.isEdited && <span className={styles.editedMark}>(수정됨)</span>}
             </span>
           </div>
-          {comment.isDeleted ? (
-            <div className={styles.deletedText}>삭제된 댓글입니다.</div>
-          ) : editingCommentId === comment.commentId ? (
+          {editingCommentId === comment.commentId ? (
             <div className={styles.editWrapper}>
               <textarea
                 className={styles.editTextarea}
@@ -171,7 +186,7 @@ export default function CommentSection({ postId, onLoginRequired }: Props) {
           ) : (
             <div className={styles.text}>{comment.content}</div>
           )}
-          {!comment.isDeleted && editingCommentId !== comment.commentId && (
+          {editingCommentId !== comment.commentId && (
             <div className={styles.actions}>
               {!isReply && (
                 <button 
@@ -241,6 +256,7 @@ export default function CommentSection({ postId, onLoginRequired }: Props) {
                         }}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
+                            if (e.nativeEvent.isComposing) return;
                             e.preventDefault();
                             handleReplySubmit(comment.commentId);
                           }
@@ -289,6 +305,7 @@ export default function CommentSection({ postId, onLoginRequired }: Props) {
           }}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
+              if (e.nativeEvent.isComposing) return;
               e.preventDefault();
               handleSubmit(e);
             }

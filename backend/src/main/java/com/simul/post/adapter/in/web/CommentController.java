@@ -86,6 +86,12 @@ public class CommentController {
                     "message", "댓글 내용을 입력해주세요."
             ));
         }
+        if (content.length() > 200) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of(
+                    "error_code", "ERR-305-B",
+                    "message", "댓글은 200자를 초과할 수 없습니다."
+            ));
+        }
         return ResponseEntity.ok(updateCommentUseCase.updateComment(commentId, userId, content));
     }
 }

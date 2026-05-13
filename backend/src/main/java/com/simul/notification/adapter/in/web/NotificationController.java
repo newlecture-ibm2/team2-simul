@@ -3,6 +3,8 @@ package com.simul.notification.adapter.in.web;
 import com.simul.notification.application.dto.NotificationResponse;
 import com.simul.notification.application.port.in.LoadNotificationUseCase;
 import com.simul.notification.application.port.in.MarkNotificationReadUseCase;
+import com.simul.notification.application.port.in.SubscribeNotificationUseCase;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +25,7 @@ import java.util.UUID;
  * - GET    /notifications/unread-count  : 미읽음 알림 수 조회 (헤더 배지용)
  * - PATCH  /notifications/{id}/read     : 개별 알림 읽음 처리
  * - PATCH  /notifications/read-all      : 전체 알림 읽음 처리
+ * - GET    /notifications/subscribe     : 실시간 알림 구독 (SSE)
  */
 @RestController
 @RequestMapping("/notifications")
@@ -31,6 +34,7 @@ public class NotificationController {
 
     private final LoadNotificationUseCase loadNotificationUseCase;
     private final MarkNotificationReadUseCase markNotificationReadUseCase;
+    private final SubscribeNotificationUseCase subscribeNotificationUseCase;
 
     /**
      * 알림 목록 조회
@@ -117,5 +121,20 @@ public class NotificationController {
         return ResponseEntity.ok(Map.of(
                 "updated_count", updatedCount
         ));
+    }
+
+    /**
+     * 실시간 알림 구독 (SSE)
+     * - 로그인 필수
+     * - 클라이언트는 이 엔드포인트를 통해 서버로부터 실시간 알림을 수신함
+     */
+    @GetMapping(value = "/subscribe", produces = "text/event-stream")
+    public SseEmitter subscribe(
+            @AuthenticationPrincipal UUID userId
+    ) {
+        if (userId == null) {
+            return null; // 시큐리티에서 처리되겠지만 안전장치
+        }
+        return subscribeNotificationUseCase.subscribe(userId);
     }
 }

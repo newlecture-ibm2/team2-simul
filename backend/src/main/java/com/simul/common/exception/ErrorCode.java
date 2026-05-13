@@ -41,6 +41,7 @@ public enum ErrorCode {
     UNAUTHORIZED_LIKE("ERR-304-A", HttpStatus.UNAUTHORIZED, "로그인 후 좋아요를 누를 수 있습니다"),
     UNAUTHORIZED_COMMENT("ERR-305-A", HttpStatus.UNAUTHORIZED, "로그인 후 댓글을 작성할 수 있습니다"),
     COMMENT_TOO_LONG("ERR-305-B", HttpStatus.UNPROCESSABLE_ENTITY, "댓글은 200자를 초과할 수 없습니다"),
+    COMMENT_ALREADY_DELETED("ERR-305-C", HttpStatus.UNPROCESSABLE_ENTITY, "이미 삭제된 댓글입니다"),
     TAG_LIMIT_EXCEEDED("ERR-307-A", HttpStatus.UNPROCESSABLE_ENTITY, "태그는 최대 10개까지만 추가할 수 있습니다"),
     VISION_API_FAILED("ERR-307-B", HttpStatus.INTERNAL_SERVER_ERROR, "자동 태그 추출에 실패했어요. 수동으로 입력해주세요"),
 
