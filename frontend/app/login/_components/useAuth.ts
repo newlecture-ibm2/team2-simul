@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { emailLogin, emailSignup } from '../../../lib/api/authAPI';
-import { useAuthStore, User } from '../../../lib/stores/useAuthStore';
+import { useAuthStore } from '../../../lib/stores/useAuthStore';
 
 export function useAuth() {
   const [isLoading, setIsLoading] = useState(false);
@@ -65,7 +65,7 @@ export function useAuth() {
       const res = await emailSignup(data);
       if (res.success && res.user) {
         setUser(res.user);
-        router.push('/');
+        router.push('/profile/edit');
       }
     } catch (error: unknown) {
       const err = error as Error;

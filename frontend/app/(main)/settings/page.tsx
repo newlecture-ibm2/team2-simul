@@ -1,12 +1,14 @@
+'use client';
+
 import styles from './page.module.css';
 import LogoutButton from './_components/LogoutButton';
+import { useAuthStore } from '@/lib/stores/useAuthStore';
 
-export const metadata = {
-  title: '설정 — SIMUL',
-  description: '계정 및 알림 설정을 관리하세요.',
-};
+
 
 export default function SettingsPage() {
+  const { user } = useAuthStore();
+
   return (
     <div className={styles.settingsPage}>
       <h1>설정</h1>
@@ -45,18 +47,21 @@ export default function SettingsPage() {
 
       <div className={styles.section}>
         <h2 className={styles.sectionTitle}>계정</h2>
-        <a href="#" className={styles.linkItem}>
-          <span className={styles.settingName}>이메일 변경</span>
-          <span className={styles.linkArrow}>→</span>
-        </a>
-        <a href="#" className={styles.linkItem}>
-          <span className={styles.settingName}>비밀번호 변경</span>
-          <span className={styles.linkArrow}>→</span>
-        </a>
-        <a href="#" className={styles.linkItem}>
-          <span className={styles.settingName}>연결된 계정</span>
-          <span className={styles.linkArrow}>→</span>
-        </a>
+        {user?.provider === 'email' ? (
+          <>
+            <a href="/settings/password" className={styles.linkItem}>
+              <span className={styles.settingName}>비밀번호 변경</span>
+              <span className={styles.linkArrow}>→</span>
+            </a>
+          </>
+        ) : (
+          <div className={styles.linkItem}>
+            <span className={styles.settingName}>연결된 계정</span>
+            <span className={`${styles.providerTag} ${user?.provider ? styles['provider' + (user.provider.charAt(0).toUpperCase() + user.provider.slice(1))] : ''}`}>
+              {user?.provider}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className={styles.section}>

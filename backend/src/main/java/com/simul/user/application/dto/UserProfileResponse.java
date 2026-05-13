@@ -20,7 +20,8 @@ public record UserProfileResponse(
     long followerCount,
     long followingCount,
     long postCount,
-    boolean isFollowing
+    boolean isFollowing,
+    String provider
 ) {
     /**
      * User 엔티티 + 팔로우 정보 + 게시물 수 → UserProfileResponse 변환
@@ -39,7 +40,8 @@ public record UserProfileResponse(
             followerCount,
             followingCount,
             postCount,
-            isFollowing
+            isFollowing,
+            user.getProvider()
         );
     }
 }

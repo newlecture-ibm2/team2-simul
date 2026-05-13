@@ -5,6 +5,7 @@ import com.simul.user.application.dto.UserResponse;
 import com.simul.user.application.port.in.LoadUserUseCase;
 import com.simul.user.application.port.in.UpdateUserUseCase;
 import com.simul.user.application.port.in.WithdrawUserUseCase;
+import com.simul.user.application.port.in.ChangePasswordUseCase;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,17 +30,20 @@ public class UserController {
     private final LoadUserUseCase loadUserUseCase;
     private final UpdateUserUseCase updateUserUseCase;
     private final WithdrawUserUseCase withdrawUserUseCase;
+    private final ChangePasswordUseCase changePasswordUseCase;
     private final com.simul.post.application.port.in.GetUserPostsUseCase getUserPostsUseCase;
 
     public UserController(
         LoadUserUseCase loadUserUseCase,
         UpdateUserUseCase updateUserUseCase,
         WithdrawUserUseCase withdrawUserUseCase,
+        ChangePasswordUseCase changePasswordUseCase,
         com.simul.post.application.port.in.GetUserPostsUseCase getUserPostsUseCase
     ) {
         this.loadUserUseCase = loadUserUseCase;
         this.updateUserUseCase = updateUserUseCase;
         this.withdrawUserUseCase = withdrawUserUseCase;
+        this.changePasswordUseCase = changePasswordUseCase;
         this.getUserPostsUseCase = getUserPostsUseCase;
     }
 
@@ -79,6 +83,19 @@ public class UserController {
             bannerImageUrl,
             bannerImage
         );
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 비밀번호 변경
+     * PATCH /users/me/password
+     */
+    @PatchMapping("/me/password")
+    public ResponseEntity<Void> changePassword(
+        @AuthenticationPrincipal UUID userId,
+        @RequestBody @jakarta.validation.Valid ChangePasswordRequest request
+    ) {
+        changePasswordUseCase.changePassword(userId, request.oldPassword(), request.newPassword());
         return ResponseEntity.ok().build();
     }
 

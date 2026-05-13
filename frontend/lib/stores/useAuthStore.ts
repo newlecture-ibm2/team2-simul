@@ -15,6 +15,7 @@ export interface User {
   followingCount?: number;
   postCount?: number;
   isFollowing?: boolean;
+  provider?: string;
 }
 
 interface AuthState {

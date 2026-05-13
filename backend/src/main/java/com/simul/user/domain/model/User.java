@@ -59,4 +59,11 @@ public class User {
     public void deactivate() {
         this.isActive = false;
     }
+
+    /**
+     * 비밀번호 변경
+     */
+    public void changePassword(String newPassword) {
+        this.password = newPassword;
+    }
 }
