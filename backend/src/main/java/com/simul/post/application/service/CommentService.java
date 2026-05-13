@@ -100,7 +100,8 @@ public class CommentService implements LoadCommentUseCase, CreateCommentUseCase,
                 .filter(java.util.Objects::nonNull)
                 .collect(Collectors.toList());
 
-        return new org.springframework.data.domain.PageImpl<>(content, pageable, parentComments.getTotalElements());
+        long totalActiveComments = commentPersistencePort.countActiveByPostId(postId);
+        return new org.springframework.data.domain.PageImpl<>(content, pageable, totalActiveComments);
     }
 
     @Override

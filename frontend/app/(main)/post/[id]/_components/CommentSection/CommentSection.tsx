@@ -252,6 +252,7 @@ export default function CommentSection({ postId }: Props) {
                         }}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
+                            if (e.nativeEvent.isComposing) return;
                             e.preventDefault();
                             handleReplySubmit(comment.commentId);
                           }
@@ -300,6 +301,7 @@ export default function CommentSection({ postId }: Props) {
           }}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
+              if (e.nativeEvent.isComposing) return;
               e.preventDefault();
               handleSubmit(e);
             }
