@@ -162,7 +162,7 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
         )}
 
         {!errorMessage && jobId && estimatedLeft === 0 && zeroLeftTick >= 10 && (
-          <div style={{ marginTop: 12 }}>
+          <div style={{ marginTop: 12, display: 'flex', gap: 10, justifyContent: 'center' }}>
             <button
               type="button"
               onClick={handleReconnect}
@@ -179,6 +179,23 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
               }}
             >
               다시 시도
+            </button>
+            <button
+              type="button"
+              onClick={() => router.replace(`/tryon/result?job_id=${encodeURIComponent(jobId)}`)}
+              style={{
+                padding: '10px 14px',
+                borderRadius: 10,
+                border: '1px solid rgba(255,255,255,0.35)',
+                background: 'rgba(255,255,255,0.12)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                color: 'var(--color-text-primary)',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              목업 결과 보기
             </button>
           </div>
         )}
