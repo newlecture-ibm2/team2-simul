@@ -41,6 +41,12 @@ export default function StudioPage() {
     return 'ACCESSORY';
   };
 
+  const clothesCategoryLabel = (ui: ClothesCategoryUi) => {
+    if (ui === 'top') return '상의';
+    if (ui === 'bottom') return '하의';
+    return '악세서리';
+  };
+
   const selectedPersonImageUrl = useMemo(() => {
     const picked = baseImages.find(b => b.base_image_id === selectedBaseImageId);
     return picked?.image_url || '/dummy.jpg';
@@ -354,7 +360,7 @@ export default function StudioPage() {
             <>
               {closetItems.length === 0 && (
                 <div style={{ padding: '12px 4px', fontSize: 12, opacity: 0.7 }}>
-                  옷 아이템이 없습니다. + 버튼으로 업로드해주세요.
+                  {clothesCategoryLabel(clothesCategory)}가 선택되지 않았습니다.
                 </div>
               )}
               {closetItems.map((cloth) => {
