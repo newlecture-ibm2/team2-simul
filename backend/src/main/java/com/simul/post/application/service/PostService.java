@@ -38,10 +38,12 @@ import com.simul.post.domain.model.PostLike;
 // ... imports handled below by inserting at class declaration
 
 import com.simul.post.application.port.in.GetUserPostsUseCase;
+import com.simul.post.application.port.in.BlindPostUseCase;
+import com.simul.post.application.port.in.UnblindPostUseCase;
 
 @Service
 @RequiredArgsConstructor
-public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetPostDetailUseCase, DeletePostUseCase, UpdatePostUseCase, GetPostLikesUseCase, GetUserPostsUseCase {
+public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetPostDetailUseCase, DeletePostUseCase, UpdatePostUseCase, GetPostLikesUseCase, GetUserPostsUseCase, BlindPostUseCase, UnblindPostUseCase {
 
     private final PostRepositoryPort postRepositoryPort;
     private final PostLikePersistencePort postLikePersistencePort;
@@ -231,6 +233,8 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
                 post.getCommentCount(),
                 isLiked,
                 post.getIsPublic(),
+                post.getReportCount(),
+                post.isWarned(),
                 post.getCreatedAt()
         );
     }
@@ -446,5 +450,23 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
                     post.getCreatedAt()
             );
         });
+    }
+
+    @Override
+    @Transactional
+    public void blindPost(UUID postId) {
+        Post post = postRepositoryPort.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("ERR-003: 찾을 수 없는 콘텐츠입니다."));
+        post.blind();
+        postRepositoryPort.save(post);
+    }
+
+    @Override
+    @Transactional
+    public void unblindPost(UUID postId) {
+        Post post = postRepositoryPort.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("ERR-003: 찾을 수 없는 콘텐츠입니다."));
+        post.unblind();
+        postRepositoryPort.save(post);
     }
 }

@@ -3,12 +3,15 @@ package com.simul.tryon.adapter.in.web;
 import com.simul.common.exception.BusinessException;
 import com.simul.common.exception.ErrorCode;
 import com.simul.tryon.application.dto.BaseImageUploadResponse;
+import com.simul.tryon.application.port.in.DeleteBaseImageUseCase;
 import com.simul.tryon.application.port.in.UploadBaseImageUseCase;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -21,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class BaseImageController {
 
     private final UploadBaseImageUseCase uploadBaseImageUseCase;
+    private final DeleteBaseImageUseCase deleteBaseImageUseCase;
 
     @PostMapping
     public ResponseEntity<BaseImageUploadResponse> uploadBaseImage(
@@ -40,5 +44,23 @@ public class BaseImageController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-}
 
+    @DeleteMapping("/{baseImageId}")
+    public ResponseEntity<Void> deleteBaseImage(
+            @AuthenticationPrincipal UUID userId,
+            @PathVariable UUID baseImageId
+    ) {
+        if (userId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        deleteBaseImageUseCase.delete(
+                DeleteBaseImageUseCase.DeleteBaseImageCommand.builder()
+                        .userId(userId)
+                        .baseImageId(baseImageId)
+                        .build()
+        );
+
+        return ResponseEntity.noContent().build();
+    }
+}

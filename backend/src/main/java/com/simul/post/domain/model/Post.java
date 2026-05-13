@@ -136,10 +136,38 @@ public class Post extends BaseJpaEntity {
         this.status = PostStatus.FAILED;
     }
 
-    public void incrementReportCount() {
+    /** 신고 경고 임계값 (이 이상이면 경고 라벨 표시) */
+    public static final int REPORT_WARNING_THRESHOLD = 5;
+    /** 신고 블라인드 임계값 (이 이상이면 자동 블라인드) */
+    public static final int REPORT_BLIND_THRESHOLD = 10;
+
+    /**
+     * 신고가 경고 구간(5~9회)에 해당하는지 확인
+     */
+    public boolean isWarned() {
+        return this.reportCount >= REPORT_WARNING_THRESHOLD
+                && this.reportCount < REPORT_BLIND_THRESHOLD
+                && !Boolean.TRUE.equals(this.isBlinded);
+    }
+
+    /**
+     * 신고 횟수 증가 및 블라인드 처리
+     * @return 이번 신고로 인해 블라인드가 새로 발동되었으면 true
+     */
+    public boolean incrementReportCount() {
         this.reportCount++;
-        if (this.reportCount >= 5) {
+        if (this.reportCount >= REPORT_BLIND_THRESHOLD && !Boolean.TRUE.equals(this.isBlinded)) {
             this.isBlinded = true;
+            return true; // 블라인드 발동됨
         }
+        return false; // 블라인드 미발동
+    }
+
+    public void blind() {
+        this.isBlinded = true;
+    }
+
+    public void unblind() {
+        this.isBlinded = false;
     }
 }
