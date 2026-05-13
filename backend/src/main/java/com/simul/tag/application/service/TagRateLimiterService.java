@@ -20,11 +20,19 @@ public class TagRateLimiterService {
     }
 
     private Bucket newBucket(UUID userId) {
-        // 최대 30개 토큰, 1분마다 30개씩 충전
-        Refill refill = Refill.greedy(30, Duration.ofMinutes(1));
-        Bandwidth limit = Bandwidth.classic(30, refill);
+        // 1. 단기 제한 (Burst 방어): 1분에 30회
+        Bandwidth minuteLimit = Bandwidth.classic(30, Refill.greedy(30, Duration.ofMinutes(1)));
+        
+        // 2. 중기 제한 (매크로 방어): 1시간에 100회
+        Bandwidth hourLimit = Bandwidth.classic(100, Refill.greedy(100, Duration.ofHours(1)));
+        
+        // 3. 장기 제한 (일일 과금 캡): 1일에 300회
+        Bandwidth dayLimit = Bandwidth.classic(300, Refill.greedy(300, Duration.ofDays(1)));
+
         return Bucket.builder()
-                .addLimit(limit)
+                .addLimit(minuteLimit)
+                .addLimit(hourLimit)
+                .addLimit(dayLimit)
                 .build();
     }
 }

@@ -14,8 +14,11 @@ public record PostDetailResponse(
         String caption,
         int likeCount,
         int viewCount,
+        int commentCount,
         boolean isLiked,
         boolean isPublic,
+        int reportCount,
+        boolean isWarned,
         LocalDateTime createdAt
 ) {
 }

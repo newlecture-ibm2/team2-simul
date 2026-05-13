@@ -15,7 +15,7 @@ interface ToggleProps {
 
 export default function Toggle({ options, activeId, onChange, className = '' }: ToggleProps) {
   return (
-    <div className={`${styles.toggleTrack} ${className}`}>
+    <div className={`${styles.toggleTrack} ${className}`} data-count={options.length}>
       {options.map((option) => {
         const isActive = activeId === option.id;
         return (

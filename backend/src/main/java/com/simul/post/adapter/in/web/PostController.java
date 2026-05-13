@@ -28,6 +28,8 @@ public class PostController {
     private final GetPostDetailUseCase getPostDetailUseCase;
     private final DeletePostUseCase deletePostUseCase;
     private final UpdatePostUseCase updatePostUseCase;
+    private final ReportPostUseCase reportPostUseCase;
+    private final GetPostLikesUseCase getPostLikesUseCase;
     private final GetUserPostsUseCase getUserPostsUseCase;
 
     @PostMapping
@@ -97,6 +99,38 @@ public class PostController {
 
         ToggleLikeResponse response = togglePostLikeUseCase.toggleLike(postId, userId);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 게시물 좋아요 목록 조회 (GET /posts/{postId}/likes)
+     * - 누구나 열람 가능
+     */
+    @GetMapping("/{postId}/likes")
+    public ResponseEntity<Page<LikeUserResponse>> getPostLikes(
+            @PathVariable UUID postId,
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        Page<LikeUserResponse> likes = getPostLikesUseCase.getPostLikes(postId, pageable);
+        return ResponseEntity.ok(likes);
+    }
+
+    @PostMapping("/{postId}/report")
+    public ResponseEntity<?> reportPost(
+            @AuthenticationPrincipal UUID reporterId,
+            @PathVariable UUID postId,
+            @RequestBody ReportPostCommand command) {
+        if (reporterId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "error_code", "ERR-001",
+                    "message", "로그인이 필요한 서비스입니다."
+            ));
+        }
+
+        reportPostUseCase.reportPost(postId, reporterId, command.getReason());
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "게시물 신고가 접수되었습니다."
+        ));
     }
 
     /**

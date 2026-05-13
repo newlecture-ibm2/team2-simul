@@ -8,8 +8,14 @@ import { toggleLike, getPostDetail, deletePost } from '../../../../lib/api/feedA
 import { checkIsFollowing, followUser, unfollowUser } from '@/lib/api/userAPI';
 import { useAuthStore } from '../../../../lib/stores/useAuthStore';
 import { toast } from '@/lib/utils/toast';
-import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
+import ConfirmModal from './_components/ConfirmModal/ConfirmModal';
 import styles from './page.module.css';
+import CommentSection from './_components/CommentSection/CommentSection';
+import ReportModal from './_components/ReportModal/ReportModal';
+import DeleteConfirmModal from './_components/DeleteConfirmModal/DeleteConfirmModal';
+import LikeListModal from './_components/LikeListModal/LikeListModal';
+import { reportPost } from '../../../../lib/api/feedAPI';
+import LoginRequiredBottomSheet from './_components/LoginRequiredBottomSheet';
 
 export interface PostDetailData {
   postId: string;
@@ -21,7 +27,10 @@ export interface PostDetailData {
   caption: string;
   likeCount: number;
   viewCount: number;
+  commentCount: number;
   isLiked: boolean;
+  reportCount: number;
+  isWarned: boolean;
   createdAt: string;
 }
 
@@ -39,6 +48,12 @@ export default function PostDetailPage() {
   const postId = params.id as string;
   const { isAuthenticated, user } = useAuthStore();
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
+
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isLikeListModalOpen, setIsLikeListModalOpen] = useState(false);
+  const [isLoginSheetOpen, setIsLoginSheetOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -83,7 +98,7 @@ export default function PostDetailPage() {
 
   const handleFollowToggle = () => {
     if (!isAuthenticated) {
-      toast.error('로그인이 필요합니다.');
+      setIsLoginSheetOpen(true);
       return;
     }
     if (isFollowingAuthor) {
@@ -171,7 +186,7 @@ export default function PostDetailPage() {
 
   const handleLike = async () => {
     if (!isAuthenticated) {
-      toast.error('좋아요를 누르려면 로그인이 필요합니다.');
+      setIsLoginSheetOpen(true);
       return;
     }
 
@@ -194,24 +209,43 @@ export default function PostDetailPage() {
 
   const handleDelete = async () => {
     setShowMenu(false);
-    setConfirmModal({
-      isOpen: true,
-      title: '게시물을 삭제하시겠습니까?',
-      description: '삭제된 게시물은 복구할 수 없습니다.',
-      confirmText: '삭제',
-      onConfirm: async () => {
-        try {
-          await deletePost(postId);
-          toast.success('게시물이 삭제되었습니다.');
-          router.push('/');
-        } catch (err) {
-          console.error('삭제 실패:', err);
-          toast.error('삭제에 실패했습니다.');
-        } finally {
-          setConfirmModal(prev => ({ ...prev, isOpen: false }));
-        }
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeletePost = async () => {
+    try {
+      await deletePost(postId);
+      toast.success('게시물이 삭제되었습니다.');
+      router.push('/');
+    } catch (err) {
+      console.error('삭제 실패:', err);
+      toast.error('삭제에 실패했습니다.');
+    } finally {
+      setIsDeleteDialogOpen(false);
+    }
+  };
+
+  const handleReport = async (reason: string) => {
+    if (!isAuthenticated) {
+      setIsLoginSheetOpen(true);
+      setIsReportModalOpen(false);
+      return;
+    }
+    setIsReporting(true);
+    try {
+      await reportPost(postId as string, reason);
+      toast.success('게시물 신고가 접수되었습니다.');
+      setIsReportModalOpen(false);
+    } catch (err: unknown) {
+      const error = err as { response?: { status?: number } };
+      if (error?.response?.status === 422) {
+        toast.error('이미 신고한 게시물입니다.');
+      } else {
+        toast.error('신고 접수에 실패했습니다.');
       }
-    });
+    } finally {
+      setIsReporting(false);
+    }
   };
 
   if (isLoading) return <div className={styles.container}><div style={{padding: '20px', textAlign: 'center'}}>로딩 중...</div></div>;
@@ -231,36 +265,45 @@ export default function PostDetailPage() {
           <button className={styles.iconBtn} aria-label="공유하기">
             <img src="/icons/square.and.arrow.up.png" alt="Share" className={styles.icon} />
           </button>
-          {isOwner && (
-            <div className={styles.menuWrapper} ref={menuRef}>
-              <button 
-                className={styles.iconBtn} 
-                onClick={() => setShowMenu(!showMenu)}
-                aria-label="더보기"
-              >
-                <img src="/icons/ellipsis.png" alt="More" className={styles.icon} />
-              </button>
-              {showMenu && (
-                <div className={styles.dropdownMenu}>
-                  <button 
-                    className={styles.menuItem} 
-                    onClick={() => { setShowMenu(false); router.push(`/post/${postId}/edit`); }}
-                  >
-                    <img src="/icons/pencil.png" alt="" className={styles.menuIcon} />
-                    <span>수정하기</span>
-                  </button>
-                  <div className={styles.menuDivider} />
+          <div className={styles.menuWrapper} ref={menuRef}>
+            <button 
+              className={styles.iconBtn} 
+              onClick={() => setShowMenu(!showMenu)}
+              aria-label="더보기"
+            >
+              <img src="/icons/ellipsis.png" alt="More" className={styles.icon} />
+            </button>
+            {showMenu && (
+              <div className={styles.dropdownMenu}>
+                {isOwner ? (
+                  <>
+                    <button 
+                      className={styles.menuItem} 
+                      onClick={() => { setShowMenu(false); router.push(`/post/${postId}/edit`); }}
+                    >
+                      <img src="/icons/pencil.png" alt="" className={styles.menuIcon} />
+                      <span>수정하기</span>
+                    </button>
+                    <div className={styles.menuDivider} />
+                    <button 
+                      className={`${styles.menuItem} ${styles.menuItemDanger}`} 
+                      onClick={handleDelete}
+                    >
+                      <img src="/icons/trash.png" alt="" className={styles.menuIcon} />
+                      <span>삭제하기</span>
+                    </button>
+                  </>
+                ) : (
                   <button 
                     className={`${styles.menuItem} ${styles.menuItemDanger}`} 
-                    onClick={handleDelete}
+                    onClick={() => { setShowMenu(false); setIsReportModalOpen(true); }}
                   >
-                    <img src="/icons/trash.png" alt="" className={styles.menuIcon} />
-                    <span>삭제하기</span>
+                    <span>🚨 신고하기</span>
                   </button>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -304,6 +347,15 @@ export default function PostDetailPage() {
             </div>
           )}
         </div>
+
+          {post.isWarned && (
+            <div className={styles.warningBanner}>
+              <span className={styles.warningIcon}>⚠️</span>
+              <span className={styles.warningText}>
+                이 게시물은 다수의 신고가 접수되었습니다. 커뮤니티 가이드를 위반한 경우 블라인드 처리될 수 있습니다.
+              </span>
+            </div>
+          )}
 
         <div className={styles.contentSection}>
           <div className={styles.authorRow}>
@@ -354,18 +406,28 @@ export default function PostDetailPage() {
                 alt="Like" 
                 className={styles.statIcon} 
               />
-              <span>{likeCount}</span>
             </button>
+            <span 
+              className={styles.clickableCount} 
+              onClick={() => setIsLikeListModalOpen(true)}
+              style={{ fontWeight: 600, fontSize: '14px', cursor: 'pointer', marginRight: '16px' }}
+            >
+              좋아요 {likeCount}개
+            </span>
+            
             <div className={styles.statItem}>
               <img src="/icons/bubble.png" alt="Comment" className={styles.statIcon} />
-              <span>0</span>
+              <span>{post.commentCount || 0}</span>
             </div>
             <div className={styles.statItem} style={{marginLeft: 'auto', color: '#999', fontSize: '13px'}}>
                조회 {post.viewCount}
             </div>
           </div>
           
-          <button className={styles.reportBtn}>🚨 게시물 신고하기</button>
+          <CommentSection 
+            postId={postId as string} 
+            onLoginRequired={() => setIsLoginSheetOpen(true)}
+          />
         </div>
       </div>
 
@@ -374,9 +436,35 @@ export default function PostDetailPage() {
         title={confirmModal.title}
         description={confirmModal.description}
         confirmText={confirmModal.confirmText}
-        isDestructive={true}
+        isDanger={true}
         onConfirm={confirmModal.onConfirm}
         onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
+
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        onSubmit={handleReport}
+        isSubmitting={isReporting}
+      />
+
+      <DeleteConfirmModal
+        isOpen={isDeleteDialogOpen}
+        title="게시물을 삭제하시겠습니까?"
+        description="삭제된 게시물은 복구할 수 없습니다."
+        onConfirm={confirmDeletePost}
+        onCancel={() => setIsDeleteDialogOpen(false)}
+      />
+
+      <LikeListModal
+        isOpen={isLikeListModalOpen}
+        onClose={() => setIsLikeListModalOpen(false)}
+        postId={postId as string}
+      />
+
+      <LoginRequiredBottomSheet
+        isOpen={isLoginSheetOpen}
+        onClose={() => setIsLoginSheetOpen(false)}
       />
     </div>
   );

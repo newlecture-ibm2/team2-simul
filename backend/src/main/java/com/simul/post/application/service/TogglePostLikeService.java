@@ -1,5 +1,6 @@
 package com.simul.post.application.service;
 
+import com.simul.notification.application.dto.PostLikedEvent;
 import com.simul.post.application.dto.ToggleLikeResponse;
 import com.simul.post.application.port.in.TogglePostLikeUseCase;
 import com.simul.post.application.port.out.PostLikePersistencePort;
@@ -7,6 +8,7 @@ import com.simul.post.application.port.out.PostRepositoryPort;
 import com.simul.post.domain.model.Post;
 import com.simul.post.domain.model.PostLike;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,7 @@ public class TogglePostLikeService implements TogglePostLikeUseCase {
 
     private final PostRepositoryPort postRepositoryPort;
     private final PostLikePersistencePort postLikePersistencePort;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -57,6 +60,12 @@ public class TogglePostLikeService implements TogglePostLikeUseCase {
 
         // 4. 변경된 likeCount 반영
         postRepositoryPort.save(post);
+
+        // 5. 좋아요 시에만 알림 이벤트 발행 (좋아요 취소 시에는 알림 안 보냄)
+        // 헥사고날 규칙 및 이벤트 기반 구조를 위해 ApplicationEventPublisher 사용
+        if (isLiked) {
+            eventPublisher.publishEvent(new PostLikedEvent(userId, post.getUserId(), postId));
+        }
 
         return new ToggleLikeResponse(isLiked, post.getLikeCount());
     }

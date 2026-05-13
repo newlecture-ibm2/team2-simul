@@ -1,6 +1,7 @@
 package com.simul.post.application.service;
 
 import com.simul.common.application.service.FileStorageService;
+import com.simul.notification.application.dto.PostCreatedEvent;
 import com.simul.post.application.dto.CreatePostCommand;
 import com.simul.post.application.dto.FeedPostResponse;
 import com.simul.post.application.port.in.CreatePostUseCase;
@@ -15,6 +16,7 @@ import com.simul.tag.application.port.in.LoadTagsUseCase;
 import com.simul.user.application.dto.UserResponse;
 import com.simul.user.application.port.in.LoadUserUseCase;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,15 +30,20 @@ import java.util.*;
 import com.simul.post.application.port.in.GetPostDetailUseCase;
 import com.simul.post.application.port.in.DeletePostUseCase;
 import com.simul.post.application.port.in.UpdatePostUseCase;
+import com.simul.post.application.port.in.GetPostLikesUseCase;
 import com.simul.post.application.dto.PostDetailResponse;
 import com.simul.post.application.dto.UpdatePostCommand;
+import com.simul.post.application.dto.LikeUserResponse;
+import com.simul.post.domain.model.PostLike;
 // ... imports handled below by inserting at class declaration
 
 import com.simul.post.application.port.in.GetUserPostsUseCase;
+import com.simul.post.application.port.in.BlindPostUseCase;
+import com.simul.post.application.port.in.UnblindPostUseCase;
 
 @Service
 @RequiredArgsConstructor
-public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetPostDetailUseCase, DeletePostUseCase, UpdatePostUseCase, GetUserPostsUseCase {
+public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetPostDetailUseCase, DeletePostUseCase, UpdatePostUseCase, GetPostLikesUseCase, GetUserPostsUseCase, BlindPostUseCase, UnblindPostUseCase {
 
     private final PostRepositoryPort postRepositoryPort;
     private final PostLikePersistencePort postLikePersistencePort;
@@ -44,6 +51,7 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
     private final AttachTagsToPostUseCase attachTagsToPostUseCase;
     private final LoadUserUseCase loadUserUseCase;
     private final LoadTagsUseCase loadTagsUseCase;
+    private final ApplicationEventPublisher eventPublisher;
 
     // ... existing createPost method ...
     @Override
@@ -99,6 +107,11 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         // 5. 태그 매핑 (N:M)
         if (tags != null && !tags.isEmpty()) {
             attachTagsToPostUseCase.attachTags(savedPost.getPostId(), tags);
+        }
+
+        // 6. 공개 게시물인 경우 팔로워들에게 알림 이벤트 발행
+        if (Boolean.TRUE.equals(command.getIsPublic())) {
+            eventPublisher.publishEvent(new PostCreatedEvent(savedPost.getUserId(), savedPost.getPostId()));
         }
 
         return savedPost;
@@ -217,8 +230,11 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
                 post.getCaption(),
                 post.getLikeCount(),
                 post.getViewCount(),
+                post.getCommentCount(),
                 isLiked,
                 post.getIsPublic(),
+                post.getReportCount(),
+                post.isWarned(),
                 post.getCreatedAt()
         );
     }
@@ -307,6 +323,44 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
 
     @Override
     @Transactional(readOnly = true)
+    public Page<LikeUserResponse> getPostLikes(UUID postId, Pageable pageable) {
+        // 1. 게시물 존재 확인
+        postRepositoryPort.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("ERR-003: 찾을 수 없는 콘텐츠입니다."));
+
+        // 2. 좋아요 내역 조회 (페이징)
+        Page<PostLike> likes = postLikePersistencePort.findByPostId(postId, pageable);
+
+        if (likes.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        // 3. 좋아요 누른 사용자 ID 목록 추출
+        List<UUID> userIds = likes.getContent().stream()
+                .map(PostLike::getUserId)
+                .toList();
+
+        // 4. 사용자 정보 일괄 조회
+        Map<UUID, UserResponse> userMap = loadUserUseCase.loadUsers(userIds);
+
+        // 5. Response 매핑
+        return likes.map(like -> {
+            UserResponse user = userMap.get(like.getUserId());
+            if (user != null) {
+                return new LikeUserResponse(
+                        user.userId(),
+                        user.nickname(),
+                        user.profileImageUrl()
+                );
+            } else {
+                return new LikeUserResponse(
+                        like.getUserId(),
+                        "알 수 없는 사용자",
+                        null
+                );
+            }
+        });
+    }
     public Page<FeedPostResponse> getUserPosts(UUID targetUserId, UUID currentUserId, Pageable pageable) {
         Page<Post> postsPage;
         
@@ -396,5 +450,23 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
                     post.getCreatedAt()
             );
         });
+    }
+
+    @Override
+    @Transactional
+    public void blindPost(UUID postId) {
+        Post post = postRepositoryPort.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("ERR-003: 찾을 수 없는 콘텐츠입니다."));
+        post.blind();
+        postRepositoryPort.save(post);
+    }
+
+    @Override
+    @Transactional
+    public void unblindPost(UUID postId) {
+        Post post = postRepositoryPort.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("ERR-003: 찾을 수 없는 콘텐츠입니다."));
+        post.unblind();
+        postRepositoryPort.save(post);
     }
 }
