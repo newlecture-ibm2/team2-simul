@@ -1,9 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
-import styles from './layout.module.css';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import BottomNav from '@/components/BottomNav';
 import Providers from '@/components/Providers';
 
 import OfflineBanner from '@/components/OfflineBanner';
@@ -11,6 +7,7 @@ import Toast from '@/components/Toast';
 import GlobalLoading from '@/components/GlobalLoading';
 import AuthInitializer from '@/components/AuthInitializer';
 import { NotificationInitializer } from '@/components/NotificationInitializer';
+import ConditionalLayout from '@/components/ConditionalLayout';
 
 export const metadata: Metadata = {
   title: 'SIMUL — AI 가상시착 패션 플랫폼',
@@ -40,12 +37,9 @@ export default function RootLayout({
           <GlobalLoading />
           <AuthInitializer />
           <NotificationInitializer />
-          <div className={styles.appContainer}>
-            <Header />
-            <main className={styles.main}>{children}</main>
-            <Footer />
-            <BottomNav />
-          </div>
+          <ConditionalLayout>
+            {children}
+          </ConditionalLayout>
         </Providers>
       </body>
     </html>
