@@ -11,6 +11,9 @@ interface SearchBarProps {
 
 export default function SearchBar({ initialQuery = '', onSearch }: SearchBarProps) {
   const [query, setQuery] = useState(initialQuery);
+  useEffect(() => {
+    setQuery(initialQuery);
+  }, [initialQuery]);
   const [suggestions, setSuggestions] = useState<TagResponse[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);

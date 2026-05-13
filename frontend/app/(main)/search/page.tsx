@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
 import SearchBar from './_components/SearchBar';
@@ -18,8 +18,29 @@ function SearchContent() {
   const [query, setQuery] = useState(initialQuery);
   const [searchType, setSearchType] = useState<SearchType>(initialType);
 
+  useEffect(() => {
+    const q = searchParams.get('q') || '';
+    const type = (searchParams.get('type') as SearchType) || 'all';
+    setQuery(q);
+    setSearchType(type);
+  }, [searchParams]);
+
+  const updateUrl = (q: string, type: SearchType) => {
+    if (!q) {
+      router.replace('/search');
+    } else {
+      router.replace(`/search?q=${encodeURIComponent(q)}&type=${type}`);
+    }
+  };
+
   const handleSearch = (newQuery: string) => {
     setQuery(newQuery);
+    updateUrl(newQuery, searchType);
+  };
+
+  const handleTypeChange = (newType: SearchType) => {
+    setSearchType(newType);
+    updateUrl(query, newType);
   };
 
   const handleBack = () => {
