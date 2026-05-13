@@ -14,4 +14,5 @@ public interface TagPersistencePort {
     List<PostTag> findPostTagsByPostId(UUID postId);
     List<PostTag> findPostTagsByPostIds(List<UUID> postIds);
     void deletePostTagsByPostId(UUID postId);
+    List<Tag> findTagsByNamePrefix(String prefix, int limit);
 }

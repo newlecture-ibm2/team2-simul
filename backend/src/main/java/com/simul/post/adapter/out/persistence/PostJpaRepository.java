@@ -21,4 +21,12 @@ public interface PostJpaRepository extends JpaRepository<Post, UUID> {
 
     @Query("SELECT COUNT(p) FROM Post p JOIN PostLike l ON l.postId = p.postId WHERE l.userId = :userId AND p.deletedAt IS NULL")
     long countLikedPosts(UUID userId);
+
+    Page<Post> findAllByCaptionContainingIgnoreCaseAndIsPublicTrueAndIsBlindedFalse(String caption, Pageable pageable);
+
+    @Query("SELECT p FROM Post p JOIN PostTag pt ON p.postId = pt.postId JOIN Tag t ON pt.tag.id = t.id WHERE t.name = :tagName AND p.isPublic = true AND p.isBlinded = false AND p.deletedAt IS NULL")
+    Page<Post> findByTagName(@org.springframework.data.repository.query.Param("tagName") String tagName, Pageable pageable);
+
+    @Query("SELECT DISTINCT p FROM Post p LEFT JOIN PostTag pt ON p.postId = pt.postId LEFT JOIN Tag t ON pt.tag.id = t.id WHERE (t.name = :query OR LOWER(p.caption) LIKE LOWER(CONCAT('%', :query, '%'))) AND p.isPublic = true AND p.isBlinded = false AND p.deletedAt IS NULL")
+    Page<Post> findByTagNameOrCaption(@org.springframework.data.repository.query.Param("query") String query, Pageable pageable);
 }
