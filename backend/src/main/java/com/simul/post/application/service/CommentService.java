@@ -78,24 +78,29 @@ public class CommentService implements LoadCommentUseCase, CreateCommentUseCase,
                 ? Map.of()
                 : loadUserUseCase.loadUsers(new ArrayList<>(userIds));
 
-        // 5. DTO 변환
-        return parentComments.map(parent -> {
-            boolean parentDeleted = parent.getDeletedAt() != null;
+        // 5. DTO 변환 및 null 필터링
+        List<CommentResponse> content = parentComments.stream()
+                .map(parent -> {
+                    boolean parentDeleted = parent.getDeletedAt() != null;
 
-            // 대댓글 중 삭제되지 않은 것만 필터 (depth-2는 자식이 없으므로 삭제되면 숨김)
-            List<Comment> replies = repliesMap.getOrDefault(parent.getCommentId(), List.of());
-            List<CommentResponse> replyDtos = replies.stream()
-                    .filter(r -> r.getDeletedAt() == null)
-                    .map(r -> createCommentResponse(r, List.of(), userMap))
-                    .collect(Collectors.toList());
+                    // 대댓글 중 삭제되지 않은 것만 필터 (depth-2는 자식이 없으므로 삭제되면 숨김)
+                    List<Comment> replies = repliesMap.getOrDefault(parent.getCommentId(), List.of());
+                    List<CommentResponse> replyDtos = replies.stream()
+                            .filter(r -> r.getDeletedAt() == null)
+                            .map(r -> createCommentResponse(r, List.of(), userMap))
+                            .collect(Collectors.toList());
 
-            // 삭제된 부모 댓글이지만 살아있는 대댓글이 없으면 → 완전히 숨김 (null 반환 후 필터)
-            if (parentDeleted && replyDtos.isEmpty()) {
-                return null;
-            }
+                    // 삭제된 부모 댓글이지만 살아있는 대댓글이 없으면 → 완전히 숨김 (null 반환 후 필터)
+                    if (parentDeleted && replyDtos.isEmpty()) {
+                        return null;
+                    }
 
-            return createCommentResponse(parent, replyDtos, userMap);
-        });
+                    return createCommentResponse(parent, replyDtos, userMap);
+                })
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toList());
+
+        return new org.springframework.data.domain.PageImpl<>(content, pageable, parentComments.getTotalElements());
     }
 
     @Override

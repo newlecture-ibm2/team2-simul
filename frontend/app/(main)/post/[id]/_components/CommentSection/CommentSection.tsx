@@ -120,6 +120,8 @@ export default function CommentSection({ postId }: Props) {
   const comments = pageData?.content || [];
 
   const renderComment = (comment: Comment, isReply = false) => {
+    if (!comment) return null;
+
     const isOwner = isAuthenticated && user && (
       String(user.id) === String(comment.userId) ||
       String(user.userId) === String(comment.userId)
