@@ -5,4 +5,5 @@ export * from './tryonAPI';
 export * from './closetAPI';
 export * from './adminAPI';
 export * from './notificationAPI';
+export * from './searchAPI';
 

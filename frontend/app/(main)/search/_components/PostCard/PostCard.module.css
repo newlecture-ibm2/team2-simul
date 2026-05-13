@@ -1,0 +1,188 @@
+.card {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-hero);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform var(--transition-normal);
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.ratioSquare {
+  aspect-ratio: 1 / 1;
+}
+
+.ratioTall {
+  aspect-ratio: 4 / 6;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.imageWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-hero);
+  overflow: hidden;
+  background: var(--color-surface-fog);
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.card:hover .image {
+  transform: scale(1.03);
+}
+
+.overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: radial-gradient(circle at bottom right, var(--color-green) 0%, transparent 60%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 16px 16px 16px;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.card:hover .overlay {
+  opacity: 1;
+}
+
+.authorInfo {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 6px;
+  border-radius: var(--radius-button);
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-family: var(--font-family-latin);
+  box-shadow: var(--shadow-subtle);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  z-index: 10;
+}
+
+.card:hover .authorInfo {
+  opacity: 1;
+}
+
+.authorAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-circle);
+  object-fit: cover;
+  background-color: var(--color-surface-sand);
+}
+
+.authorName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.likeBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+  z-index: 20;
+  padding: 0;
+}
+
+.likeBtn:hover {
+  transform: scale(1.1);
+}
+
+.likeBtn:active {
+  transform: scale(0.95);
+}
+
+.heartIcon {
+  width: 18px;
+  height: 18px;
+  fill: rgba(255, 255, 255, 0.8);
+  transition: fill var(--transition-fast), stroke var(--transition-fast);
+  stroke: rgba(0, 0, 0, 0.2);
+  stroke-width: 1px;
+}
+
+.liked .heartIcon {
+  fill: var(--color-error);
+  stroke: var(--color-error);
+}
+
+.likeCount {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin-left: 2px;
+  font-family: var(--font-family-latin);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.liked .likeCount {
+  color: var(--color-error);
+}
+
+.tagList {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 48px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.card:hover .tagList {
+  opacity: 1;
+}
+
+.tagChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: var(--radius-button);
+  white-space: nowrap;
+  font-family: var(--font-family-korean);
+}
