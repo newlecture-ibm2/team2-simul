@@ -50,6 +50,7 @@ public class DataInitializer implements CommandLineRunner {
     private final CollectionItemJpaRepository collectionItemJpaRepository;
     private final PostJpaRepository postJpaRepository;
     private final PostLikeJpaRepository postLikeJpaRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     // 고정 UUID (개발 시 참조 편의용)
     private static final UUID ADMIN_ID  = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -70,11 +71,15 @@ public class DataInitializer implements CommandLineRunner {
         // 1. 유저 3명 생성
         // ==========================================
         UserJpaEntity admin = createUser(ADMIN_ID, "kakao", "kakao_admin_001",
-                "관리자", "SimulAdmin", Gender.UNKNOWN, "SIMUL 관리자 계정입니다.", Role.ADMIN);
-        UserJpaEntity user1 = createUser(USER1_ID, "kakao", "kakao_user_001",
-                "정찬우", "chim-chan-man", Gender.MALE, "패션을 사랑하는 정찬우입니다 🌟", Role.USER);
-        UserJpaEntity user2 = createUser(USER2_ID, "naver", "naver_user_001",
-                "이우석", "rainstone_lee", Gender.MALE, "일상 속 스타일을 찾아서 👕", Role.USER);
+                "관리자", "SimulAdmin", null, Gender.UNKNOWN, "SIMUL 관리자 계정입니다.", Role.ADMIN);
+        
+        // USER1을 이메일 로그인 사용자로 변경
+        UserJpaEntity user1 = createUser(USER1_ID, "email", "user1@simul.com",
+                "정찬우", "chim-chan-man", "simul1234", Gender.MALE, "패션을 사랑하는 정찬우입니다 🌟", Role.USER);
+        
+        // USER2를 이메일 로그인 사용자로 변경 (추가)
+        UserJpaEntity user2 = createUser(USER2_ID, "email", "user2@simul.com",
+                "이우석", "rainstone_lee", "simul1234", Gender.MALE, "일상 속 스타일을 찾아서 👕", Role.USER);
 
         userJpaRepository.saveAll(List.of(admin, user1, user2));
         log.info("  → 유저 3명 생성 완료 (ADMIN: {}, USER1: {}, USER2: {})", ADMIN_ID, USER1_ID, USER2_ID);
@@ -213,13 +218,15 @@ public class DataInitializer implements CommandLineRunner {
     // ==========================================
 
     private UserJpaEntity createUser(UUID userId, String provider, String providerId,
-                                      String name, String nickname, Gender gender, String bio, Role role) {
+                                      String name, String nickname, String password, Gender gender, String bio, Role role) {
+        String encodedPassword = (password != null) ? passwordEncoder.encode(password) : null;
         return UserJpaEntity.builder()
                 .userId(userId)
                 .provider(provider)
                 .providerId(providerId)
                 .name(name)
                 .nickname(nickname)
+                .password(encodedPassword)
                 .gender(gender)
                 .bio(bio)
                 .profileImageUrl("/uploads/images/sample/profile_" + nickname + ".jpg")

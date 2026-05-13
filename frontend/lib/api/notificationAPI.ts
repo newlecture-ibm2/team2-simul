@@ -1,4 +1,4 @@
-import client from './client';
+import { apiClient } from './client';
 
 export interface NotificationResponse {
   notificationId: string;
@@ -11,18 +11,27 @@ export interface NotificationResponse {
   createdAt: string;
 }
 
+export interface NotificationPageResponse {
+  content: NotificationResponse[];
+  totalPages: number;
+  totalElements: number;
+  last: boolean;
+  size: number;
+  number: number;
+}
+
 export const notificationAPI = {
   /** 알림 목록 조회 */
   getNotifications: (page = 0, size = 20) =>
-    client.get<any>(`/notifications?page=${page}&size=${size}`),
+    apiClient<NotificationPageResponse>(`/notifications?page=${page}&size=${size}`),
 
   /** 미읽음 알림 수 조회 */
   getUnreadCount: () =>
-    client.get<{ unread_count: number }>('/notifications/unread-count'),
+    apiClient<{ unread_count: number }>('/notifications/unread-count'),
 
   /** 개별 읽음 처리 */
-  markAsRead: (id: string) => client.patch(`/notifications/${id}/read`),
+  markAsRead: (id: string) => apiClient<void>(`/notifications/${id}/read`, { method: 'PATCH' }),
 
   /** 전체 읽음 처리 */
-  markAllAsRead: () => client.patch<{ updated_count: number }>('/notifications/read-all'),
+  markAllAsRead: () => apiClient<{ updated_count: number }>('/notifications/read-all', { method: 'PATCH' }),
 };
