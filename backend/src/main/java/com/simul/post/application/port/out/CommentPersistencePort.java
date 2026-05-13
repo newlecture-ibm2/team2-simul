@@ -13,5 +13,8 @@ public interface CommentPersistencePort {
     Optional<Comment> findById(UUID commentId);
     Page<Comment> findParentCommentsByPostId(UUID postId, Pageable pageable);
     List<Comment> findRepliesByParentId(UUID parentCommentId);
+    List<Comment> findRepliesByParentIds(List<UUID> parentIds);
+    boolean hasNonDeletedReplies(UUID parentCommentId);
     int countByPostId(UUID postId);
+    int countActiveByPostId(UUID postId);
 }

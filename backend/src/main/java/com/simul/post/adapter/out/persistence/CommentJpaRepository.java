@@ -13,6 +13,10 @@ import java.util.UUID;
 public interface CommentJpaRepository extends JpaRepository<Comment, UUID> {
     Page<Comment> findByPostIdAndParentCommentIdIsNullOrderByCreatedAtAsc(UUID postId, Pageable pageable);
     List<Comment> findByParentCommentIdOrderByCreatedAtAsc(UUID parentCommentId);
-    
+    List<Comment> findByParentCommentIdInOrderByCreatedAtAsc(List<UUID> parentIds);
+
+    boolean existsByParentCommentIdAndDeletedAtIsNull(UUID parentCommentId);
+
     int countByPostId(UUID postId);
+    int countByPostIdAndDeletedAtIsNull(UUID postId);
 }
