@@ -1,17 +1,22 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
 import SearchBar from './_components/SearchBar';
 import SearchFilter from './_components/SearchFilter';
 import SearchResultGrid from './_components/SearchResultGrid';
 import { SearchType } from '../../../lib/api/searchAPI';
 
-export default function SearchPage() {
+function SearchContent() {
   const router = useRouter();
-  const [query, setQuery] = useState('');
-  const [searchType, setSearchType] = useState<SearchType>('all');
+  const searchParams = useSearchParams();
+  
+  const initialQuery = searchParams.get('q') || '';
+  const initialType = (searchParams.get('type') as SearchType) || 'all';
+
+  const [query, setQuery] = useState(initialQuery);
+  const [searchType, setSearchType] = useState<SearchType>(initialType);
 
   const handleSearch = (newQuery: string) => {
     setQuery(newQuery);
@@ -27,7 +32,7 @@ export default function SearchPage() {
         <button className={styles.backButton} onClick={handleBack} aria-label="뒤로가기">
           ←
         </button>
-        <SearchBar onSearch={handleSearch} />
+        <SearchBar initialQuery={query} onSearch={handleSearch} />
       </header>
 
       {query ? (
@@ -43,5 +48,13 @@ export default function SearchPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className={styles.pageContainer}></div>}>
+      <SearchContent />
+    </Suspense>
   );
 }

@@ -406,7 +406,9 @@ export default function PostDetailPage() {
           {post.tags && post.tags.length > 0 && (
              <div className={styles.tagRow}>
                 {post.tags.map((tag: string) => (
-                   <span key={tag} className={styles.tagChip}>#{tag}</span>
+                   <Link key={tag} href={`/search?q=%23${tag}&type=tag`} style={{ textDecoration: 'none' }}>
+                     <span className={styles.tagChip}>#{tag}</span>
+                   </Link>
                 ))}
              </div>
           )}
