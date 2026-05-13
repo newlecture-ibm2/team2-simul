@@ -4,7 +4,7 @@ import com.simul.common.exception.BusinessException;
 import com.simul.common.exception.ErrorCode;
 import com.simul.notification.application.dto.ReportBlindedEvent;
 import com.simul.post.application.port.out.PostRepositoryPort;
-import com.simul.post.application.port.out.ReportPersistencePort;
+import com.simul.post.application.port.out.PostReportPersistencePort;
 import com.simul.post.domain.model.Post;
 import com.simul.post.domain.model.PostStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +33,7 @@ class ReportServiceTest {
     private PostRepositoryPort postRepositoryPort;
 
     @Mock
-    private ReportPersistencePort reportPersistencePort;
+    private PostReportPersistencePort postReportPersistencePort;
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
@@ -66,7 +66,7 @@ class ReportServiceTest {
     void reportPost_success() {
         // given
         given(postRepositoryPort.findById(postId)).willReturn(Optional.of(post));
-        given(reportPersistencePort.existsByPostIdAndReporterId(postId, reporterId)).willReturn(false);
+        given(postReportPersistencePort.existsByPostIdAndReporterId(postId, reporterId)).willReturn(false);
 
         // when
         reportService.reportPost(postId, reporterId, "SPAM");
@@ -75,7 +75,7 @@ class ReportServiceTest {
         assertThat(post.getReportCount()).isEqualTo(1);
         assertThat(post.getIsBlinded()).isFalse();
         
-        verify(reportPersistencePort, times(1)).save(any());
+        verify(postReportPersistencePort, times(1)).save(any());
         verify(postRepositoryPort, times(1)).save(post);
         verify(eventPublisher, never()).publishEvent(any());
     }
@@ -85,7 +85,7 @@ class ReportServiceTest {
     void reportPost_duplicate() {
         // given
         given(postRepositoryPort.findById(postId)).willReturn(Optional.of(post));
-        given(reportPersistencePort.existsByPostIdAndReporterId(postId, reporterId)).willReturn(true);
+        given(postReportPersistencePort.existsByPostIdAndReporterId(postId, reporterId)).willReturn(true);
 
         // when & then
         assertThatThrownBy(() -> reportService.reportPost(postId, reporterId, "SPAM"))
@@ -97,7 +97,6 @@ class ReportServiceTest {
     @DisplayName("10회 누적: 자동 블라인드 처리 및 작성자 알림 이벤트 발행")
     void reportPost_blindAndNotify() {
         // given
-        // 미리 신고 9회 누적 상태로 세팅
         post = Post.builder()
                 .postId(postId)
                 .userId(postAuthorId)
@@ -107,7 +106,7 @@ class ReportServiceTest {
                 .build();
 
         given(postRepositoryPort.findById(postId)).willReturn(Optional.of(post));
-        given(reportPersistencePort.existsByPostIdAndReporterId(postId, reporterId)).willReturn(false);
+        given(postReportPersistencePort.existsByPostIdAndReporterId(postId, reporterId)).willReturn(false);
 
         // when
         reportService.reportPost(postId, reporterId, "INAPPROPRIATE");
@@ -116,7 +115,7 @@ class ReportServiceTest {
         assertThat(post.getReportCount()).isEqualTo(10);
         assertThat(post.getIsBlinded()).isTrue();
 
-        verify(reportPersistencePort, times(1)).save(any());
+        verify(postReportPersistencePort, times(1)).save(any());
         verify(postRepositoryPort, times(1)).save(post);
 
         // 알림 이벤트 발행 확인

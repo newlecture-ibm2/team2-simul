@@ -18,7 +18,7 @@ import java.util.UUID;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
-public class Report {
+public class PostReport {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -39,7 +39,7 @@ public class Report {
     private LocalDateTime createdAt;
 
     @Builder
-    public Report(UUID postId, UUID reporterId, String reason) {
+    public PostReport(UUID postId, UUID reporterId, String reason) {
         this.postId = postId;
         this.reporterId = reporterId;
         this.reason = reason;
