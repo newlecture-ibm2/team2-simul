@@ -11,10 +11,12 @@ import com.simul.user.application.port.in.UpdateUserUseCase;
 import com.simul.user.application.port.in.WithdrawUserUseCase;
 import com.simul.user.application.port.out.FollowPersistencePort;
 import com.simul.user.application.port.out.UserPersistencePort;
+import com.simul.common.application.port.out.ImageStoragePort;
 import com.simul.user.domain.model.Gender;
 import com.simul.user.domain.model.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -31,10 +33,12 @@ public class UserService implements LoadUserUseCase, RegisterUserUseCase, Update
 
     private final UserPersistencePort userPersistencePort;
     private final FollowPersistencePort followPersistencePort;
+    private final ImageStoragePort imageStoragePort;
 
-    public UserService(UserPersistencePort userPersistencePort, FollowPersistencePort followPersistencePort) {
+    public UserService(UserPersistencePort userPersistencePort, FollowPersistencePort followPersistencePort, ImageStoragePort imageStoragePort) {
         this.userPersistencePort = userPersistencePort;
         this.followPersistencePort = followPersistencePort;
+        this.imageStoragePort = imageStoragePort;
     }
 
     /**
@@ -94,11 +98,39 @@ public class UserService implements LoadUserUseCase, RegisterUserUseCase, Update
     }
 
     @Override
-    public void updateProfile(UUID userId, String nickname, String name, Gender gender, String bio, String profileImageUrl) {
+    @Transactional
+    public void updateProfile(UUID userId, String nickname, String name, Gender gender, String bio, String profileImageUrl, MultipartFile profileImage, String bannerImageUrl, MultipartFile bannerImage) {
         User user = userPersistencePort.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        user.updateProfile(nickname, name, gender, bio, profileImageUrl);
+        // 기존 이미지 경로 백업
+        String oldProfileUrl = user.getProfileImageUrl();
+        String oldBannerUrl = user.getBannerImageUrl();
+
+        String finalProfileImageUrl = profileImageUrl;
+        String finalBannerImageUrl = bannerImageUrl;
+
+        // 프로필 이미지 업로드
+        if (profileImage != null && !profileImage.isEmpty()) {
+            finalProfileImageUrl = imageStoragePort.uploadImage(profileImage, "profile");
+            
+            // 새 이미지 업로드 성공 시 기존 이미지 삭제
+            if (oldProfileUrl != null && !oldProfileUrl.isEmpty()) {
+                imageStoragePort.deleteImage(oldProfileUrl);
+            }
+        }
+
+        // 배너 이미지 업로드
+        if (bannerImage != null && !bannerImage.isEmpty()) {
+            finalBannerImageUrl = imageStoragePort.uploadImage(bannerImage, "banner");
+            
+            // 새 배너 업로드 성공 시 기존 배너 삭제
+            if (oldBannerUrl != null && !oldBannerUrl.isEmpty()) {
+                imageStoragePort.deleteImage(oldBannerUrl);
+            }
+        }
+
+        user.updateProfile(nickname, name, gender, bio, finalProfileImageUrl, finalBannerImageUrl);
         userPersistencePort.save(user);
     }
 

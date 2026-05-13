@@ -1,15 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuthStore } from '@/lib/stores/useAuthStore';
 import styles from './BottomNav.module.css';
 
 const TABS = [
-  { href: '/', iconName: 'home' },
-  { href: '/tryon', iconName: 'tryon' },
-  { href: '/post/create', iconName: 'create' },
-  { href: '/closet', iconName: 'closet' },
-  { href: '/profile', iconName: 'profile' },
+  { href: '/', iconName: 'home', authRequired: false },
+  { href: '/tryon', iconName: 'tryon', authRequired: true },
+  { href: '/post/create', iconName: 'create', authRequired: true },
+  { href: '/closet', iconName: 'closet', authRequired: true },
+  { href: '/profile', iconName: 'profile', authRequired: true },
 ];
 
 interface CustomWindow extends Window {
@@ -18,10 +19,23 @@ interface CustomWindow extends Window {
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/';
     return pathname.startsWith(href);
+  };
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, tab: typeof TABS[0]) => {
+    if (typeof window !== 'undefined') {
+      (window as CustomWindow).isNavigatingFromBottomNav = true;
+    }
+
+    if (tab.authRequired && !isAuthenticated) {
+      e.preventDefault();
+      router.push(`/login?returnUrl=${tab.href}`);
+    }
   };
 
   return (
@@ -35,11 +49,7 @@ export default function BottomNav() {
             key={tab.href}
             href={tab.href}
             className={`${styles.navItem} ${active ? styles.navItemActive : ''}`}
-            onClick={() => {
-              if (typeof window !== 'undefined') {
-                (window as CustomWindow).isNavigatingFromBottomNav = true;
-              }
-            }}
+            onClick={(e) => handleNavClick(e, tab)}
           >
             <img src={iconSrc} alt={`${tab.iconName} 탭`} className={styles.navIcon} />
           </Link>

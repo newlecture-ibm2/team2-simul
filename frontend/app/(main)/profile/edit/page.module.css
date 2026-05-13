@@ -43,11 +43,27 @@
 }
 
 .formGroup label {
-  display: block;
   font-size: var(--font-caption-bold);
   font-weight: var(--weight-bold);
   color: var(--color-text-primary);
+}
+
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 8px;
+}
+
+.counter {
+  font-size: 11px;
+  color: var(--color-text-disabled);
+  font-family: var(--font-family-latin);
+}
+
+.counterMax {
+  color: #ff4d4f;
+  font-weight: var(--weight-bold);
 }
 
 .input {
@@ -65,6 +81,25 @@
 }
 
 .input:focus {
+  outline: none;
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 2px rgba(67, 94, 229, 0.15);
+}
+
+.textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-comfortable);
+  font-size: var(--font-body);
+  color: var(--color-text-primary);
+  background: var(--color-surface-white);
+  height: 120px;
+  resize: none;
+  line-height: 1.5;
+}
+
+.textarea:focus {
   outline: none;
   border-color: var(--color-focus);
   box-shadow: 0 0 0 2px rgba(67, 94, 229, 0.15);

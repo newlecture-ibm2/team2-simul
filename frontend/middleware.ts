@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
 
   // 2. 일반 유저 인증 필수 라우트 검증
   const isAuthRoute = AUTH_REQUIRED_ROUTES.some((route) => pathname.startsWith(route));
-  if (isAuthRoute && !user) {
+  if (isAuthRoute && (!user || !user.id)) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('returnUrl', pathname);
     return NextResponse.redirect(loginUrl);

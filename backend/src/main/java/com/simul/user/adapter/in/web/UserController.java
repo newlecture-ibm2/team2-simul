@@ -5,9 +5,11 @@ import com.simul.user.application.dto.UserResponse;
 import com.simul.user.application.port.in.LoadUserUseCase;
 import com.simul.user.application.port.in.UpdateUserUseCase;
 import com.simul.user.application.port.in.WithdrawUserUseCase;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -52,22 +54,30 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * 프로필 수정
-     * PATCH /users/me
-     */
-    @PatchMapping("/me")
+    @PatchMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> updateProfile(
         @AuthenticationPrincipal UUID userId,
-        @RequestBody UpdateUserRequest request
+        @RequestPart(value = "data", required = false) UpdateUserRequest request,
+        @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
+        @RequestPart(value = "bannerImage", required = false) MultipartFile bannerImage
     ) {
+        String nickname = (request != null) ? request.nickname() : null;
+        String name = (request != null) ? request.name() : null;
+        com.simul.user.domain.model.Gender gender = (request != null) ? request.gender() : null;
+        String bio = (request != null) ? request.bio() : null;
+        String profileImageUrl = (request != null) ? request.profileImageUrl() : null;
+        String bannerImageUrl = (request != null) ? request.bannerImageUrl() : null;
+
         updateUserUseCase.updateProfile(
             userId,
-            request.nickname(),
-            request.name(),
-            request.gender(),
-            request.bio(),
-            request.profileImageUrl()
+            nickname,
+            name,
+            gender,
+            bio,
+            profileImageUrl,
+            profileImage,
+            bannerImageUrl,
+            bannerImage
         );
         return ResponseEntity.ok().build();
     }

@@ -48,7 +48,7 @@ export default function ProfilePage() {
       <div className={styles.profileFrame}>
         {/* Immersive Hero Section */}
         <div className={styles.heroSection}>
-          <img src={user?.profileImageUrl || "/profile.jpg"} alt="Profile Background" className={styles.heroBg} />
+          <img src={user?.bannerImageUrl || "/banner-default.jpg"} alt="Profile Banner" className={styles.heroBg} />
           <div className={styles.heroOverlay}></div>
 
           {/* Hero Content (Bottom aligned) */}

@@ -14,6 +14,7 @@ public record UserResponse(
     String gender,
     String bio,
     String profileImageUrl,
+    String bannerImageUrl,
     boolean isPublic,
     String role
 ) {
@@ -28,6 +29,7 @@ public record UserResponse(
             user.getGender().name(),
             user.getBio(),
             user.getProfileImageUrl(),
+            user.getBannerImageUrl(),
             user.isPublic(),
             user.getRole().name()
         );

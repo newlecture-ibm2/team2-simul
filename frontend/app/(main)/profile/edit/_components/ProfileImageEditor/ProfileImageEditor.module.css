@@ -1,0 +1,87 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.avatarWrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.avatarWrapper:hover {
+  transform: scale(1.02);
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-circle, 50%);
+  overflow: hidden;
+  background-color: var(--color-surface-sand, #f0f0f0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--color-border-light, rgba(0, 0, 0, 0.05));
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+
+.defaultIcon {
+  font-size: 60px;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-circle, 50%);
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.avatarWrapper:hover .overlay {
+  opacity: 1;
+}
+
+.cameraIcon {
+  font-size: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.changeBtn {
+  background: none;
+  border: none;
+  color: var(--color-primary, #95b358);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-button, 99px);
+  transition: background-color 0.2s ease;
+}
+
+.changeBtn:hover {
+  background-color: rgba(149, 179, 88, 0.1);
+  text-decoration: underline;
+}
+
+.hiddenInput {
+  display: none;
+}

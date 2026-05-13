@@ -34,10 +34,36 @@ export async function getCurrentUser() {
 }
 
 /** 프로필 수정 */
-export async function updateProfile(data: Record<string, unknown>) {
+export async function updateProfile(data: { 
+  nickname?: string; 
+  bio?: string; 
+  profileImage?: File; 
+  bannerImage?: File;
+  profileImageUrl?: string;
+  bannerImageUrl?: string;
+}) {
+  const formData = new FormData();
+  
+  // JSON 데이터 (data 파트)
+  const userData = {
+    nickname: data.nickname,
+    bio: data.bio,
+    profileImageUrl: data.profileImageUrl,
+    bannerImageUrl: data.bannerImageUrl
+  };
+  formData.append('data', new Blob([JSON.stringify(userData)], { type: 'application/json' }));
+  
+  // 이미지 파일들
+  if (data.profileImage) {
+    formData.append('profileImage', data.profileImage);
+  }
+  if (data.bannerImage) {
+    formData.append('bannerImage', data.bannerImage);
+  }
+
   return apiClient('/users/me', {
     method: 'PATCH',
-    body: JSON.stringify(data),
+    body: formData,
   });
 }
 

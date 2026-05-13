@@ -10,5 +10,6 @@ public record UpdateUserRequest(
     String name,
     Gender gender,
     String bio,
-    String profileImageUrl
+    String profileImageUrl,
+    String bannerImageUrl
 ) {}

@@ -1,0 +1,68 @@
+.container {
+  width: 100%;
+  margin-bottom: 40px;
+}
+
+.bannerWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  border-radius: var(--radius-comfortable, 20px);
+  overflow: hidden;
+  cursor: pointer;
+  background-color: var(--color-surface-sand, #f0f0f0);
+}
+
+.banner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+
+.placeholder {
+  color: var(--color-text-secondary, #666);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.bannerWrapper:hover .overlay {
+  opacity: 1;
+}
+
+.cameraIcon {
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px 16px;
+  border-radius: var(--radius-button, 99px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.hiddenInput {
+  display: none;
+}
