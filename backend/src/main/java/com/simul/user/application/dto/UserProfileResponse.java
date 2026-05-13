@@ -14,12 +14,14 @@ public record UserProfileResponse(
     String gender,
     String bio,
     String profileImageUrl,
+    String bannerImageUrl,
     boolean isPublic,
     String role,
     long followerCount,
     long followingCount,
     long postCount,
-    boolean isFollowing
+    boolean isFollowing,
+    String provider
 ) {
     /**
      * User 엔티티 + 팔로우 정보 + 게시물 수 → UserProfileResponse 변환
@@ -32,12 +34,14 @@ public record UserProfileResponse(
             user.getGender().name(),
             user.getBio(),
             user.getProfileImageUrl(),
+            user.getBannerImageUrl(),
             user.isPublic(),
             user.getRole().name(),
             followerCount,
             followingCount,
             postCount,
-            isFollowing
+            isFollowing,
+            user.getProvider()
         );
     }
 }

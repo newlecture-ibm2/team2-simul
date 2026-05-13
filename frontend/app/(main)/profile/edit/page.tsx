@@ -6,13 +6,20 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCurrentUser, updateProfile } from '@/lib/api/authAPI';
 import { User } from '@/lib/stores/useAuthStore';
 import Button from '@/components/Button';
+import ProfileImageEditor from './_components/ProfileImageEditor';
+import ProfileBannerEditor from './_components/ProfileBannerEditor';
 import styles from './page.module.css';
+
+const MAX_NICKNAME = 30;
+const MAX_BIO = 150;
 
 export default function ProfileEditPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [nickname, setNickname] = useState('');
   const [bio, setBio] = useState('');
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [selectedBanner, setSelectedBanner] = useState<File | null>(null);
 
   // 1. 기존 정보 불러오기
   const { data: user, isLoading } = useQuery<User>({
@@ -43,7 +50,12 @@ export default function ProfileEditPage() {
   });
 
   const handleSave = () => {
-    mutation.mutate({ nickname, bio });
+    mutation.mutate({ 
+      nickname, 
+      bio, 
+      profileImage: selectedImage || undefined,
+      bannerImage: selectedBanner || undefined
+    });
   };
 
   if (isLoading) return <div className={styles.loading}>로딩 중...</div>;
@@ -52,34 +64,47 @@ export default function ProfileEditPage() {
     <div className={styles.editPage}>
       <h1>프로필 편집</h1>
 
-      <div className={styles.avatarSection}>
-        <div className={styles.avatar}>
-          {user?.profileImageUrl ? <img src={user.profileImageUrl} alt="Avatar" /> : '🧑'}
-        </div>
-        <button className={styles.changeAvatarBtn}>프로필 사진 변경</button>
-      </div>
+      <ProfileImageEditor 
+        currentImageUrl={user?.profileImageUrl} 
+        onImageSelect={setSelectedImage} 
+      />
+
+      <ProfileBannerEditor 
+        currentImageUrl={user?.bannerImageUrl}
+        onImageSelect={setSelectedBanner}
+      />
 
       <div className={styles.formGroup}>
-        <label htmlFor="nickname">닉네임</label>
+        <div className={styles.labelRow}>
+          <label htmlFor="nickname">닉네임</label>
+          <span className={`${styles.counter} ${nickname.length >= MAX_NICKNAME ? styles.counterMax : ''}`}>
+            {nickname.length}/{MAX_NICKNAME}
+          </span>
+        </div>
         <input
           id="nickname"
           type="text"
           className={styles.input}
           value={nickname}
-          onChange={(e) => setNickname(e.target.value)}
+          onChange={(e) => setNickname(e.target.value.slice(0, MAX_NICKNAME))}
           placeholder="닉네임을 입력하세요"
         />
       </div>
 
       <div className={styles.formGroup}>
-        <label htmlFor="bio">한줄 소개</label>
-        <input
+        <div className={styles.labelRow}>
+          <label htmlFor="bio">한줄 소개</label>
+          <span className={`${styles.counter} ${bio.length >= MAX_BIO ? styles.counterMax : ''}`}>
+            {bio.length}/{MAX_BIO}
+          </span>
+        </div>
+        <textarea
           id="bio"
-          type="text"
-          className={styles.input}
+          className={styles.textarea}
           value={bio}
-          onChange={(e) => setBio(e.target.value)}
+          onChange={(e) => setBio(e.target.value.slice(0, MAX_BIO))}
           placeholder="자기소개를 입력하세요"
+          rows={4}
         />
       </div>
 

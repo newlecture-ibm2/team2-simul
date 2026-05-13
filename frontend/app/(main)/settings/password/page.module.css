@@ -1,0 +1,42 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background: #111;
+  color: #fff;
+  padding: 0 var(--space-page-x);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  background: #111;
+  z-index: 10;
+}
+
+.backBtn {
+  font-size: 24px;
+  color: #fff;
+  text-decoration: none;
+  width: 24px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.content {
+  margin-top: 20px;
+}
+
+.description {
+  font-size: 14px;
+  color: #999;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}

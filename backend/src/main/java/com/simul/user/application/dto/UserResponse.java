@@ -14,8 +14,10 @@ public record UserResponse(
     String gender,
     String bio,
     String profileImageUrl,
+    String bannerImageUrl,
     boolean isPublic,
-    String role
+    String role,
+    String provider
 ) {
     /**
      * User 엔티티 → UserResponse 변환
@@ -28,8 +30,10 @@ public record UserResponse(
             user.getGender().name(),
             user.getBio(),
             user.getProfileImageUrl(),
+            user.getBannerImageUrl(),
             user.isPublic(),
-            user.getRole().name()
+            user.getRole().name(),
+            user.getProvider()
         );
     }
 }

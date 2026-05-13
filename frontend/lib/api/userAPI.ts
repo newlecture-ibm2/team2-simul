@@ -49,4 +49,12 @@ export async function getFollowers(userId: string) {
 export async function getFollowings(userId: string) {
   return apiClient<FollowUserResponse[]>(`/users/${userId}/followings`);
 }
-
+/**
+ * 비밀번호 변경
+ */
+export async function changePassword(data: { oldPassword: string; newPassword: string }) {
+  return apiClient('/users/me/password', {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}

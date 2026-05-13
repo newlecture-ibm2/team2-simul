@@ -3,7 +3,7 @@
 import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { socialLogin } from '@/lib/api/authAPI';
-import { useAuthStore, User } from '@/lib/stores/useAuthStore';
+import { useAuthStore } from '@/lib/stores/useAuthStore';
 
 function CallbackHandler() {
   const searchParams = useSearchParams();

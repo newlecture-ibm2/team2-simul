@@ -49,6 +49,9 @@ public class UserJpaEntity extends BaseJpaEntity {
     @Column(name = "profile_image_url")
     private String profileImageUrl;
 
+    @Column(name = "banner_image_url")
+    private String bannerImageUrl;
+
     @Column(name = "is_public", nullable = false)
     private boolean isPublic;
 
@@ -61,8 +64,8 @@ public class UserJpaEntity extends BaseJpaEntity {
 
     @Builder
     public UserJpaEntity(UUID userId, String provider, String providerId, String name, String nickname,
-                         String password, Gender gender, String bio, String profileImageUrl, boolean isPublic,
-                         Role role, boolean isActive) {
+                         String password, Gender gender, String bio, String profileImageUrl, String bannerImageUrl,
+                         boolean isPublic, Role role, boolean isActive) {
         this.userId = userId;
         this.provider = provider;
         this.providerId = providerId;
@@ -72,6 +75,7 @@ public class UserJpaEntity extends BaseJpaEntity {
         this.gender = gender;
         this.bio = bio;
         this.profileImageUrl = profileImageUrl;
+        this.bannerImageUrl = bannerImageUrl;
         this.isPublic = isPublic;
         this.role = role;
         this.isActive = isActive;

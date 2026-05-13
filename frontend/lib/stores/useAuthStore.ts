@@ -8,12 +8,14 @@ export interface User {
   name?: string;
   email?: string;
   profileImageUrl?: string;
+  bannerImageUrl?: string;
   bio?: string;
   role?: string;
   followerCount?: number;
   followingCount?: number;
   postCount?: number;
   isFollowing?: boolean;
+  provider?: string;
 }
 
 interface AuthState {

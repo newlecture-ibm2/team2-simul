@@ -81,6 +81,32 @@
   transform: translateX(20px);
 }
 
+.providerTag {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #000;
+  background: var(--color-primary);
+}
+
+.providerKakao {
+  background: #fee500;
+  color: #3c1e1e;
+}
+
+.providerNaver {
+  background: #03c75a;
+  color: #fff;
+}
+
+.providerGoogle {
+  background: #fff;
+  color: #000;
+  border: 1px solid #ddd;
+}
+
 .linkItem {
   display: flex;
   align-items: center;

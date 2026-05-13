@@ -40,6 +40,17 @@ export async function POST(request: NextRequest) {
     const data = await backendResponse.json();
     const { accessToken, refreshToken, isNewUser } = data;
 
+    // JWT payload에서 userId 추출
+    let userId = '';
+    try {
+      const payload = JSON.parse(
+        Buffer.from(accessToken.split('.')[1], 'base64').toString('utf-8')
+      );
+      userId = payload.sub || '';
+    } catch (e) {
+      console.error('JWT decoding failed:', e);
+    }
+
     // 새로 발급받은 토큰으로 유저 정보 조회
     let user = null;
     try {
@@ -49,7 +60,15 @@ export async function POST(request: NextRequest) {
         },
       });
       if (userResponse.ok) {
-        user = await userResponse.json();
+        const profile = await userResponse.json();
+        user = {
+          id: profile.userId || userId,
+          nickname: profile.nickname,
+          email: profile.email || '',
+          profileImage: profile.profileImageUrl,
+          bio: profile.bio,
+          role: profile.role || 'USER',
+        };
       }
     } catch (e) {
       console.error('BFF Fetch User Error:', e);
@@ -64,7 +83,7 @@ export async function POST(request: NextRequest) {
 
     const session = await getIronSession<SessionData>(request, response, sessionOptions);
     session.user = {
-      id: '', // 토큰에서 추출 가능하지만, 당장은 빈 값으로 설정
+      id: userId,
       role: 'USER',
       token: accessToken,
       refreshToken: refreshToken,

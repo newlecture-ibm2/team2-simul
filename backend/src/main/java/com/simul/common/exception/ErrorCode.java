@@ -49,7 +49,10 @@ public enum ErrorCode {
     SELF_FOLLOW("ERR-501-A", HttpStatus.UNPROCESSABLE_ENTITY, "자기 자신을 팔로우할 수 없습니다"),
 
     // 신고
-    DUPLICATE_REPORT("ERR-401-A", HttpStatus.UNPROCESSABLE_ENTITY, "이미 신고한 게시물입니다");
+    DUPLICATE_REPORT("ERR-401-A", HttpStatus.UNPROCESSABLE_ENTITY, "이미 신고한 게시물입니다"),
+
+    // 인증/비밀번호
+    WRONG_PASSWORD("ERR-005", HttpStatus.BAD_REQUEST, "현재 비밀번호가 일치하지 않습니다");
 
     private final String code;
     private final HttpStatus httpStatus;
