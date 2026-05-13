@@ -142,4 +142,12 @@ public class Post extends BaseJpaEntity {
             this.isBlinded = true;
         }
     }
+
+    public void blind() {
+        this.isBlinded = true;
+    }
+
+    public void unblind() {
+        this.isBlinded = false;
+    }
 }
