@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toggleLike, getPostDetail, deletePost } from '../../../../lib/api/feedAPI';
+import { toggleLike, getPostDetail, deletePost, getComments } from '../../../../lib/api/feedAPI';
 import { checkIsFollowing, followUser, unfollowUser } from '@/lib/api/userAPI';
 import { useAuthStore } from '../../../../lib/stores/useAuthStore';
 import { toast } from '@/lib/utils/toast';
@@ -15,7 +15,7 @@ import ReportModal from './_components/ReportModal/ReportModal';
 import DeleteConfirmModal from './_components/DeleteConfirmModal/DeleteConfirmModal';
 import LikeListModal from './_components/LikeListModal/LikeListModal';
 import { reportPost } from '../../../../lib/api/feedAPI';
-import LoginRequiredBottomSheet from './_components/LoginRequiredBottomSheet';
+
 
 export interface PostDetailData {
   postId: string;
@@ -53,7 +53,7 @@ export default function PostDetailPage() {
   const [isReporting, setIsReporting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLikeListModalOpen, setIsLikeListModalOpen] = useState(false);
-  const [isLoginSheetOpen, setIsLoginSheetOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -70,6 +70,14 @@ export default function PostDetailPage() {
   });
 
   const queryClient = useQueryClient();
+
+  // Fetch live comment count to keep stats row synced with CommentSection
+  const { data: commentsData } = useQuery({
+    queryKey: ['comments', postId],
+    queryFn: () => getComments(postId, 0, 100),
+    enabled: !!postId, 
+  });
+  const displayCommentCount = commentsData?.totalElements ?? post?.commentCount ?? 0;
 
   // Fetch follow status if we have the author's userId
   const { data: followStatus } = useQuery({
@@ -98,7 +106,7 @@ export default function PostDetailPage() {
 
   const handleFollowToggle = () => {
     if (!isAuthenticated) {
-      setIsLoginSheetOpen(true);
+      setIsLoginModalOpen(true);
       return;
     }
     if (isFollowingAuthor) {
@@ -186,7 +194,7 @@ export default function PostDetailPage() {
 
   const handleLike = async () => {
     if (!isAuthenticated) {
-      setIsLoginSheetOpen(true);
+      setIsLoginModalOpen(true);
       return;
     }
 
@@ -199,6 +207,7 @@ export default function PostDetailPage() {
     try {
       if (postId !== 'dummy' && !postId.startsWith('dummy')) {
          await toggleLike(postId);
+         queryClient.invalidateQueries({ queryKey: ['postLikes', postId] });
       }
     } catch (err) {
       setIsLiked(previousIsLiked);
@@ -226,11 +235,7 @@ export default function PostDetailPage() {
   };
 
   const handleReport = async (reason: string) => {
-    if (!isAuthenticated) {
-      setIsLoginSheetOpen(true);
-      setIsReportModalOpen(false);
-      return;
-    }
+
     setIsReporting(true);
     try {
       await reportPost(postId as string, reason);
@@ -295,8 +300,15 @@ export default function PostDetailPage() {
                   </>
                 ) : (
                   <button 
-                    className={`${styles.menuItem} ${styles.menuItemDanger}`} 
-                    onClick={() => { setShowMenu(false); setIsReportModalOpen(true); }}
+                    className={`${styles.menuItem} ${styles.menuItemDanger}`}
+                    onClick={() => { 
+                      setShowMenu(false); 
+                      if (!isAuthenticated) {
+                        setIsLoginModalOpen(true);
+                      } else {
+                        setIsReportModalOpen(true); 
+                      }
+                    }}
                   >
                     <span>🚨 신고하기</span>
                   </button>
@@ -371,7 +383,7 @@ export default function PostDetailPage() {
               </div>
             </Link>
             
-            {(!isAuthenticated || (user && String(user.userId) !== String(post.userId))) && (
+            {(!isAuthenticated || !isOwner) && (
               <button 
                 className={styles.followBtn} 
                 onClick={handleFollowToggle}
@@ -417,7 +429,7 @@ export default function PostDetailPage() {
             
             <div className={styles.statItem}>
               <img src="/icons/bubble.png" alt="Comment" className={styles.statIcon} />
-              <span>{post.commentCount || 0}</span>
+              <span>{displayCommentCount}</span>
             </div>
             <div className={styles.statItem} style={{marginLeft: 'auto', color: '#999', fontSize: '13px'}}>
                조회 {post.viewCount}
@@ -426,7 +438,7 @@ export default function PostDetailPage() {
           
           <CommentSection 
             postId={postId as string} 
-            onLoginRequired={() => setIsLoginSheetOpen(true)}
+            onLoginRequired={() => setIsLoginModalOpen(true)}
           />
         </div>
       </div>
@@ -462,9 +474,14 @@ export default function PostDetailPage() {
         postId={postId as string}
       />
 
-      <LoginRequiredBottomSheet
-        isOpen={isLoginSheetOpen}
-        onClose={() => setIsLoginSheetOpen(false)}
+      <ConfirmModal
+        isOpen={isLoginModalOpen}
+        title="로그인이 필요한 서비스입니다"
+        description="로그인하고 Simul의 AI 가상시착과 다양한 기능을 자유롭게 이용해 보세요."
+        confirmText="로그인하러 가기"
+        cancelText="다음에 하기"
+        onConfirm={() => router.push('/login')}
+        onCancel={() => setIsLoginModalOpen(false)}
       />
     </div>
   );
