@@ -14,12 +14,10 @@ import com.simul.tryon.application.port.out.SafeSearchPort;
 import java.io.IOException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-@ConditionalOnProperty(name = "simul.vision.enabled", havingValue = "true", matchIfMissing = true)
 public class GoogleVisionSafeSearchAdapter implements SafeSearchPort {
 
     @Override
