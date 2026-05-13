@@ -8,5 +8,6 @@ type PageProps = {
 export default async function TryonResultPage({ searchParams }: PageProps) {
   const resolved = (await searchParams) ?? {};
   const resultImageUrl = typeof resolved.result_image_url === 'string' ? resolved.result_image_url : undefined;
-  return <ResultClient className={styles.resultPage} resultImageUrl={resultImageUrl} />;
+  const jobId = typeof resolved.job_id === 'string' ? resolved.job_id : undefined;
+  return <ResultClient className={styles.resultPage} resultImageUrl={resultImageUrl} jobId={jobId} />;
 }
