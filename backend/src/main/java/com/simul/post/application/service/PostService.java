@@ -112,16 +112,26 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         Post savedPost = postRepositoryPort.save(post);
 
         // 5. 태그 매핑 (N:M)
+        Set<String> processedTags = new HashSet<>();
+
         if (command.getNewImageTagsMap() != null) {
             for (Map.Entry<Integer, List<String>> entry : command.getNewImageTagsMap().entrySet()) {
                 if (entry.getKey() >= 0 && entry.getKey() < post.getImages().size()) {
                     String imgUrl = post.getImages().get(entry.getKey()).getImageUrl();
-                    attachTagsToPostUseCase.attachTagsWithSource(savedPost.getPostId(), entry.getValue(), imgUrl);
+                    List<String> uniqueTags = entry.getValue().stream()
+                            .map(tag -> tag.trim().toLowerCase())
+                            .filter(t -> !t.isEmpty() && processedTags.add(t))
+                            .toList();
+                    attachTagsToPostUseCase.attachTagsWithSource(savedPost.getPostId(), uniqueTags, imgUrl);
                 }
             }
         }
         if (command.getManualTags() != null && !command.getManualTags().isEmpty()) {
-            attachTagsToPostUseCase.attachTagsWithSource(savedPost.getPostId(), command.getManualTags(), null);
+            List<String> uniqueTags = command.getManualTags().stream()
+                    .map(tag -> tag.trim().toLowerCase())
+                    .filter(t -> !t.isEmpty() && processedTags.add(t))
+                    .toList();
+            attachTagsToPostUseCase.attachTagsWithSource(savedPost.getPostId(), uniqueTags, null);
         }
 
         // 6. 공개 게시물인 경우 팔로워들에게 알림 이벤트 발행
@@ -346,25 +356,37 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         // 태그 업데이트
         attachTagsToPostUseCase.clearTags(post.getPostId());
         
+        Set<String> processedTags = new HashSet<>();
+
         if (command.getExistingImageTagsMap() != null) {
             command.getExistingImageTagsMap().forEach((url, tagsList) -> {
-                attachTagsToPostUseCase.attachTagsWithSource(post.getPostId(), tagsList, url);
+                List<String> uniqueTags = tagsList.stream()
+                        .map(tag -> tag.trim().toLowerCase())
+                        .filter(t -> !t.isEmpty() && processedTags.add(t))
+                        .toList();
+                attachTagsToPostUseCase.attachTagsWithSource(post.getPostId(), uniqueTags, url);
             });
         }
         if (command.getNewImageTagsMap() != null) {
             command.getNewImageTagsMap().forEach((index, tagsList) -> {
                 // newImages의 저장된 URL 찾기 (post.getImages()의 뒷부분에 추가됨)
-                // 기존 이미지가 M개, 새 이미지가 N개일 때, index(0부터 N-1)번째 새 이미지는
-                // 전체 이미지 리스트의 (M + index)번째 항목
                 int existingCount = normalizedExistingUrls.size();
                 if (existingCount + index < post.getImages().size()) {
                     String newUrl = post.getImages().get(existingCount + index).getImageUrl();
-                    attachTagsToPostUseCase.attachTagsWithSource(post.getPostId(), tagsList, newUrl);
+                    List<String> uniqueTags = tagsList.stream()
+                            .map(tag -> tag.trim().toLowerCase())
+                            .filter(t -> !t.isEmpty() && processedTags.add(t))
+                            .toList();
+                    attachTagsToPostUseCase.attachTagsWithSource(post.getPostId(), uniqueTags, newUrl);
                 }
             });
         }
         if (command.getManualTags() != null) {
-            attachTagsToPostUseCase.attachTagsWithSource(post.getPostId(), command.getManualTags(), null);
+            List<String> uniqueTags = command.getManualTags().stream()
+                    .map(tag -> tag.trim().toLowerCase())
+                    .filter(t -> !t.isEmpty() && processedTags.add(t))
+                    .toList();
+            attachTagsToPostUseCase.attachTagsWithSource(post.getPostId(), uniqueTags, null);
         }
     }
 
