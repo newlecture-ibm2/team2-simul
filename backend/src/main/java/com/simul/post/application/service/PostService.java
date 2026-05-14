@@ -154,8 +154,9 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         return postsPage.map(post -> {
             UserResponse user = userMap.get(post.getUserId());
             List<String> postTags = tagMap.getOrDefault(post.getPostId(), Collections.emptyList());
-            
-            String imageUrl = post.getImages().isEmpty() ? null : post.getImages().get(0).getImageUrl();
+            String imageUrl = post.getImages().isEmpty()
+                    ? post.getImageUrl()
+                    : post.getImages().get(0).getImageUrl();
             
             return new FeedPostResponse(
                     post.getPostId(),
@@ -394,7 +395,9 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
 
         return postsPage.map(post -> {
             List<String> postTags = tagMap.getOrDefault(post.getPostId(), Collections.emptyList());
-            String imageUrl = post.getImages().isEmpty() ? null : post.getImages().get(0).getImageUrl();
+            String imageUrl = post.getImages().isEmpty()
+                    ? post.getImageUrl()
+                    : post.getImages().get(0).getImageUrl();
             
             return new FeedPostResponse(
                     post.getPostId(),
@@ -436,7 +439,9 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         return postsPage.map(post -> {
             UserResponse author = userMap.get(post.getUserId());
             List<String> postTags = tagMap.getOrDefault(post.getPostId(), Collections.emptyList());
-            String imageUrl = post.getImages().isEmpty() ? null : post.getImages().get(0).getImageUrl();
+            String imageUrl = post.getImages().isEmpty()
+                    ? post.getImageUrl()
+                    : post.getImages().get(0).getImageUrl();
             
             return new FeedPostResponse(
                     post.getPostId(),
