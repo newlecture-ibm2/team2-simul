@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -129,5 +130,28 @@ public class AdminControllerIntegrationTest {
         var updatedUserEntity = userJpaRepository.findById(savedUser.getUserId()).orElseThrow();
         assertThat(updatedUserEntity.isActive()).isFalse();
         assertThat(updatedUserEntity.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("관리자가 특정 사용자에게 크레딧을 수동으로 지급(초기화)할 수 있어야 한다")
+    void provideCredits_success() throws Exception {
+        // given
+        User testUser = User.builder()
+                .provider("kakao")
+                .providerId("test-credit-123")
+                .nickname("크레딧지급대상")
+                .build();
+        User savedUser = userPersistencePort.save(testUser);
+
+        UUID adminUserId = UUID.randomUUID();
+        UsernamePasswordAuthenticationToken adminAuth = new UsernamePasswordAuthenticationToken(
+                adminUserId, null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+
+        // when
+        mockMvc.perform(post("/admin/users/" + savedUser.getUserId() + "/credits")
+                        .with(authentication(adminAuth))
+                        .with(csrf()))
+                .andDo(print())
+                .andExpect(status().isOk());
     }
 }
