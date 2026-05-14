@@ -3,6 +3,10 @@ import { proxyHandler } from './handlers/proxyHandler';
 
 type Context = { params: Promise<{ path: string[] }> };
 
+// Ensure Node.js runtime for streaming (SSE) proxying.
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 /**
  * BFF Catch-all 라우터
  * /api/* 요청을 Spring Boot 백엔드로 프록시

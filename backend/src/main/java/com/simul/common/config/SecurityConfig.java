@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -55,10 +56,10 @@ public class SecurityConfig {
                 // 정적 파일(이미지 등) 인증 불필요
                 .requestMatchers("/uploads/**").permitAll()
                 // 피드/게시물 상세는 비로그인 열람 허용
-                .requestMatchers("GET", "/posts", "/posts/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/posts", "/posts/**").permitAll()
                 // 사용자 프로필 조회: 내 정보는 인증 필요, 타인 프로필은 비로그인 허용
-                .requestMatchers("GET", "/users/me").authenticated()
-                .requestMatchers("GET", "/users/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/users/me").authenticated()
+                .requestMatchers(HttpMethod.GET, "/users/**").permitAll()
                 // 옷장 아이템 조회 (로그인 필수)
                 .requestMatchers("/closet/**").authenticated()
                 // 관리자 전용

@@ -10,6 +10,7 @@ import com.simul.notification.application.dto.TryonCompletedEvent;
 import com.simul.post.application.port.out.PostRepositoryPort;
 import com.simul.post.domain.model.Post;
 import com.simul.post.domain.model.PostStatus;
+import com.simul.tryon.application.dto.TryonGenerationRequestedEvent;
 import com.simul.tryon.application.dto.TryonGenerateResponse;
 import com.simul.tryon.application.port.in.GenerateTryonUseCase;
 import com.simul.tryon.application.port.in.DeductTryonCreditUseCase;
@@ -91,10 +92,14 @@ public class GenerateTryonService implements GenerateTryonUseCase {
                 .isPublic(false)
                 .build());
 
-        // NOTE: In current phase, we call Gemini synchronously for a single-step generation.
-        // This will be evolved into async pipeline + SSE in subsequent tasks.
+        // Respond immediately with job_id and run AI generation asynchronously after transaction commit.
         if (geminiEnabled) {
-            runAiGenerationAndUpdatePost(saved, baseImage, items);
+            eventPublisher.publishEvent(new TryonGenerationRequestedEvent(
+                    saved.getUserId(),
+                    saved.getPostId(),
+                    baseImage.getId(),
+                    itemIds
+            ));
         }
 
         return new TryonGenerateResponse(saved.getPostId(), "processing", ESTIMATED_SECONDS);
@@ -132,18 +137,17 @@ public class GenerateTryonService implements GenerateTryonUseCase {
                 .map(img -> new TryonAiGenerationPort.ImagePart(img.bytes(), img.mimeType()))
                 .toList();
 
-        TryonAiGenerationPort.TryonAiGenerationCommand aiCommand =
-                new TryonAiGenerationPort.TryonAiGenerationCommand(
-                        userImage.bytes(),
-                        userImage.mimeType(),
-                        clothingParts,
-                        prompt
-                );
+        TryonAiGenerationPort.TryonAiGenerationCommand aiCommand = new TryonAiGenerationPort.TryonAiGenerationCommand(
+                userImage.bytes(),
+                userImage.mimeType(),
+                clothingParts,
+                prompt);
 
         try {
             TryonAiGenerationPort.TryonAiGenerationResult result = generateWithRetry(aiCommand);
 
-            String resultImageUrl = binaryImageStoragePort.upload(result.resultImageBytes(), result.resultImageMimeType(), "tryon");
+            String resultImageUrl = binaryImageStoragePort.upload(result.resultImageBytes(),
+                    result.resultImageMimeType(), "tryon");
             post.markCompleted(resultImageUrl);
             postRepositoryPort.save(post);
 
@@ -152,8 +156,7 @@ public class GenerateTryonService implements GenerateTryonUseCase {
                     DeductTryonCreditUseCase.DeductTryonCreditCommand.builder()
                             .userId(post.getUserId())
                             .jobId(post.getPostId())
-                            .build()
-            );
+                            .build());
 
             // increment try_count for each used item
             for (ClosetItem item : items) {
@@ -183,7 +186,8 @@ public class GenerateTryonService implements GenerateTryonUseCase {
         }
     }
 
-    private TryonAiGenerationPort.TryonAiGenerationResult generateWithRetry(TryonAiGenerationPort.TryonAiGenerationCommand command) {
+    private TryonAiGenerationPort.TryonAiGenerationResult generateWithRetry(
+            TryonAiGenerationPort.TryonAiGenerationCommand command) {
         BusinessException lastBusinessException = null;
 
         for (int attempt = 0; attempt <= MAX_RETRY; attempt++) {
@@ -199,14 +203,18 @@ public class GenerateTryonService implements GenerateTryonUseCase {
         }
 
         // Should be unreachable
-        throw lastBusinessException != null ? lastBusinessException : new BusinessException(ErrorCode.AI_GENERATION_FAILED);
+        throw lastBusinessException != null ? lastBusinessException
+                : new BusinessException(ErrorCode.AI_GENERATION_FAILED);
     }
 
     private boolean shouldRetry(BusinessException be) {
-        return be.getErrorCode() == ErrorCode.AI_TIMEOUT || be.getErrorCode() == ErrorCode.AI_GENERATION_FAILED;
+        // 재시도는 비용(외부 AI 호출) 중복 청구 위험이 큼.
+        // Timeout 같이 네트워크/일시 장애로 판단 가능한 케이스만 제한적으로 재시도한다.
+        return be.getErrorCode() == ErrorCode.AI_TIMEOUT;
     }
 
-    private TryonAiGenerationPort.TryonAiGenerationResult generateWithTimeout(TryonAiGenerationPort.TryonAiGenerationCommand command) {
+    private TryonAiGenerationPort.TryonAiGenerationResult generateWithTimeout(
+            TryonAiGenerationPort.TryonAiGenerationCommand command) {
         try {
             return CompletableFuture.supplyAsync(() -> tryonAiGenerationPort.generate(command))
                     .orTimeout(AI_TIMEOUT.toSeconds(), TimeUnit.SECONDS)
@@ -225,18 +233,37 @@ public class GenerateTryonService implements GenerateTryonUseCase {
 
     private String buildPromptForOrderedItems(int clothingCount) {
         String base = """
-                You are a virtual try-on image generator.
-                Inputs:
-                - The first image is a photo of a person.
-                - The next images are clothing item images in the given order.
-                Task:
-                - Generate a realistic image of the person wearing the clothing items.
-                Constraints:
-                - Preserve the person’s identity and pose as much as possible.
-                - Keep the background natural (do not add text).
-                Output:
-                - Return only the generated image.
-                """;
+                You are a professional virtual try-on image compositor.
+
+                ## Inputs
+                - Image 1: A photo of a person (the model).
+                - Image 2+: One or more clothing item images to be worn by the person, in the given order.
+
+                ## Your Task
+                Generate a single, photorealistic image of the person naturally wearing all provided clothing items.
+
+                ## Critical Requirements
+
+                ### Person Preservation (highest priority)
+                - Preserve the person's face, skin tone, hair, and body proportions EXACTLY as they appear in Image 1.
+                - Preserve the person's original pose and body position. Do not alter limb placement or stance.
+                - Do not alter facial features, expression, age, or identity in any way.
+
+                ### Clothing Rendering
+                - Realistically drape and fit each clothing item onto the person's body, respecting gravity, body shape, and natural fabric behavior (wrinkles, folds, shadows).
+                - Match the clothing's color, texture, pattern, and material exactly as shown in the clothing images. Do not alter colors or prints.
+                - If multiple clothing items are provided, layer them naturally (e.g., top over bottom, outerwear over inner layers).
+                - Occlude clothing items correctly behind arms, hands, and other body parts where appropriate.
+
+                ### Background & Lighting
+                - Preserve the original background from Image 1 exactly. Do not change, blur, or replace it.
+                - Match lighting and shadows on the clothing to the lighting conditions in Image 1.
+                - Do not add any text, watermarks, logos, or UI elements to the output image.
+
+                ### Output
+                - Return one final composited image only.
+                - The image should look like a natural, professional photograph — not a collage or montage.
+                                """;
         return switch (clothingCount) {
             case 1 -> base + "\nOrder: 2nd image = clothing item.\n";
             case 2 -> base + "\nOrder: 2nd image = top, 3rd image = bottom.\n";

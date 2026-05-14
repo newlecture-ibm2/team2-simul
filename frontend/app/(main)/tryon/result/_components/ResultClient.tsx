@@ -1,46 +1,81 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Button from '@/components/Button';
+import { getTryonJob } from '@/lib/api/tryonAPI';
 import styles from '../page.module.css';
 
 type Props = {
   className?: string;
+  jobId?: string;
   resultImageUrl?: string;
 };
 
-export default function ResultClient({ className, resultImageUrl }: Props) {
+export default function ResultClient({ className, jobId, resultImageUrl }: Props) {
   const [viewMode, setViewMode] = useState<'result' | 'original'>('result');
+  const [originalImg, setOriginalImg] = useState<string | null>(null);
+  const [resultImgResolved, setResultImgResolved] = useState<string | null>(resultImageUrl ?? null);
 
-  const originalImg = '/dummy.jpg'; // TODO: base image 연동
-  const resultImg = useMemo(() => resultImageUrl || '/recent.jpg', [resultImageUrl]);
+  useEffect(() => {
+    if (!jobId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await getTryonJob(jobId);
+        if (cancelled) return;
+        setOriginalImg(res.base_image_url ?? null);
+        if (!resultImageUrl) {
+          setResultImgResolved(res.result_image_url ?? null);
+        }
+      } catch {
+        // ignore (page can still render result from query string)
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [jobId, resultImageUrl]);
+
+  const resultImg = useMemo(() => resultImgResolved ?? '', [resultImgResolved]);
+  const canShowOriginal = Boolean(originalImg);
+  const canShowResult = Boolean(resultImg);
+  const activeSrc =
+    viewMode === 'result'
+      ? (canShowResult ? resultImg : '')
+      : (canShowOriginal ? (originalImg as string) : '');
 
   return (
     <div className={className}>
       <h1>시착 결과</h1>
 
       <div className={styles.imageFrame}>
-        <img
-          src={viewMode === 'result' ? resultImg : originalImg}
-          alt={viewMode === 'result' ? 'Result' : 'Original'}
-          className={styles.mainImage}
-        />
+        {activeSrc ? (
+          <img
+            src={activeSrc}
+            alt={viewMode === 'result' ? 'Result' : 'Original'}
+            className={styles.mainImage}
+          />
+        ) : (
+          <div className={styles.mainImage} />
+        )}
         <div className={styles.viewBadge}>{viewMode === 'result' ? '결과' : '원본'}</div>
 
         <div className={styles.thumbnailContainer}>
           <div
             className={`${styles.thumbnail} ${viewMode === 'original' ? styles.activeThumbnail : ''}`}
-            onClick={() => setViewMode('original')}
+            onClick={() => canShowOriginal && setViewMode('original')}
+            aria-disabled={!canShowOriginal}
           >
-            <img src={originalImg} alt="Original Thumbnail" />
+            {canShowOriginal ? <img src={originalImg as string} alt="Original Thumbnail" /> : <div />}
             <span className={styles.thumbLabel}>원본</span>
           </div>
           <div
             className={`${styles.thumbnail} ${viewMode === 'result' ? styles.activeThumbnail : ''}`}
-            onClick={() => setViewMode('result')}
+            onClick={() => canShowResult && setViewMode('result')}
+            aria-disabled={!canShowResult}
           >
-            <img src={resultImg} alt="Result Thumbnail" />
+            {canShowResult ? <img src={resultImg} alt="Result Thumbnail" /> : <div />}
             <span className={styles.thumbLabel}>결과</span>
           </div>
         </div>
