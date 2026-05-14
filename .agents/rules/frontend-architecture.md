@@ -169,13 +169,15 @@ app/(main)/closet/
 ```
 lib/api/
 ├── client.ts         # 공통 Axios 기반 API 클라이언트 및 에러 인터셉터 (401 갱신)
-├── authAPI.ts        # 인증 API
-├── eventAPI.ts       # 이벤트 API
-├── hostAPI.ts        # 호스트 API
+├── authAPI.ts        # 인증 API (소셜 로그인, 토큰 갱신)
+├── userAPI.ts        # 사용자/프로필 API
+├── feedAPI.ts        # 게시물(피드) CRUD API
+├── tagAPI.ts         # 태그 분석/자동완성 API
+├── searchAPI.ts      # 통합 검색 API
+├── tryonAPI.ts       # AI 가상시착 API
+├── closetAPI.ts      # 개인 옷장 API
+├── notificationAPI.ts # 알림 API
 ├── adminAPI.ts       # 관리자 API
-├── communityAPI.ts   # 커뮤니티 API
-├── orderAPI.ts       # 주문 API
-├── contactAPI.ts     # 문의 API
 └── index.ts          # re-export
 ```
 - 도메인별 별도 파일로 분리

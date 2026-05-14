@@ -59,7 +59,7 @@ trigger: always_on
 ## 태그/검색
 | Method | Endpoint | 설명 |
 |--------|----------|------|
-| POST | `/tags/analyze` | Vision API 이미지 태그 분석 (confidence≥0.7 필터) |
+| POST | `/tags/analyze` | Vision API 이미지 태그 분석 (패션 태그 confidence≥0.5, 색상 태그 confidence≥0.8, 한국어 자동 번역) |
 | GET | `/tags/search` | 태그 자동완성 (usage_count 내림차순) |
 | GET | `/search` | 통합 검색 (type=tag/caption/all, 페이지네이션) |
 
