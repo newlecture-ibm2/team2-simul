@@ -13,7 +13,13 @@ export default function PostCreatePage() {
 
   const [images, setImages] = useState<File[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [tags, setTags] = useState<string[]>([]);
+  
+  // Tag States
+  const [manualTags, setManualTags] = useState<string[]>([]);
+  const [imageTagsMap, setImageTagsMap] = useState<Record<string, string[]>>({});
+  
+  // Derived Tags (combines all unique tags)
+  const tags = Array.from(new Set([...Object.values(imageTagsMap).flat(), ...manualTags]));
   const [caption, setCaption] = useState('');
   const [isPublic, setIsPublic] = useState(false);
   const [customTag, setCustomTag] = useState('');
@@ -77,17 +83,17 @@ export default function PostCreatePage() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
+      const tempUrl = URL.createObjectURL(file);
 
       setIsAnalyzing(true);
       try {
         const result = await analyzeTags(file);
         const extractedTags = result?.recommended_tags;
         if (extractedTags && Array.isArray(extractedTags)) {
-          setTags(prev => {
-            const newTags = extractedTags.filter((tag: string) => !prev.includes(tag));
-            const combined = [...prev, ...newTags];
-            return combined;
-          });
+          setImageTagsMap(prev => ({
+            ...prev,
+            [tempUrl]: extractedTags
+          }));
         }
       } catch (err: unknown) {
         console.error('태그 분석 실패:', err);
@@ -99,17 +105,39 @@ export default function PostCreatePage() {
       }
 
       setImages([...images, file]);
-      setImageUrls([...imageUrls, URL.createObjectURL(file)]);
+      setImageUrls([...imageUrls, tempUrl]);
     }
   };
 
   const handleRemoveImage = (index: number) => {
+    const urlToRemove = imageUrls[index];
     setImages(images.filter((_, i) => i !== index));
     setImageUrls(imageUrls.filter((_, i) => i !== index));
+    
+    // Remove tags associated with this image
+    setImageTagsMap(prev => {
+      const newMap = { ...prev };
+      delete newMap[urlToRemove];
+      return newMap;
+    });
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
+    // Remove from manual tags
+    setManualTags(prev => prev.filter(tag => tag !== tagToRemove));
+    
+    // Remove from all image tags maps
+    setImageTagsMap(prev => {
+      const newMap = { ...prev };
+      let isChanged = false;
+      for (const key in newMap) {
+        if (newMap[key].includes(tagToRemove)) {
+          newMap[key] = newMap[key].filter(tag => tag !== tagToRemove);
+          isChanged = true;
+        }
+      }
+      return isChanged ? newMap : prev;
+    });
   };
 
   const handleAddCustomTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -121,7 +149,7 @@ export default function PostCreatePage() {
       if (tags.includes(newTag)) {
         return;
       }
-      setTags([...tags, newTag]);
+      setManualTags([...manualTags, newTag]);
       setCustomTag('');
     }
   };
