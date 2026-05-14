@@ -14,6 +14,8 @@ export interface PostDetailData {
   profileImageUrl: string | null;
   images: string[];
   tags: string[];
+  imageTagsMap?: Record<string, string[]>;
+  manualTags?: string[];
   caption: string;
   likeCount: number;
   viewCount: number;
@@ -63,7 +65,14 @@ export default function PostEditPage() {
       try {
         const data = await getPostDetail(postId) as PostDetailData;
         setExistingImageUrls(data.images || []);
-        setManualTags(data.tags || []);
+        
+        if (data.imageTagsMap || data.manualTags) {
+          setManualTags(data.manualTags || []);
+          setImageTagsMap(data.imageTagsMap || {});
+        } else {
+          setManualTags(data.tags || []);
+        }
+        
         setCaption(data.caption || '');
         setIsPublic(data.isPublic ?? true);
         setIsLoading(false);
@@ -147,7 +156,14 @@ export default function PostEditPage() {
 
   // ── 이미지 제거 ──
   const handleRemoveExistingImage = (index: number) => {
+    const urlToRemove = existingImageUrls[index];
     setExistingImageUrls(prev => prev.filter((_, i) => i !== index));
+    
+    setImageTagsMap(prev => {
+      const newMap = { ...prev };
+      delete newMap[urlToRemove];
+      return newMap;
+    });
   };
 
   const handleRemoveNewImage = (index: number) => {
@@ -206,10 +222,22 @@ export default function PostEditPage() {
       toast.error('태그는 최대 10개까지만 등록 가능합니다. 불필요한 태그를 지워주세요.');
       return;
     }
+    const existingImageTagsMapToSend: Record<string, string[]> = {};
+    const newImageTagsMapToSend: Record<number, string[]> = {};
+
+    existingImageUrls.forEach(url => {
+       if (imageTagsMap[url] && imageTagsMap[url].length > 0) existingImageTagsMapToSend[url] = imageTagsMap[url];
+    });
+    newImageUrls.forEach((url, idx) => {
+       if (imageTagsMap[url] && imageTagsMap[url].length > 0) newImageTagsMapToSend[idx] = imageTagsMap[url];
+    });
+
     const formData = new FormData();
     formData.append('caption', caption);
     formData.append('isPublic', isPublic ? 'true' : 'false');
-    tags.forEach(tag => formData.append('tags', tag));
+    formData.append('existingImageTagsMapJson', JSON.stringify(existingImageTagsMapToSend));
+    formData.append('newImageTagsMapJson', JSON.stringify(newImageTagsMapToSend));
+    manualTags.forEach(tag => formData.append('manualTags', tag));
     existingImageUrls.forEach(url => formData.append('existingImageUrls', url));
     newImages.forEach(img => formData.append('newImages', img));
 

@@ -13,7 +13,9 @@ public class UpdatePostCommand {
     private final UUID userId;
     private final String caption;
     private final Boolean isPublic;
-    private final List<String> tags;
+    private final java.util.Map<String, java.util.List<String>> existingImageTagsMap;
+    private final java.util.Map<Integer, java.util.List<String>> newImageTagsMap;
+    private final List<String> manualTags;
     private final List<String> existingImageUrls;
     private final List<org.springframework.web.multipart.MultipartFile> newImages;
 }

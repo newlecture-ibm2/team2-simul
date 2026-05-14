@@ -11,6 +11,8 @@ public record PostDetailResponse(
         String profileImageUrl,
         List<String> images,
         List<String> tags,
+        java.util.Map<String, List<String>> imageTagsMap,
+        List<String> manualTags,
         String caption,
         int likeCount,
         int viewCount,

@@ -20,6 +20,12 @@ public class AttachTagsToPostService implements AttachTagsToPostUseCase {
     @Override
     @Transactional
     public void attachTags(UUID postId, List<String> tagNames) {
+        attachTagsWithSource(postId, tagNames, null);
+    }
+
+    @Override
+    @Transactional
+    public void attachTagsWithSource(UUID postId, List<String> tagNames, String sourceImageUrl) {
         if (tagNames == null || tagNames.isEmpty()) {
             return;
         }
@@ -41,6 +47,7 @@ public class AttachTagsToPostService implements AttachTagsToPostUseCase {
             PostTag postTag = PostTag.builder()
                     .postId(postId)
                     .tag(tag)
+                    .sourceImageUrl(sourceImageUrl)
                     .build();
             tagPersistencePort.savePostTag(postTag);
         }
@@ -48,18 +55,20 @@ public class AttachTagsToPostService implements AttachTagsToPostUseCase {
 
     @Override
     @Transactional
-    public void updateTags(UUID postId, List<String> tagNames) {
-        // 기존 태그 조회 및 usageCount 감소
+    public void clearTags(UUID postId) {
         List<PostTag> existingPostTags = tagPersistencePort.findPostTagsByPostId(postId);
         for (PostTag postTag : existingPostTags) {
             Tag tag = postTag.getTag();
             tag.decrementUsageCount();
             tagPersistencePort.saveTag(tag);
         }
-
-        // 기존 태그 매핑 모두 삭제
         tagPersistencePort.deletePostTagsByPostId(postId);
-        // 새 태그 매핑
+    }
+
+    @Override
+    @Transactional
+    public void updateTags(UUID postId, List<String> tagNames) {
+        clearTags(postId);
         attachTags(postId, tagNames);
     }
 }

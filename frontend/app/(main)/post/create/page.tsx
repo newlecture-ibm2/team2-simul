@@ -169,7 +169,15 @@ export default function PostCreatePage() {
     images.forEach(img => formData.append('images', img));
     formData.append('caption', caption);
     formData.append('isPublic', isPublic ? 'true' : 'false');
-    tags.forEach(tag => formData.append('tags', tag));
+    
+    const newImageTagsMapToSend: Record<number, string[]> = {};
+    imageUrls.forEach((url, idx) => {
+      if (imageTagsMap[url] && imageTagsMap[url].length > 0) {
+        newImageTagsMapToSend[idx] = imageTagsMap[url];
+      }
+    });
+    formData.append('newImageTagsMapJson', JSON.stringify(newImageTagsMapToSend));
+    manualTags.forEach(tag => formData.append('manualTags', tag));
 
     try {
       await createPost(formData);

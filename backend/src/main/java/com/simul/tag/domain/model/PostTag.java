@@ -26,6 +26,9 @@ public class PostTag {
     @Column(name = "post_tag_id")
     private UUID id;
 
+    @Column(name = "source_image_url", length = 500)
+    private String sourceImageUrl;
+
     @Column(name = "post_id", nullable = false)
     private UUID postId;
 
@@ -38,8 +41,9 @@ public class PostTag {
     private LocalDateTime createdAt;
 
     @Builder
-    public PostTag(UUID postId, Tag tag) {
+    public PostTag(UUID postId, Tag tag, String sourceImageUrl) {
         this.postId = postId;
         this.tag = tag;
+        this.sourceImageUrl = sourceImageUrl;
     }
 }

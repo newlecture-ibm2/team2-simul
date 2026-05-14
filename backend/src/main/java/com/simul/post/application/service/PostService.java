@@ -69,8 +69,14 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         }
 
         // 2. 태그 유효성 검사
-        List<String> tags = command.getTags();
-        if (tags != null && tags.size() > 10) {
+        int totalTags = 0;
+        if (command.getNewImageTagsMap() != null) {
+            totalTags += command.getNewImageTagsMap().values().stream().mapToInt(List::size).sum();
+        }
+        if (command.getManualTags() != null) {
+            totalTags += command.getManualTags().size();
+        }
+        if (totalTags > 10) {
             throw new IllegalArgumentException("ERR-307-A: 태그는 최대 10개까지 등록 가능합니다.");
         }
 
@@ -106,8 +112,16 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         Post savedPost = postRepositoryPort.save(post);
 
         // 5. 태그 매핑 (N:M)
-        if (tags != null && !tags.isEmpty()) {
-            attachTagsToPostUseCase.attachTags(savedPost.getPostId(), tags);
+        if (command.getNewImageTagsMap() != null) {
+            for (Map.Entry<Integer, List<String>> entry : command.getNewImageTagsMap().entrySet()) {
+                if (entry.getKey() >= 0 && entry.getKey() < post.getImages().size()) {
+                    String imgUrl = post.getImages().get(entry.getKey()).getImageUrl();
+                    attachTagsToPostUseCase.attachTagsWithSource(savedPost.getPostId(), entry.getValue(), imgUrl);
+                }
+            }
+        }
+        if (command.getManualTags() != null && !command.getManualTags().isEmpty()) {
+            attachTagsToPostUseCase.attachTagsWithSource(savedPost.getPostId(), command.getManualTags(), null);
         }
 
         // 6. 공개 게시물인 경우 팔로워들에게 알림 이벤트 발행
@@ -212,9 +226,8 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
                 .map(PostImage::getImageUrl)
                 .toList();
 
-        // 6. 태그 조회
-        List<String> tags = loadTagsUseCase.loadTagsByPostIds(List.of(postId))
-                .getOrDefault(postId, Collections.emptyList());
+        // 6. 태그 조회 (상세)
+        com.simul.tag.application.dto.PostTagsResponse tagsResponse = loadTagsUseCase.loadDetailedTagsByPostId(postId);
 
         // 7. 좋아요 여부 확인
         boolean isLiked = false;
@@ -228,7 +241,9 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
                 nickname,
                 profileImageUrl,
                 imageUrls,
-                tags,
+                tagsResponse.tags(),
+                tagsResponse.imageTagsMap(),
+                tagsResponse.manualTags(),
                 post.getCaption(),
                 post.getLikeCount(),
                 post.getViewCount(),
@@ -266,7 +281,18 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
             throw new IllegalArgumentException("ERR-002: 본인의 게시물만 수정할 수 있습니다.");
         }
 
-        if (command.getTags() != null && command.getTags().size() > 10) {
+        int totalTags = 0;
+        if (command.getExistingImageTagsMap() != null) {
+            totalTags += command.getExistingImageTagsMap().values().stream().mapToInt(List::size).sum();
+        }
+        if (command.getNewImageTagsMap() != null) {
+            totalTags += command.getNewImageTagsMap().values().stream().mapToInt(List::size).sum();
+        }
+        if (command.getManualTags() != null) {
+            totalTags += command.getManualTags().size();
+        }
+
+        if (totalTags > 10) {
             throw new IllegalArgumentException("ERR-307-A: 태그는 최대 10개까지 등록 가능합니다.");
         }
 
@@ -318,8 +344,27 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         postRepositoryPort.save(post);
 
         // 태그 업데이트
-        if (command.getTags() != null) {
-            attachTagsToPostUseCase.updateTags(command.getPostId(), command.getTags());
+        attachTagsToPostUseCase.clearTags(post.getPostId());
+        
+        if (command.getExistingImageTagsMap() != null) {
+            command.getExistingImageTagsMap().forEach((url, tagsList) -> {
+                attachTagsToPostUseCase.attachTagsWithSource(post.getPostId(), tagsList, url);
+            });
+        }
+        if (command.getNewImageTagsMap() != null) {
+            command.getNewImageTagsMap().forEach((index, tagsList) -> {
+                // newImages의 저장된 URL 찾기 (post.getImages()의 뒷부분에 추가됨)
+                // 기존 이미지가 M개, 새 이미지가 N개일 때, index(0부터 N-1)번째 새 이미지는
+                // 전체 이미지 리스트의 (M + index)번째 항목
+                int existingCount = normalizedExistingUrls.size();
+                if (existingCount + index < post.getImages().size()) {
+                    String newUrl = post.getImages().get(existingCount + index).getImageUrl();
+                    attachTagsToPostUseCase.attachTagsWithSource(post.getPostId(), tagsList, newUrl);
+                }
+            });
+        }
+        if (command.getManualTags() != null) {
+            attachTagsToPostUseCase.attachTagsWithSource(post.getPostId(), command.getManualTags(), null);
         }
     }
 
