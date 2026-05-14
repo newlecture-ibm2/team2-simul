@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toggleLike } from '@/lib/api/feedAPI';
 import { useAuthStore } from '@/lib/stores/useAuthStore';
 import styles from './PostCard.module.css';
@@ -27,16 +28,20 @@ export default function PostCard({
   isLiked: initialLiked = false,
   ratio = 'tall' 
 }: PostCardProps) {
+  const router = useRouter();
   const [isLiked, setIsLiked] = useState(initialLiked);
   const [currentLikeCount, setCurrentLikeCount] = useState(likeCount);
   const { isAuthenticated } = useAuthStore();
   const displayImage = imageUrl || '/dummy.jpg';
 
+  const handleCardClick = () => {
+    router.push(`/post/${postId}`);
+  };
+
   const handleLike = async (e: React.MouseEvent) => {
-    e.preventDefault();
+    e.stopPropagation();
 
     if (!isAuthenticated) {
-      // TODO: 추후 바텀시트 UI로 변경
       alert('좋아요를 누르려면 로그인이 필요합니다.');
       return;
     }
@@ -59,7 +64,11 @@ export default function PostCard({
   };
   
   return (
-    <Link href={`/post/${postId}`} className={`${styles.card} ${ratio === 'square' ? styles.ratioSquare : styles.ratioTall}`}>
+    <div
+      className={`${styles.card} ${ratio === 'square' ? styles.ratioSquare : styles.ratioTall}`}
+      onClick={handleCardClick}
+      style={{ cursor: 'pointer' }}
+    >
       <div className={styles.imageWrapper}>
         <img src={displayImage} alt="게시물 이미지" className={styles.image} />
         
@@ -77,7 +86,12 @@ export default function PostCard({
         {tags.length > 0 && (
           <div className={styles.tagList}>
             {tags.slice(0, 3).map((tag) => (
-              <Link key={tag} href={`/search?q=%23${tag}&type=tag`} style={{ textDecoration: 'none' }}>
+              <Link
+                key={tag}
+                href={`/search?q=%23${tag}&type=tag`}
+                style={{ textDecoration: 'none' }}
+                onClick={(e) => e.stopPropagation()}
+              >
                 <span className={styles.tagChip}>#{tag}</span>
               </Link>
             ))}
@@ -97,6 +111,6 @@ export default function PostCard({
           )}
         </button>
       </div>
-    </Link>
+    </div>
   );
 }
