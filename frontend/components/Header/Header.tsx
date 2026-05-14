@@ -41,6 +41,9 @@ export default function Header() {
           <Link href="/search" className={styles.iconBtn} aria-label="검색">
             <img src="/icons/magnifyingglass.png" alt="검색 아이콘" className={styles.iconImage} />
           </Link>
+          <Link href="/profile" className={styles.iconBtn} aria-label="마이 페이지">
+            <img src="/icons/profile.png" alt="마이 페이지 아이콘" className={styles.iconImage} />
+          </Link>
           <button
             className={styles.iconBtn}
             aria-label="알림"

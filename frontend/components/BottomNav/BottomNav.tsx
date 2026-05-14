@@ -7,10 +7,10 @@ import styles from './BottomNav.module.css';
 
 const TABS = [
   { href: '/', iconName: 'home', authRequired: false },
-  { href: '/tryon', iconName: 'tryon', authRequired: true },
+  { href: '/community', iconName: 'rectangle.portrait.on.rectangle.portrait.angled', authRequired: false },
   { href: '/post/create', iconName: 'create', authRequired: true },
+  { href: '/tryon', iconName: 'tryon', authRequired: true },
   { href: '/closet', iconName: 'closet', authRequired: true },
-  { href: '/profile', iconName: 'profile', authRequired: true },
 ];
 
 interface CustomWindow extends Window {

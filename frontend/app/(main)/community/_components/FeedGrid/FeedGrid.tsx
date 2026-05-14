@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import PostCard from '../PostCard';
 import styles from './FeedGrid.module.css';
-import { getFeedPosts, FeedPost } from '../../../../lib/api/feedAPI';
+import { getFeedPosts, FeedPost } from '@/lib/api/feedAPI';
 
 /* ── 더미 데이터 (API 데이터가 없을 때 Fallback) ── */
 const AUTHORS = ['지수', '민준', '서연', '하은', '도윤', '예린', '시우', '수빈', '지호', '유나', '태현', '소율'];
