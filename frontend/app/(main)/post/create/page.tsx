@@ -104,8 +104,8 @@ export default function PostCreatePage() {
         setIsAnalyzing(false);
       }
 
-      setImages([...images, file]);
-      setImageUrls([...imageUrls, tempUrl]);
+      setImages(prev => [...prev, file]);
+      setImageUrls(prev => [...prev, tempUrl]);
     }
   };
 
