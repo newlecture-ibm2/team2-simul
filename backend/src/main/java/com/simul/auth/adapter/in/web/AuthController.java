@@ -29,17 +29,34 @@ public class AuthController {
     private final RefreshTokenUseCase refreshTokenUseCase;
     private final EmailAuthUseCase emailAuthUseCase;
     private final LogoutUseCase logoutUseCase;
+    private final com.simul.auth.application.port.in.RestoreAccountUseCase restoreAccountUseCase;
 
     public AuthController(
         SocialLoginUseCase socialLoginUseCase,
         RefreshTokenUseCase refreshTokenUseCase,
         EmailAuthUseCase emailAuthUseCase,
-        LogoutUseCase logoutUseCase
+        LogoutUseCase logoutUseCase,
+        com.simul.auth.application.port.in.RestoreAccountUseCase restoreAccountUseCase
     ) {
         this.socialLoginUseCase = socialLoginUseCase;
         this.refreshTokenUseCase = refreshTokenUseCase;
         this.emailAuthUseCase = emailAuthUseCase;
         this.logoutUseCase = logoutUseCase;
+        this.restoreAccountUseCase = restoreAccountUseCase;
+    }
+
+    /**
+     * 계정 복구
+     * POST /auth/restore
+     */
+    @PostMapping("/restore")
+    public ResponseEntity<TokenResponse> restore(
+        @RequestBody Map<String, String> request
+    ) {
+        String provider = request.get("provider");
+        String providerId = request.get("providerId");
+        TokenResponse response = restoreAccountUseCase.restoreAccount(provider, providerId);
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -80,6 +97,12 @@ public class AuthController {
     public ResponseEntity<TokenResponse> emailLogin(@RequestBody EmailLoginCommand command) {
         TokenResponse response = emailAuthUseCase.emailLogin(command.email(), command.password());
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/verify-email")
+    public ResponseEntity<Void> verifyEmail(@RequestParam("token") String token) {
+        emailAuthUseCase.verifyEmail(token);
+        return ResponseEntity.ok().build();
     }
 
     /**

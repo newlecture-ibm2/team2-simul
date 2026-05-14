@@ -94,6 +94,7 @@ public class UserService implements LoadUserUseCase, RegisterUserUseCase, Update
                 .nickname(nickname)
                 .name(name)
                 .gender((gender != null) ? gender : Gender.UNKNOWN)
+                .isActive(false) // 이메일 인증 전까지 비활성 상태
                 .build();
         return userPersistencePort.save(newUser);
     }
