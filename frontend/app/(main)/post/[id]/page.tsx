@@ -339,24 +339,59 @@ export default function PostDetailPage() {
             {post.images && post.images.length > 0 ? (
               post.images.map((url: string, idx: number) => (
                 <div key={idx} className={styles.imageSlide}>
-                  <img src={url} alt={`게시물 이미지 ${idx + 1}`} className={styles.image} />
+                  <img src={url} alt={`게시물 이미지 ${idx + 1}`} className={styles.image} draggable={false} />
                 </div>
               ))
             ) : (
               <div className={styles.imageSlide}>
-                <img src="/dummy.jpg" alt="기본 이미지" className={styles.image} />
+                <img src="/dummy.jpg" alt="기본 이미지" className={styles.image} draggable={false} />
               </div>
             )}
           </div>
+
           {post.images && post.images.length > 1 && (
-            <div className={styles.carouselIndicators}>
-              {post.images.map((_: string, idx: number) => (
-                <div 
-                  key={idx} 
-                  className={`${styles.indicator} ${currentImgIndex === idx ? styles.indicatorActive : ''}`} 
-                />
-              ))}
-            </div>
+            <>
+              {currentImgIndex > 0 && (
+                <button 
+                  className={`${styles.navButton} ${styles.navLeft}`} 
+                  onClick={() => {
+                    if (scrollRef.current) {
+                      const width = scrollRef.current.clientWidth;
+                      scrollRef.current.scrollBy({ left: -width, behavior: 'smooth' });
+                    }
+                  }}
+                  aria-label="이전 이미지"
+                >
+                  <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                </button>
+              )}
+              {currentImgIndex < post.images.length - 1 && (
+                <button 
+                  className={`${styles.navButton} ${styles.navRight}`} 
+                  onClick={() => {
+                    if (scrollRef.current) {
+                      const width = scrollRef.current.clientWidth;
+                      scrollRef.current.scrollBy({ left: width, behavior: 'smooth' });
+                    }
+                  }}
+                  aria-label="다음 이미지"
+                >
+                  <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
+              )}
+              <div className={styles.carouselIndicators}>
+                {post.images.map((_: string, idx: number) => (
+                  <div 
+                    key={idx} 
+                    className={`${styles.indicator} ${currentImgIndex === idx ? styles.indicatorActive : ''}`} 
+                  />
+                ))}
+              </div>
+            </>
           )}
         </div>
 
