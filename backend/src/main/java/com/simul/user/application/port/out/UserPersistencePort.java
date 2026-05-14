@@ -29,7 +29,12 @@ public interface UserPersistencePort {
 
     /**
      * 소셜 로그인 제공자 + 제공자ID로 사용자 조회
-     * (기존 회원인지 확인용)
+     * (기존 회원인지 확인용 - 활성 유저만)
      */
     Optional<User> findByProviderAndProviderId(String provider, String providerId);
+
+    /**
+     * 탈퇴 여부와 상관없이 사용자 조회 (복구 체크용)
+     */
+    Optional<User> findByProviderAndProviderIdIncludingDeleted(String provider, String providerId);
 }

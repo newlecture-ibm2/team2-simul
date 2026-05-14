@@ -22,6 +22,11 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, UUID> {
     );
 
     /**
+     * 탈퇴 여부와 상관없이 소셜 로그인 정보로 사용자 조회
+     */
+    Optional<UserJpaEntity> findByProviderAndProviderId(String provider, String providerId);
+
+    /**
      * ID로 활성 사용자 조회 (Soft Delete 필터)
      */
     Optional<UserJpaEntity> findByUserIdAndDeletedAtIsNull(UUID userId);
