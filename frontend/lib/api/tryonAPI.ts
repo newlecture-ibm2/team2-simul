@@ -6,6 +6,13 @@ export type TryonGenerateResponse = {
   estimated_seconds: number;
 };
 
+export type TryonJobResponse = {
+  job_id: string;
+  status: 'processing' | 'completed' | 'failed';
+  base_image_url?: string | null;
+  result_image_url?: string | null;
+};
+
 export type MyBaseImagesResponse = {
   base_images: Array<{
     base_image_id: string;
@@ -29,6 +36,11 @@ export async function generateTryon(data: {
     method: 'POST',
     body: JSON.stringify(data),
   });
+}
+
+/** 시착 job 조회 (GET /tryon/jobs/{jobId}) */
+export async function getTryonJob(jobId: string): Promise<TryonJobResponse> {
+  return apiClient(`/tryon/jobs/${jobId}`);
 }
 
 /** 베이스 이미지 업로드 (POST /tryon/base-images) */
@@ -63,5 +75,5 @@ export async function getTryonHistory() {
 
 /** 크레딧 잔액 조회 */
 export async function getTryonCredits() {
-  return apiClient('/tryon/credits');
+  return apiClient<{ remaining: number; total_daily: number; reset_at: string }>('/tryon/credits');
 }
