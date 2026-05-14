@@ -117,6 +117,13 @@ export function useAuth() {
     setIsLoading(true);
     try {
       const res = await emailSignup(data);
+      if (!res.accessToken) {
+        // 이메일 인증이 필요한 경우 (백엔드에서 성공 응답을 주되 토큰을 비워서 보냄)
+        setRestoreMessage('회원가입이 완료되었습니다! 가입하신 이메일로 발송된 인증 링크를 클릭하여 계정을 활성화해 주세요.');
+        setAuthMode('signup');
+        setIsRestoreModalOpen(true);
+        return;
+      }
       await handleLoginSuccess(res);
     } catch (error: any) {
       handleError(error, 'email', data.email as string, 'signup');

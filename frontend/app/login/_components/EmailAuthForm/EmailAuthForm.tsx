@@ -135,10 +135,16 @@ export default function EmailAuthForm({ type }: EmailAuthFormProps) {
         description={restoreMessage}
         confirmText={authMode === 'login' ? '복구하기' : '확인'}
         cancelText={authMode === 'login' ? '아니오' : ''}
-        onConfirm={authMode === 'login' ? handleRestore : () => setIsRestoreModalOpen(false)}
-        onCancel={() => {
+        onConfirm={authMode === 'login' ? handleRestore : () => {
           setIsRestoreModalOpen(false);
           router.push('/');
+        }}
+        onCancel={() => {
+          setIsRestoreModalOpen(false);
+          // 로그인 복구 모달일 때만 '아니오'나 닫기를 누르면 메인으로 이동
+          if (authMode === 'login') {
+            router.push('/');
+          }
         }}
       />
     </form>

@@ -198,7 +198,8 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, Ema
         log.info("이메일 인증 링크: {}", verificationLink);
         log.info("================================================================");
 
-        throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED);
+        // 예외를 던지면 롤백되므로, 성공 응답을 주되 토큰을 비워서 보냄
+        return new TokenResponse(null, null, true);
     }
 
     @Override
@@ -241,7 +242,8 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, Ema
             throw new BusinessException(ErrorCode.INVALID_INPUT, "만료된 인증 토큰입니다.");
         }
 
-        User user = userPersistencePort.findByProviderAndProviderId("email", verification.getEmail())
+        // isActive가 false이면 softDelete로 처리되어 있으므로 포함해서 검색해야 함
+        User user = userPersistencePort.findByProviderAndProviderIdIncludingDeleted("email", verification.getEmail())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         user.restore(); // isActive를 true로 변경하는 용도로 재사용

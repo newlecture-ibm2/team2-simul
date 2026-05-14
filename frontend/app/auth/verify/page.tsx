@@ -45,14 +45,6 @@ function VerifyContent() {
         </h1>
         <p className={styles.message}>{message}</p>
         
-        {status !== 'loading' && (
-          <button 
-            className={styles.button}
-            onClick={() => router.push('/login')}
-          >
-            로그인 화면으로 이동
-          </button>
-        )}
       </div>
     </div>
   );
