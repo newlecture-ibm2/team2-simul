@@ -38,7 +38,10 @@ export default function PostEditPage() {
   const [newImages, setNewImages] = useState<File[]>([]);
   const [newImageUrls, setNewImageUrls] = useState<string[]>([]);
 
-  const [tags, setTags] = useState<string[]>([]);
+  const [manualTags, setManualTags] = useState<string[]>([]);
+  const [imageTagsMap, setImageTagsMap] = useState<Record<string, string[]>>({});
+  
+  const tags = Array.from(new Set([...Object.values(imageTagsMap).flat(), ...manualTags]));
   const [customTag, setCustomTag] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [caption, setCaption] = useState('');
@@ -60,7 +63,7 @@ export default function PostEditPage() {
       try {
         const data = await getPostDetail(postId) as PostDetailData;
         setExistingImageUrls(data.images || []);
-        setTags(data.tags || []);
+        setManualTags(data.tags || []);
         setCaption(data.caption || '');
         setIsPublic(data.isPublic ?? true);
         setIsLoading(false);
@@ -113,6 +116,7 @@ export default function PostEditPage() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
+      const tempUrl = URL.createObjectURL(file);
 
       // Vision API 태그 분석
       setIsAnalyzing(true);
@@ -120,11 +124,10 @@ export default function PostEditPage() {
         const result = await analyzeTags(file);
         const extractedTags = result?.recommended_tags;
         if (extractedTags && Array.isArray(extractedTags)) {
-          setTags(prev => {
-            const newTags = extractedTags.filter((tag: string) => !prev.includes(tag));
-            const combined = [...prev, ...newTags];
-            return combined;
-          });
+          setImageTagsMap(prev => ({
+            ...prev,
+            [tempUrl]: extractedTags
+          }));
         }
       } catch (err: unknown) {
         console.error('태그 분석 실패:', err);
@@ -136,7 +139,7 @@ export default function PostEditPage() {
       }
 
       setNewImages(prev => [...prev, file]);
-      setNewImageUrls(prev => [...prev, URL.createObjectURL(file)]);
+      setNewImageUrls(prev => [...prev, tempUrl]);
       // 파일 input 초기화
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
@@ -148,13 +151,32 @@ export default function PostEditPage() {
   };
 
   const handleRemoveNewImage = (index: number) => {
+    const urlToRemove = newImageUrls[index];
     setNewImages(prev => prev.filter((_, i) => i !== index));
     setNewImageUrls(prev => prev.filter((_, i) => i !== index));
+    
+    setImageTagsMap(prev => {
+      const newMap = { ...prev };
+      delete newMap[urlToRemove];
+      return newMap;
+    });
   };
 
   // ── 태그 추가/제거 ──
   const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
+    setManualTags(prev => prev.filter(tag => tag !== tagToRemove));
+    
+    setImageTagsMap(prev => {
+      const newMap = { ...prev };
+      let isChanged = false;
+      for (const key in newMap) {
+        if (newMap[key].includes(tagToRemove)) {
+          newMap[key] = newMap[key].filter(tag => tag !== tagToRemove);
+          isChanged = true;
+        }
+      }
+      return isChanged ? newMap : prev;
+    });
   };
 
   const handleAddCustomTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -168,7 +190,7 @@ export default function PostEditPage() {
         return;
       }
 
-      setTags([...tags, newTag]);
+      setManualTags(prev => [...prev, newTag]);
       setCustomTag('');
     }
   };
