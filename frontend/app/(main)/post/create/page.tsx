@@ -1,12 +1,67 @@
 'use client';
 
-import { useState, useRef, MouseEvent, useEffect } from 'react';
+import { useState, useRef, MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  arrayMove,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
 import Button from './_components/Button';
 import { createPost } from '@/lib/api/feedAPI';
 import { analyzeTags } from '@/lib/api/tagAPI';
 import { toast } from '@/lib/utils/toast';
 import styles from './page.module.css';
+
+function SortableImageFrame({ url, index, onRemove }: { url: string; index: number; onRemove: (index: number) => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: url });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 0,
+    opacity: isDragging ? 0.9 : 1,
+    scale: isDragging ? '1.02' : '1',
+    boxShadow: isDragging ? '0 10px 20px rgba(0,0,0,0.15)' : 'none',
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className={styles.imageFrame}>
+      <img src={url} alt={`Upload ${index + 1}`} style={{ pointerEvents: 'none' }} />
+      <div className={styles.dragHandle} {...attributes} {...listeners}>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="white">
+          <path d="M8 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm0 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm0 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm8-12a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm0 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm0 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
+        </svg>
+      </div>
+      <button
+        type="button"
+        className={styles.removeImageBtn}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove(index);
+        }}
+        aria-label="이미지 삭제"
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
 
 export default function PostCreatePage() {
   const router = useRouter();
@@ -35,6 +90,32 @@ export default function PostCreatePage() {
   const [hasDragged, setHasDragged] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor)
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = imageUrls.indexOf(active.id as string);
+      const newIndex = imageUrls.indexOf(over.id as string);
+
+      setImageUrls((items) => arrayMove(items, oldIndex, newIndex));
+      setImages((items) => arrayMove(items, oldIndex, newIndex));
+    }
+  };
 
   const handleMouseDown = (e: MouseEvent<HTMLDivElement>) => {
     if (!scrollRef.current) return;
@@ -197,40 +278,39 @@ export default function PostCreatePage() {
 
       {/* Image Carousel */}
       <div className={styles.carouselContainer}>
-        <div
-          className={`${styles.imageScrollArea} ${isDragging ? styles.dragging : ''}`}
-          ref={scrollRef}
-          onMouseDown={handleMouseDown}
-          onMouseLeave={handleMouseLeave}
-          onMouseUp={handleMouseUp}
-          onMouseMove={handleMouseMove}
-          onClickCapture={handleCaptureClick}
-        >
-          {imageUrls.map((url, index) => (
-            <div key={index} className={styles.imageFrame}>
-              <img src={url} alt={`Upload ${index + 1}`} />
-              <button
-                className={styles.removeImageBtn}
-                onClick={() => handleRemoveImage(index)}
-                aria-label="이미지 삭제"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-          {images.length < 5 && (
-            <div className={styles.addFrame} onClick={handleAddImageClick}>
-              <span className={styles.plusIcon}>+</span>
-              <input
-                type="file"
-                ref={fileInputRef}
-                hidden
-                accept="image/jpeg, image/png, image/webp"
-                onChange={handleFileChange}
-              />
-            </div>
-          )}
-        </div>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <div
+            className={`${styles.imageScrollArea} ${isDragging ? styles.dragging : ''}`}
+            ref={scrollRef}
+            onMouseDown={handleMouseDown}
+            onMouseLeave={handleMouseLeave}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+            onClickCapture={handleCaptureClick}
+          >
+            <SortableContext items={imageUrls} strategy={horizontalListSortingStrategy}>
+              {imageUrls.map((url, index) => (
+                <SortableImageFrame key={url} url={url} index={index} onRemove={handleRemoveImage} />
+              ))}
+            </SortableContext>
+            
+            {images.length < 5 && (
+              <div className={styles.addFrame} onClick={handleAddImageClick}>
+                <span className={styles.plusIcon}>+</span>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  hidden
+                  accept="image/jpeg, image/png, image/webp"
+                  onChange={handleFileChange}
+                />
+              </div>
+            )}
+          </div>
+        </DndContext>
+        {images.length > 1 && (
+          <p className={styles.helperText}>드래그 아이콘(⋮⋮)을 잡아 순서를 변경해보세요.</p>
+        )}
       </div>
 
       {/* Tags */}
