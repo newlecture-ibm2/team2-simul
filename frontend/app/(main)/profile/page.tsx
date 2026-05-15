@@ -41,14 +41,22 @@ export default function ProfilePage() {
     }
   }, [user, setUser]);
 
+  // 3. 비로그인 상태면 로그인 페이지로 리다이렉트
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
+
   if (isUserLoading) return <div className={styles.loading}>로딩 중...</div>;
+  if (!user) return null; // 리다이렉트 중에는 아무것도 렌더링하지 않음
 
   return (
     <div className={styles.profilePage}>
       <div className={styles.profileFrame}>
         {/* Immersive Hero Section */}
         <div className={styles.heroSection}>
-          <img src={user?.bannerImageUrl || "/banner-default.jpg"} alt="Profile Banner" className={styles.heroBg} />
+          <img src={user?.bannerImageUrl || "/images/login-bg.png"} alt="Profile Banner" className={styles.heroBg} />
           <div className={styles.heroOverlay}></div>
 
           {/* Hero Content (Bottom aligned) */}
