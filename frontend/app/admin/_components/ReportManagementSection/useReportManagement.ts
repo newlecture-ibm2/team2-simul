@@ -43,22 +43,11 @@ export function useReportManagement() {
     }
   });
 
-  const provideCreditsMutation = useMutation({
-    mutationFn: (userId: string) => adminAPI.provideCredits(userId),
-    onSuccess: () => {
-      toast.success('크레딧이 수동 지급되었습니다.');
-    },
-    onError: () => {
-      toast.error('크레딧 지급에 실패했습니다.');
-    }
-  });
-
   return {
     reports: data?.content || [],
     isLoading,
     blindPost: blindMutation.mutate,
     unblindPost: unblindMutation.mutate,
     suspendUser: suspendUserMutation.mutate,
-    provideCredits: provideCreditsMutation.mutate,
   };
 }

@@ -55,7 +55,7 @@ export const adminAPI = {
   provideCredits: async (userId: string, amount: number) => {
     return apiClient(`/admin/users/${userId}/credits`, { 
       method: 'POST',
-      data: { amount }
+      body: { amount }
     });
   },
 };

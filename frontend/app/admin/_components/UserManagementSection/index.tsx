@@ -12,17 +12,17 @@ export default function UserManagementSection() {
   const [confirmConfig, setConfirmConfig] = useState<{
     isOpen: boolean;
     title: string;
-    message: string;
+    description: string;
     onConfirm: () => void;
   }>({
     isOpen: false,
     title: '',
-    message: '',
+    description: '',
     onConfirm: () => {},
   });
 
-  const openConfirm = (title: string, message: string, onConfirm: () => void) => {
-    setConfirmConfig({ isOpen: true, title, message, onConfirm });
+  const openConfirm = (title: string, description: string, onConfirm: () => void) => {
+    setConfirmConfig({ isOpen: true, title, description, onConfirm });
   };
 
   const closeConfirm = () => {
@@ -126,7 +126,7 @@ export default function UserManagementSection() {
       <ConfirmModal
         isOpen={confirmConfig.isOpen}
         title={confirmConfig.title}
-        message={confirmConfig.message}
+        description={confirmConfig.description}
         onConfirm={confirmConfig.onConfirm}
         onCancel={closeConfirm}
       />
