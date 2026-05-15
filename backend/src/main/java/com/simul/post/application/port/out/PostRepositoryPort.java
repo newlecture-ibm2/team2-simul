@@ -17,7 +17,9 @@ public interface PostRepositoryPort {
     Page<Post> findFollowingPosts(List<UUID> userIds, Pageable pageable);
     
     long countByUserId(UUID userId);
+    long countProfilePostsByUserId(UUID userId);
     Page<Post> findByUserId(UUID userId, Pageable pageable);
+    Page<Post> findProfilePostsByUserId(UUID userId, Pageable pageable);
     Page<Post> findPublicPostsByUserId(UUID userId, Pageable pageable);
 
     long countLikedPosts(UUID userId);

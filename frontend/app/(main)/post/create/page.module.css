@@ -1,7 +1,7 @@
 .createPage {
   max-width: 450px;
   margin: 0 auto;
-  padding: 8px var(--space-page-x) 100px var(--space-page-x);
+  padding: 8px var(--space-page-x) var(--space-page-y) var(--space-page-x);
 }
 
 /* Header */
@@ -414,5 +414,5 @@
 .submitRow {
   display: flex;
   gap: 10px;
-  margin-bottom: 100px;
+  margin-bottom: 16px;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, MouseEvent } from 'react';
+import { useState, useRef, MouseEvent, useEffect, useSearchParams } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   DndContext,
@@ -65,6 +65,8 @@ function SortableImageFrame({ url, index, onRemove }: { url: string; index: numb
 
 export default function PostCreatePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const sourceImageUrl = searchParams.get('source_image_url');
 
   const [images, setImages] = useState<File[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
@@ -84,6 +86,7 @@ export default function PostCreatePage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const loadingSourceImageRef = useRef<string | null>(null);
 
   // Drag to scroll state
   const [isDragging, setIsDragging] = useState(false);
@@ -91,6 +94,80 @@ export default function PostCreatePage() {
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
 
+  const resolveImageUrl = (url: string) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return new URL(url, window.location.origin).toString();
+  };
+
+  const previewSourceImageUrl = sourceImageUrl ? resolveImageUrl(sourceImageUrl) : '';
+  const displayImageUrls = imageUrls.length > 0
+    ? imageUrls
+    : (previewSourceImageUrl ? [previewSourceImageUrl] : []);
+
+  useEffect(() => {
+    const queryImageUrl = new URLSearchParams(window.location.search).get('source_image_url');
+    const storedImageDataUrl = sessionStorage.getItem('tryon_source_image_data_url');
+    const storedImageUrl = sessionStorage.getItem('tryon_source_image_url');
+    const candidateImageUrl = sourceImageUrl || queryImageUrl || storedImageUrl;
+    const previewUrl = storedImageDataUrl || (candidateImageUrl ? resolveImageUrl(candidateImageUrl) : null);
+    if (previewUrl && imageUrls.length === 0) {
+      setImageUrls([previewUrl]);
+    }
+
+    const loadingKey = storedImageDataUrl || candidateImageUrl;
+    if ((!storedImageDataUrl && !candidateImageUrl) || images.length > 0) return;
+    if (loadingKey && loadingSourceImageRef.current === loadingKey) return;
+
+    loadingSourceImageRef.current = loadingKey;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        if (storedImageDataUrl) {
+          const response = await fetch(storedImageDataUrl);
+          if (!response.ok) throw new Error('source image data fetch failed');
+          const blob = await response.blob();
+          const file = new File([blob], 'tryon-result.png', { type: blob.type || 'image/png' });
+          if (cancelled) return;
+
+          setImages([file]);
+          setImageUrls([URL.createObjectURL(file)]);
+          sessionStorage.removeItem('tryon_source_image_data_url');
+          sessionStorage.removeItem('tryon_source_image_url');
+          return;
+        }
+
+        if (!candidateImageUrl) throw new Error('source image url missing');
+        let blob: Blob | null = null;
+        const requestUrl = resolveImageUrl(candidateImageUrl);
+
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+          const response = await fetch(requestUrl, { credentials: 'include' });
+          if (response.ok) {
+            blob = await response.blob();
+            break;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 300));
+        }
+
+        if (!blob) throw new Error('source image fetch failed');
+        const file = new File([blob], 'tryon-result.png', { type: blob.type || 'image/png' });
+        if (cancelled) return;
+
+        setImages([file]);
+        setImageUrls([URL.createObjectURL(file)]);
+        sessionStorage.removeItem('tryon_source_image_data_url');
+        sessionStorage.removeItem('tryon_source_image_url');
+      } catch {
+        loadingSourceImageRef.current = null;
+        toast.error('시착 결과 이미지를 불러오지 못했습니다.');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sourceImageUrl, images.length, imageUrls.length]);
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -154,7 +231,7 @@ export default function PostCreatePage() {
   };
 
   const handleAddImageClick = () => {
-    if (images.length >= 5) {
+    if (displayImageUrls.length >= 5) {
       toast.error('이미지는 최대 5장까지 첨부 가능합니다.');
       return;
     }
@@ -236,7 +313,21 @@ export default function PostCreatePage() {
   };
 
   const handleSubmit = async () => {
-    if (images.length === 0) {
+    let submitImages = images;
+    if (submitImages.length === 0 && displayImageUrls.length > 0) {
+      try {
+        const response = await fetch(displayImageUrls[0], { credentials: 'include' });
+        if (!response.ok) throw new Error('image fetch failed');
+        const blob = await response.blob();
+        submitImages = [new File([blob], 'tryon-result.png', { type: blob.type || 'image/png' })];
+        setImages(submitImages);
+      } catch {
+        toast.error('생성 이미지를 불러오지 못했습니다. 다시 시도해주세요.');
+        return;
+      }
+    }
+
+    if (submitImages.length === 0) {
       toast.error('최소 1장의 이미지를 첨부해주세요.');
       return;
     }
@@ -247,7 +338,7 @@ export default function PostCreatePage() {
     }
 
     const formData = new FormData();
-    images.forEach(img => formData.append('images', img));
+    submitImages.forEach(img => formData.append('images', img));
     formData.append('caption', caption);
     formData.append('isPublic', isPublic ? 'true' : 'false');
     
@@ -288,13 +379,13 @@ export default function PostCreatePage() {
             onMouseMove={handleMouseMove}
             onClickCapture={handleCaptureClick}
           >
-            <SortableContext items={imageUrls} strategy={horizontalListSortingStrategy}>
-              {imageUrls.map((url, index) => (
-                <SortableImageFrame key={url} url={url} index={index} onRemove={handleRemoveImage} />
-              ))}
+              <SortableContext items={displayImageUrls} strategy={horizontalListSortingStrategy}>
+            {displayImageUrls.map((url, index) => (
+  <SortableImageFrame key={url} url={url} index={index} onRemove={handleRemoveImage} />
+))}
             </SortableContext>
             
-            {images.length < 5 && (
+            {displayImageUrls.length < 5 && (
               <div className={styles.addFrame} onClick={handleAddImageClick}>
                 <span className={styles.plusIcon}>+</span>
                 <input
@@ -308,7 +399,7 @@ export default function PostCreatePage() {
             )}
           </div>
         </DndContext>
-        {images.length > 1 && (
+        {displayImageUrls.length > 1 && (
           <p className={styles.helperText}>드래그 아이콘(⋮⋮)을 잡아 순서를 변경해보세요.</p>
         )}
       </div>
