@@ -7,6 +7,7 @@ type PageProps = {
 
 export default async function TryonResultPage({ searchParams }: PageProps) {
   const resolved = (await searchParams) ?? {};
+  const jobId = typeof resolved.job_id === 'string' ? resolved.job_id : undefined;
   const resultImageUrl = typeof resolved.result_image_url === 'string' ? resolved.result_image_url : undefined;
-  return <ResultClient className={styles.resultPage} resultImageUrl={resultImageUrl} />;
+  return <ResultClient className={styles.resultPage} jobId={jobId} resultImageUrl={resultImageUrl} />;
 }

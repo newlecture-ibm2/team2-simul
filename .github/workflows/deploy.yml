@@ -34,6 +34,9 @@ jobs:
           FRONTEND_URL=${{ vars.FRONTEND_URL }}
           MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
           MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+          GEMINI_ENABLED=${{ vars.GEMINI_ENABLED }}
+          GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL=${{ vars.GEMINI_MODEL }}
           EOF
 
       - name: Create Vision API Key File

@@ -8,4 +8,5 @@ public interface TryonCreditPersistencePort {
     TryonCredit save(TryonCredit tryonCredit);
     long countByUserIdAndUsedAtBetween(UUID userId, LocalDateTime startInclusive, LocalDateTime endExclusive);
     boolean existsByJobId(UUID jobId);
+    void deleteByUserIdAndUsedAtBetween(UUID userId, LocalDateTime startInclusive, LocalDateTime endExclusive);
 }
