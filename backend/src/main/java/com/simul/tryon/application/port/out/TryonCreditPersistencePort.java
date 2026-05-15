@@ -9,4 +9,5 @@ public interface TryonCreditPersistencePort {
     long countByUserIdAndUsedAtBetween(UUID userId, LocalDateTime startInclusive, LocalDateTime endExclusive);
     boolean existsByJobId(UUID jobId);
     void deleteByUserIdAndUsedAtBetween(UUID userId, LocalDateTime startInclusive, LocalDateTime endExclusive);
+    int deleteByUsedAtBefore(LocalDateTime cutoffExclusive);
 }
