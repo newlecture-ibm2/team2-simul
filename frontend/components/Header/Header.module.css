@@ -84,3 +84,23 @@
   border: 2px solid var(--color-surface-fog); /* 헤더 배경색과 일치시켜 구분감 부여 */
 }
 
+.adminBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--radius-button);
+  background-color: color-mix(in srgb, var(--color-green) 80%, transparent);
+  color: #111;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  margin-right: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: opacity var(--transition-fast);
+}
+
+.adminBtn:hover {
+  opacity: 0.8;
+}

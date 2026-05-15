@@ -11,6 +11,7 @@ import Toast from '@/components/Toast';
 import GlobalLoading from '@/components/GlobalLoading';
 import AuthInitializer from '@/components/AuthInitializer';
 import { NotificationInitializer } from '@/components/NotificationInitializer';
+import AppLayoutWrapper from '@/components/AppLayoutWrapper';
 
 export const metadata: Metadata = {
   title: 'SIMUL — AI 가상시착 패션 플랫폼',
@@ -40,12 +41,12 @@ export default function RootLayout({
           <GlobalLoading />
           <AuthInitializer />
           <NotificationInitializer />
-          <div className={styles.appContainer}>
+          <AppLayoutWrapper appClassName={styles.appContainer} adminClassName={styles.adminContainer}>
             <Header />
             <main className={styles.main}>{children}</main>
             <Footer />
             <BottomNav />
-          </div>
+          </AppLayoutWrapper>
         </Providers>
       </body>
     </html>

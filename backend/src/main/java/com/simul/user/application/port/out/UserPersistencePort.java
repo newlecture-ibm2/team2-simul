@@ -32,6 +32,10 @@ public interface UserPersistencePort {
      * (기존 회원인지 확인용 - 활성 유저만)
      */
     Optional<User> findByProviderAndProviderId(String provider, String providerId);
+    /**
+     * 전체 사용자 페이징 조회
+     */
+    org.springframework.data.domain.Page<User> loadAllUsers(org.springframework.data.domain.Pageable pageable);
 
     /**
      * 탈퇴 여부와 상관없이 사용자 조회 (복구 체크용)

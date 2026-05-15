@@ -5,6 +5,7 @@ import com.simul.common.exception.ErrorCode;
 import com.simul.user.application.dto.FollowCountResponse;
 import com.simul.user.application.dto.UserProfileResponse;
 import com.simul.user.application.dto.UserResponse;
+import com.simul.user.application.port.in.LoadAllUsersUseCase;
 import com.simul.user.application.port.in.LoadUserUseCase;
 import com.simul.user.application.port.in.RegisterUserUseCase;
 import com.simul.user.application.port.in.SuspendUserUseCase;
@@ -30,7 +31,7 @@ import java.util.stream.Collectors;
  * - UserPersistencePort(Output Port)를 통해 DB에 접근
  */
 @Service
-public class UserService implements LoadUserUseCase, RegisterUserUseCase, UpdateUserUseCase, WithdrawUserUseCase, SuspendUserUseCase {
+public class UserService implements LoadAllUsersUseCase, LoadUserUseCase, RegisterUserUseCase, UpdateUserUseCase, WithdrawUserUseCase, SuspendUserUseCase {
 
     private final UserPersistencePort userPersistencePort;
     private final FollowPersistencePort followPersistencePort;
@@ -59,6 +60,13 @@ public class UserService implements LoadUserUseCase, RegisterUserUseCase, Update
         List<User> users = userPersistencePort.findByIds(userIds);
         return users.stream()
                 .collect(Collectors.toMap(User::getUserId, UserResponse::from));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<com.simul.admin.application.dto.AdminUserResponse> loadAllUsers(org.springframework.data.domain.Pageable pageable) {
+        return userPersistencePort.loadAllUsers(pageable)
+                .map(com.simul.admin.application.dto.AdminUserResponse::from);
     }
 
     /**

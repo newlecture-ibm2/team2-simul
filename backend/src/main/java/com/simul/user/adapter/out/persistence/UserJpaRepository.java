@@ -37,6 +37,11 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, UUID> {
     List<UserJpaEntity> findByUserIdInAndDeletedAtIsNull(List<UUID> userIds);
 
     /**
+     * 전체 활성 사용자 페이징 조회
+     */
+    org.springframework.data.domain.Page<UserJpaEntity> findAllByDeletedAtIsNull(org.springframework.data.domain.Pageable pageable);
+
+    /**
      * 인증되지 않은 오래된 가계정 삭제 (배치용)
      */
     int deleteByIsActiveFalseAndCreatedAtBefore(java.time.LocalDateTime cutoffDate);

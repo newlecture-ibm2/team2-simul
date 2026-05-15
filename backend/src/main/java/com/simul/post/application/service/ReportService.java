@@ -57,6 +57,11 @@ public class ReportService implements ReportPostUseCase, GetReportsUseCase {
     @Transactional(readOnly = true)
     public Page<ReportResponse> getReports(Pageable pageable) {
         return postReportPersistencePort.loadAllReports(pageable)
-                .map(ReportResponse::from);
+                .map(report -> {
+                    Post post = postRepositoryPort.findById(report.getPostId()).orElse(null);
+                    UUID reportedUserId = post != null ? post.getUserId() : null;
+                    boolean isBlinded = post != null && Boolean.TRUE.equals(post.getIsBlinded());
+                    return ReportResponse.from(report, reportedUserId, isBlinded);
+                });
     }
 }

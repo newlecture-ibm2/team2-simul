@@ -63,4 +63,10 @@ public class UserPersistenceAdapter implements UserPersistencePort {
                 .map(userPersistenceMapper::mapToDomainEntity)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public org.springframework.data.domain.Page<User> loadAllUsers(org.springframework.data.domain.Pageable pageable) {
+        return userJpaRepository.findAllByDeletedAtIsNull(pageable)
+                .map(userPersistenceMapper::mapToDomainEntity);
+    }
 }
