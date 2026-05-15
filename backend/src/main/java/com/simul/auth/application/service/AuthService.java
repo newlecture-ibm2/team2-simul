@@ -31,6 +31,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.simul.auth.application.port.out.EmailVerificationPort;
+import com.simul.auth.application.port.out.MailPort;
 import com.simul.auth.domain.model.EmailVerification;
 
 /**
@@ -49,9 +50,10 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, Ema
     private final RefreshTokenPort refreshTokenPort;
     private final AccessTokenBlacklistPort accessTokenBlacklistPort;
     private final EmailVerificationPort emailVerificationPort;
+    private final MailPort mailPort;
     private final long refreshTokenValiditySeconds;
     
-    @Value("${app.frontend-url:http://localhost:3000}")
+    @Value("${app.frontend-url}")
     private String frontendUrl;
 
     public AuthService(
@@ -63,6 +65,7 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, Ema
         RefreshTokenPort refreshTokenPort,
         AccessTokenBlacklistPort accessTokenBlacklistPort,
         EmailVerificationPort emailVerificationPort,
+        MailPort mailPort,
         @Value("${jwt.refresh-token-validity-in-seconds}") long refreshTokenValiditySeconds
     ) {
         this.providerMap = providers.stream()
@@ -74,6 +77,7 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, Ema
         this.refreshTokenPort = refreshTokenPort;
         this.accessTokenBlacklistPort = accessTokenBlacklistPort;
         this.emailVerificationPort = emailVerificationPort;
+        this.mailPort = mailPort;
         this.refreshTokenValiditySeconds = refreshTokenValiditySeconds;
     }
 
@@ -180,6 +184,8 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, Ema
                     if (days < 30) {
                         throw new BusinessException(ErrorCode.USER_IN_GRACE_PERIOD, "이미 사용 중인 이메일입니다. 기존 계정을 복구하시려면 로그인 화면에서 기존 비밀번호로 로그인해 주세요.");
                     }
+                } else if (!u.isActive()) {
+                    throw new BusinessException(ErrorCode.INVALID_INPUT, "이메일 인증 대기 중인 계정입니다. 메일함을 확인해 주세요.");
                 } else {
                     throw new BusinessException(ErrorCode.INVALID_INPUT, "이미 가입된 이메일입니다.");
                 }
@@ -192,10 +198,15 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, Ema
         EmailVerification verification = EmailVerification.create(email);
         emailVerificationPort.save(verification);
 
-        // 인증 링크 출력 (로그)
+        // 인증 링크 생성
         String verificationLink = frontendUrl + "/auth/verify?token=" + verification.getToken();
+
+        // 이메일 발송
+        mailPort.sendVerificationEmail(email, verificationLink);
+
         log.info("================================================================");
-        log.info("이메일 인증 링크: {}", verificationLink);
+        log.info("이메일 인증 요청 완료 (실제 발송): {}", email);
+        log.info("인증 링크(확인용): {}", verificationLink);
         log.info("================================================================");
 
         // 예외를 던지면 롤백되므로, 성공 응답을 주되 토큰을 비워서 보냄

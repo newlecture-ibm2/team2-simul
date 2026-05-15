@@ -35,4 +35,9 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, UUID> {
      * ID 목록으로 활성 사용자 조회
      */
     List<UserJpaEntity> findByUserIdInAndDeletedAtIsNull(List<UUID> userIds);
+
+    /**
+     * 인증되지 않은 오래된 가계정 삭제 (배치용)
+     */
+    int deleteByIsActiveFalseAndCreatedAtBefore(java.time.LocalDateTime cutoffDate);
 }
