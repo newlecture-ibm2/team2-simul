@@ -40,13 +40,15 @@ export async function POST(request: NextRequest) {
     const data = await backendResponse.json();
     const { accessToken, refreshToken, isNewUser } = data;
 
-    // JWT payload에서 userId 추출
+    // JWT payload에서 userId와 role 추출
     let userId = '';
+    let userRole: 'USER' | 'ADMIN' = 'USER';
     try {
       const payload = JSON.parse(
         Buffer.from(accessToken.split('.')[1], 'base64').toString('utf-8')
       );
       userId = payload.sub || '';
+      userRole = payload.role || 'USER';
     } catch (e) {
       console.error('JWT decoding failed:', e);
     }
@@ -67,7 +69,7 @@ export async function POST(request: NextRequest) {
           email: profile.email || '',
           profileImage: profile.profileImageUrl,
           bio: profile.bio,
-          role: profile.role || 'USER',
+          role: profile.role || userRole,
         };
       }
     } catch (e) {
@@ -84,7 +86,7 @@ export async function POST(request: NextRequest) {
     const session = await getIronSession<SessionData>(request, response, sessionOptions);
     session.user = {
       id: userId,
-      role: 'USER',
+      role: userRole,
       token: accessToken,
       refreshToken: refreshToken,
     };

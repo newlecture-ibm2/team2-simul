@@ -1,0 +1,153 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: var(--color-text-primary);
+}
+
+.loading, .empty {
+  padding: 40px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-comfortable);
+}
+
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  background: white;
+  border-radius: var(--radius-comfortable);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-surface-sand);
+}
+
+.table {
+  width: 100%;
+  min-width: 800px;
+  border-collapse: collapse;
+}
+
+.table th, .table td {
+  padding: 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-surface-sand);
+  font-size: 14px;
+}
+
+.table th {
+  background-color: var(--color-surface-fog);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.cellId {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.actionGroup {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btnPrimary, .btnDanger {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity var(--transition-fast);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btnPrimary {
+  background-color: var(--color-green);
+  color: var(--color-text-primary);
+}
+
+.btnDanger {
+  background-color: transparent;
+  color: #ff3b30;
+  border: 1px solid #ff3b30;
+}
+
+.btnPrimary:hover, .btnDanger:hover {
+  opacity: 0.8;
+}
+
+/* 모바일 대응 미디어 쿼리 */
+@media (max-width: 768px) {
+  .tableWrapper {
+    background: transparent;
+    box-shadow: none;
+    border: none;
+  }
+
+  .table, .table thead, .table tbody, .table tr, .table td, .table th {
+    display: block;
+  }
+
+  .table {
+    min-width: 100%; /* 모바일에서 800px 최소 너비 해제 */
+  }
+
+  .table thead {
+    display: none; /* 모바일에서는 헤더를 숨김 */
+  }
+
+  .table tr {
+    background: white;
+    margin-bottom: 16px;
+    border-radius: var(--radius-comfortable);
+    padding: 12px 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--color-surface-sand);
+  }
+
+  .table td {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    padding: 10px 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    text-align: right;
+  }
+
+  .table td:last-child {
+    border-bottom: none;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    flex-shrink: 0;
+    width: 85px;
+    text-align: left;
+  }
+
+  /* 긴 텍스트 우측 정렬 및 줄바꿈 처리 */
+  .cellId {
+    word-break: break-all;
+  }
+
+  .actionGroup {
+    margin-top: 0;
+    justify-content: flex-end;
+  }
+}
