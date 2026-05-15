@@ -72,7 +72,8 @@ public class TryonGenerationProcessor {
 
             runAiGenerationAndUpdatePost(post, baseImage, items);
         } catch (BusinessException be) {
-            log.warn("TryOn generation failed: jobId={}, errorCode={}, detail={}", event.jobId(), be.getErrorCode(), be.getMessage());
+            log.warn("TryOn generation failed: jobId={}, errorCode={}, detail={}", event.jobId(), be.getErrorCode(),
+                    be.getMessage());
             post.markFailed();
             postRepositoryPort.save(post);
         } catch (Exception e) {
@@ -100,17 +101,16 @@ public class TryonGenerationProcessor {
                 .map(img -> new TryonAiGenerationPort.ImagePart(img.bytes(), img.mimeType()))
                 .toList();
 
-        TryonAiGenerationPort.TryonAiGenerationCommand aiCommand =
-                new TryonAiGenerationPort.TryonAiGenerationCommand(
-                        userImage.bytes(),
-                        userImage.mimeType(),
-                        clothingParts,
-                        prompt
-                );
+        TryonAiGenerationPort.TryonAiGenerationCommand aiCommand = new TryonAiGenerationPort.TryonAiGenerationCommand(
+                userImage.bytes(),
+                userImage.mimeType(),
+                clothingParts,
+                prompt);
 
         TryonAiGenerationPort.TryonAiGenerationResult result = generateWithTimeout(aiCommand);
 
-        String resultImageUrl = binaryImageStoragePort.upload(result.resultImageBytes(), result.resultImageMimeType(), "tryon");
+        String resultImageUrl = binaryImageStoragePort.upload(result.resultImageBytes(), result.resultImageMimeType(),
+                "tryon");
         post.markCompleted(resultImageUrl);
         postRepositoryPort.save(post);
 
@@ -119,8 +119,7 @@ public class TryonGenerationProcessor {
                 DeductTryonCreditUseCase.DeductTryonCreditCommand.builder()
                         .userId(post.getUserId())
                         .jobId(post.getPostId())
-                        .build()
-        );
+                        .build());
 
         // increment try_count for each used item
         for (ClosetItem item : items) {
@@ -139,7 +138,8 @@ public class TryonGenerationProcessor {
         }
     }
 
-    private TryonAiGenerationPort.TryonAiGenerationResult generateWithTimeout(TryonAiGenerationPort.TryonAiGenerationCommand command) {
+    private TryonAiGenerationPort.TryonAiGenerationResult generateWithTimeout(
+            TryonAiGenerationPort.TryonAiGenerationCommand command) {
         try {
             return CompletableFuture.supplyAsync(() -> tryonAiGenerationPort.generate(command))
                     .orTimeout(AI_TIMEOUT.toSeconds(), TimeUnit.SECONDS)
@@ -158,17 +158,43 @@ public class TryonGenerationProcessor {
 
     private String buildPromptForOrderedItems(int clothingCount) {
         String base = """
-                You are a virtual try-on image generator.
-                Inputs:
-                - The first image is a photo of a person.
-                - The next images are clothing item images in the given order.
-                Task:
-                - Generate a realistic image of the person wearing the clothing items.
-                Constraints:
-                - Preserve the person’s identity and pose as much as possible.
-                - Keep the background natural (do not add text).
-                Output:
-                - Return only the generated image.
+                You are a professional virtual try-on image compositor.
+
+                ## Inputs
+                - Image 1: A photo of a person (the model).
+                - Image 2+: One or more clothing item images to be worn by the person, in the given order.
+
+                ## Your Task
+                Generate a single, photorealistic image of the person naturally wearing all provided clothing items.
+
+                ## Critical Requirements
+
+                ### Person Preservation (highest priority)
+                - Preserve the person's face, skin tone, hair, and body proportions EXACTLY as they appear in Image 1.
+                - Preserve the person's original pose and body position. Do not alter limb placement or stance.
+                - Do not alter facial features, expression, age, or identity in any way.
+
+                ### Person Positioning
+                - Place the person at the horizontal and vertical center of the image.
+                - The person should be fully visible and not cropped at the edges.
+                - Maintain natural proportions — do not stretch, shrink, or distort the person to fit the frame.
+                - Adjust the background to fill the remaining canvas space naturally if repositioning is needed.
+
+                ### Clothing Rendering
+                - Realistically drape and fit each clothing item onto the person's body, respecting gravity, body shape, and natural fabric behavior (wrinkles, folds, shadows).
+                - Match the clothing's color, texture, pattern, and material exactly as shown in the clothing images. Do not alter colors or prints.
+                - If multiple clothing items are provided, layer them naturally (e.g., top over bottom, outerwear over inner layers).
+                - Occlude clothing items correctly behind arms, hands, and other body parts where appropriate.
+
+                ### Background & Lighting
+                - Preserve the original background from Image 1 exactly. Do not change, blur, or replace it.
+                - If the background must be extended to accommodate centering, extend it naturally to match the original background style and color.
+                - Match lighting and shadows on the clothing to the lighting conditions in Image 1.
+                - Do not add any text, watermarks, logos, or UI elements to the output image.
+
+                ### Output
+                - Return one final composited image only.
+                - The image should look like a natural, professional photograph — not a collage or montage.
                 """;
         return switch (clothingCount) {
             case 1 -> base + "\nOrder: 2nd image = clothing item.\n";
@@ -178,4 +204,3 @@ public class TryonGenerationProcessor {
         };
     }
 }
-

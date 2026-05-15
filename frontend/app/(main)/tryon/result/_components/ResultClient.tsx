@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Button from '@/components/Button';
-import { getTryonJob, publishTryonJob } from '@/lib/api/tryonAPI';
+import { getTryonJob } from '@/lib/api/tryonAPI';
 import { toast } from '@/lib/utils/toast';
 import styles from '../page.module.css';
 
@@ -14,12 +15,12 @@ type Props = {
 };
 
 export default function ResultClient({ className, jobId, resultImageUrl }: Props) {
+  const router = useRouter();
   const [viewMode, setViewMode] = useState<'result' | 'original'>('result');
   const [originalImg, setOriginalImg] = useState<string | null>(null);
   const [resultImgResolved, setResultImgResolved] = useState<string | null>(resultImageUrl ?? null);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [isPublishing, setIsPublishing] = useState(false);
-  const [isPublished, setIsPublished] = useState(false);
+  const [showPublishConfirm, setShowPublishConfirm] = useState(false);
 
   useEffect(() => {
     if (!jobId) return;
@@ -80,18 +81,42 @@ export default function ResultClient({ className, jobId, resultImageUrl }: Props
   };
 
   const handlePublish = async () => {
-    if (!jobId || !canShowResult || isPublishing || isPublished) return;
+    if (!canShowResult) return;
+    setShowPublishConfirm(true);
+  };
 
-    setIsPublishing(true);
+  const convertBlobToDataUrl = (blob: Blob) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result);
+          return;
+        }
+        reject(new Error('data url convert failed'));
+      };
+      reader.onerror = () => reject(reader.error ?? new Error('data url convert failed'));
+      reader.readAsDataURL(blob);
+    });
+
+  const confirmPublish = async () => {
+    if (!canShowResult) return;
+    setShowPublishConfirm(false);
+
     try {
-      await publishTryonJob(jobId);
-      setIsPublished(true);
-      toast.success('피드에 공유했습니다.');
+      const response = await fetch(resolveImageUrl(resultImg), { credentials: 'include' });
+      if (response.ok) {
+        const blob = await response.blob();
+        const dataUrl = await convertBlobToDataUrl(blob);
+        sessionStorage.setItem('tryon_source_image_data_url', dataUrl);
+      }
     } catch {
-      toast.error('피드 공유에 실패했습니다.');
-    } finally {
-      setIsPublishing(false);
+      sessionStorage.removeItem('tryon_source_image_data_url');
     }
+
+    sessionStorage.setItem('tryon_source_image_url', resultImg);
+    const params = new URLSearchParams({ source_image_url: resultImg });
+    router.push(`/post/create?${params.toString()}`);
   };
 
   return (
@@ -139,9 +164,9 @@ export default function ResultClient({ className, jobId, resultImageUrl }: Props
             variant="large-dark"
             fullWidth
             onClick={handlePublish}
-            disabled={!jobId || !canShowResult || isPublishing || isPublished}
+            disabled={!canShowResult}
           >
-            {isPublished ? '공유 완료' : isPublishing ? '공유 중...' : '피드에 공유'}
+            피드에 공유
           </Button>
         </div>
         <Link href="/tryon/studio">
@@ -150,6 +175,33 @@ export default function ResultClient({ className, jobId, resultImageUrl }: Props
           </Button>
         </Link>
       </div>
+
+      {showPublishConfirm && (
+        <div className={styles.modalOverlay} role="dialog" aria-modal="true" aria-labelledby="publish-title">
+          <div className={styles.modalCard}>
+            <h2 id="publish-title">피드에 공유할까요?</h2>
+            <p>게시물 작성 페이지에서 캡션과 공개 여부를 직접 설정한 뒤 공유합니다.</p>
+            <div className={styles.modalActions}>
+              <Button
+                variant="large-dark"
+                fullWidth
+                className={styles.modalButtonCompact}
+                onClick={() => setShowPublishConfirm(false)}
+              >
+                취소
+              </Button>
+              <Button
+                variant="large-dark"
+                fullWidth
+                className={styles.modalButtonCompact}
+                onClick={confirmPublish}
+              >
+                게시물 작성으로 이동
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

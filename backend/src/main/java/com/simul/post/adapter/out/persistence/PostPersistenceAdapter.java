@@ -52,8 +52,18 @@ public class PostPersistenceAdapter implements PostRepositoryPort {
     }
 
     @Override
+    public long countProfilePostsByUserId(UUID userId) {
+        return postJpaRepository.countProfilePostsByUserId(userId);
+    }
+
+    @Override
     public Page<Post> findByUserId(UUID userId, Pageable pageable) {
         return postJpaRepository.findAllByUserId(userId, pageable);
+    }
+
+    @Override
+    public Page<Post> findProfilePostsByUserId(UUID userId, Pageable pageable) {
+        return postJpaRepository.findProfilePostsByUserId(userId, pageable);
     }
 
     @Override
