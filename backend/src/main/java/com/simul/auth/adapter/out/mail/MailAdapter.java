@@ -4,6 +4,7 @@ import com.simul.auth.application.port.out.MailPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import jakarta.mail.internet.MimeMessage;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,9 @@ import org.springframework.stereotype.Component;
 public class MailAdapter implements MailPort {
 
     private final JavaMailSender mailSender;
+
+    @Value("${frontend-url}")
+    private String frontendUrl;
 
     @Override
     public void sendVerificationEmail(String to, String verificationLink) {
