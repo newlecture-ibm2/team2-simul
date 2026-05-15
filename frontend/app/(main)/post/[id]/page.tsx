@@ -253,6 +253,35 @@ export default function PostDetailPage() {
     }
   };
 
+  const handleShare = async () => {
+    if (!isAuthenticated) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+    if (!post) return;
+    const url = window.location.href;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `[SIMUL] ${post.nickname}님의 스타일`,
+          text: post.caption ? (post.caption.length > 50 ? `${post.caption.slice(0, 50)}...` : post.caption) : '이 코디 어때요?',
+          url: url,
+        });
+      } catch (err) {
+        console.log('공유가 취소되었거나 실패했습니다.', err);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success('링크가 복사되었습니다.');
+      } catch (err) {
+        console.error('클립보드 복사 실패:', err);
+        toast.error('링크 복사를 지원하지 않는 브라우저입니다.');
+      }
+    }
+  };
+
   if (isLoading) return <div className={styles.container}><div style={{padding: '20px', textAlign: 'center'}}>로딩 중...</div></div>;
   if (error) return <div className={styles.container}><div style={{padding: '20px', textAlign: 'center', color: 'red'}}>{error}</div></div>;
   if (!post) return null;
@@ -267,7 +296,7 @@ export default function PostDetailPage() {
           <img src="/icons/arrow-left.png" alt="Back" className={styles.icon} />
         </button>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <button className={styles.iconBtn} aria-label="공유하기">
+          <button className={styles.iconBtn} aria-label="공유하기" onClick={handleShare}>
             <img src="/icons/square.and.arrow.up.png" alt="Share" className={styles.icon} />
           </button>
           <div className={styles.menuWrapper} ref={menuRef}>
