@@ -226,7 +226,8 @@ public class PostController {
             @RequestParam(value = "newImageTagsMapJson", required = false) String newImageTagsMapJson,
             @RequestParam(value = "manualTags", required = false) List<String> manualTags,
             @RequestParam(value = "existingImageUrls", required = false) List<String> existingImageUrls,
-            @RequestParam(value = "newImages", required = false) List<org.springframework.web.multipart.MultipartFile> newImages
+            @RequestParam(value = "newImages", required = false) List<org.springframework.web.multipart.MultipartFile> newImages,
+            @RequestParam(value = "imageOrderJson", required = false) String imageOrderJson
     ) {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
@@ -251,6 +252,11 @@ public class PostController {
             if (newImageTagsMapJson != null && !newImageTagsMapJson.isEmpty()) {
                 newImageTagsMap = mapper.readValue(newImageTagsMapJson, new TypeReference<Map<Integer, List<String>>>() {});
             }
+            
+            List<String> imageOrder = null;
+            if (imageOrderJson != null && !imageOrderJson.isEmpty()) {
+                imageOrder = mapper.readValue(imageOrderJson, new TypeReference<List<String>>() {});
+            }
 
             UpdatePostCommand command = UpdatePostCommand.builder()
                     .postId(postId)
@@ -262,6 +268,7 @@ public class PostController {
                     .manualTags(manualTags)
                     .existingImageUrls(existingImageUrls)
                     .newImages(newImages)
+                    .imageOrder(imageOrder)
                     .build();
             updatePostUseCase.updatePost(command);
             return ResponseEntity.ok().build();

@@ -18,4 +18,5 @@ public class UpdatePostCommand {
     private final List<String> manualTags;
     private final List<String> existingImageUrls;
     private final List<org.springframework.web.multipart.MultipartFile> newImages;
+    private final List<String> imageOrder;
 }

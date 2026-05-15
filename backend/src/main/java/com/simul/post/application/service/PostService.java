@@ -178,9 +178,7 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         return postsPage.map(post -> {
             UserResponse user = userMap.get(post.getUserId());
             List<String> postTags = tagMap.getOrDefault(post.getPostId(), Collections.emptyList());
-            String imageUrl = post.getImages().isEmpty()
-                    ? post.getImageUrl()
-                    : post.getImages().get(0).getImageUrl();
+            String imageUrl = post.getImageUrl();
             
             return new FeedPostResponse(
                     post.getPostId(),
@@ -324,16 +322,47 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
 
         post.getImages().removeIf(img -> !normalizedExistingUrls.contains(img.getImageUrl()));
 
-        // 새 이미지 추가
+        // 새 이미지 저장 및 임시 리스트 보관
+        List<com.simul.post.domain.model.PostImage> newlyCreatedImages = new ArrayList<>();
         if (!newFiles.isEmpty()) {
-            int maxOrder = post.getImages().stream().mapToInt(com.simul.post.domain.model.PostImage::getSortOrder).max().orElse(-1);
-            for (int i = 0; i < newFiles.size(); i++) {
-                String imageUrl = fileStorageService.store(newFiles.get(i));
+            for (MultipartFile file : newFiles) {
+                String imageUrl = fileStorageService.store(file);
                 com.simul.post.domain.model.PostImage postImage = com.simul.post.domain.model.PostImage.builder()
                         .imageUrl(imageUrl)
-                        .sortOrder(maxOrder + 1 + i)
+                        .sortOrder(999) // 임시 값
                         .build();
-                post.addImage(postImage);
+                newlyCreatedImages.add(postImage);
+            }
+        }
+
+        // imageOrder를 기반으로 sortOrder 설정 및 post.addImage 호출
+        if (command.getImageOrder() != null && !command.getImageOrder().isEmpty()) {
+            List<String> imageOrder = command.getImageOrder();
+            for (int i = 0; i < imageOrder.size(); i++) {
+                String orderItem = imageOrder.get(i);
+                if (orderItem.startsWith("new:")) {
+                    int index = Integer.parseInt(orderItem.split(":")[1]);
+                    if (index >= 0 && index < newlyCreatedImages.size()) {
+                        com.simul.post.domain.model.PostImage newImg = newlyCreatedImages.get(index);
+                        newImg.updateSortOrder(i);
+                        post.addImage(newImg);
+                    }
+                } else {
+                    String url = orderItem.contains("/uploads/images/") ? orderItem.substring(orderItem.indexOf("/uploads/images/")) : orderItem;
+                    int finalI = i;
+                    post.getImages().stream()
+                            .filter(img -> img.getImageUrl().equals(url) || img.getImageUrl().endsWith(url))
+                            .findFirst()
+                            .ifPresent(img -> img.updateSortOrder(finalI));
+                }
+            }
+        } else {
+            // fallback (imageOrder가 없는 경우)
+            int maxOrder = post.getImages().stream().mapToInt(com.simul.post.domain.model.PostImage::getSortOrder).max().orElse(-1);
+            for (int i = 0; i < newlyCreatedImages.size(); i++) {
+                com.simul.post.domain.model.PostImage newImg = newlyCreatedImages.get(i);
+                newImg.updateSortOrder(maxOrder + 1 + i);
+                post.addImage(newImg);
             }
         }
 
@@ -369,10 +398,8 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         }
         if (command.getNewImageTagsMap() != null) {
             command.getNewImageTagsMap().forEach((index, tagsList) -> {
-                // newImages의 저장된 URL 찾기 (post.getImages()의 뒷부분에 추가됨)
-                int existingCount = normalizedExistingUrls.size();
-                if (existingCount + index < post.getImages().size()) {
-                    String newUrl = post.getImages().get(existingCount + index).getImageUrl();
+                if (index >= 0 && index < newlyCreatedImages.size()) {
+                    String newUrl = newlyCreatedImages.get(index).getImageUrl();
                     List<String> uniqueTags = tagsList.stream()
                             .map(tag -> tag.trim().toLowerCase())
                             .filter(t -> !t.isEmpty() && processedTags.add(t))
@@ -462,9 +489,7 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
 
         return postsPage.map(post -> {
             List<String> postTags = tagMap.getOrDefault(post.getPostId(), Collections.emptyList());
-            String imageUrl = post.getImages().isEmpty()
-                    ? post.getImageUrl()
-                    : post.getImages().get(0).getImageUrl();
+            String imageUrl = post.getImageUrl();
             
             return new FeedPostResponse(
                     post.getPostId(),
@@ -506,9 +531,7 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         return postsPage.map(post -> {
             UserResponse author = userMap.get(post.getUserId());
             List<String> postTags = tagMap.getOrDefault(post.getPostId(), Collections.emptyList());
-            String imageUrl = post.getImages().isEmpty()
-                    ? post.getImageUrl()
-                    : post.getImages().get(0).getImageUrl();
+            String imageUrl = post.getImageUrl();
             
             return new FeedPostResponse(
                     post.getPostId(),
@@ -584,7 +607,7 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         return postsPage.map(post -> {
             UserResponse user = userMap.get(post.getUserId());
             List<String> postTags = tagMap.getOrDefault(post.getPostId(), Collections.emptyList());
-            String imageUrl = post.getImages().isEmpty() ? null : post.getImages().get(0).getImageUrl();
+            String imageUrl = post.getImageUrl();
 
             return new FeedPostResponse(
                     post.getPostId(),
