@@ -67,7 +67,7 @@ public class PostControllerIntegrationTest {
                         .file(image2)
                         .param("caption", "테스트 캡션입니다.")
                         .param("isPublic", "true")
-                        .param("tags", "OOTD", "Denim", "Spring")
+                        .param("manualTags", "OOTD", "Denim", "Spring")
                         .with(authentication(auth))
                         .with(csrf()))
                 .andDo(print())

@@ -38,10 +38,24 @@ export async function authHandler(req: NextRequest, path: string[]) {
     headers.delete('connection');
     headers.delete('keep-alive');
 
+    // 세션 정보 가져오기 (토큰 추출 및 로그아웃/갱신 처리용)
+    const session = await getIronSession<SessionData>(req, new Response(), sessionOptions);
+
+    // 1. 토큰 갱신(refresh) 요청인 경우 세션에서 리프레시 토큰 주입
+    let requestBody = req.method !== 'GET' && req.method !== 'HEAD' ? await req.text() : undefined;
+    if (path.includes('refresh') && !requestBody) {
+      const refreshToken = session.user?.refreshToken;
+      if (refreshToken) {
+        requestBody = JSON.stringify({ refreshToken });
+        headers.set('Content-Type', 'application/json');
+        console.log('[BFF Auth] Injecting refreshToken from session for renewal');
+      }
+    }
+
     const response = await fetch(targetUrl, {
       method: req.method,
       headers,
-      body: req.method !== 'GET' && req.method !== 'HEAD' ? await req.text() : undefined,
+      body: requestBody,
     });
 
     // 응답 본문이 있는지 확인 후 파싱
@@ -49,14 +63,18 @@ export async function authHandler(req: NextRequest, path: string[]) {
     let data: AuthResponse = {} as AuthResponse;
     if (contentType && contentType.includes('application/json')) {
       data = await response.json();
-    } else {
-      // 본문이 없거나 JSON이 아닌 경우 (예: 204 No Content 또는 200 OK without body)
-      if (response.ok) {
-        return new NextResponse(null, { status: response.status });
-      }
     }
 
-    // 백엔드 응답 구조: { accessToken, refreshToken, isNewUser }
+    // 1. 로그아웃 처리: path에 logout이 포함되어 있고 성공했다면 세션 파기
+    if (path.includes('logout') && response.ok) {
+      const res = NextResponse.json({ success: true });
+      const session = await getIronSession<SessionData>(req, res, sessionOptions);
+      session.destroy();
+      console.log('[BFF Auth] Logout success, session destroyed');
+      return res;
+    }
+
+    // 2. 로그인 성공 처리: accessToken이 있는 경우 세션 생성
     if (response.ok && data.accessToken) {
       const accessToken = data.accessToken;
       const refreshToken = data.refreshToken;
@@ -96,6 +114,15 @@ export async function authHandler(req: NextRequest, path: string[]) {
       
       await session.save();
       console.log(`[BFF Auth] Login success: ${profileData.nickname} (${userId})`);
+      return res;
+    }
+
+    // 3. 리프레시 실패 처리: 토큰 갱신 시도 중 401/403이 발생하면 세션 파기
+    if (path.includes('refresh') && (response.status === 401 || response.status === 403)) {
+      const res = NextResponse.json(data, { status: response.status });
+      const session = await getIronSession<SessionData>(req, res, sessionOptions);
+      session.destroy();
+      console.log('[BFF Auth] Refresh failed, session destroyed');
       return res;
     }
 

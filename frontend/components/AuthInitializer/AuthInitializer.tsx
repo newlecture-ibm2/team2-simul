@@ -16,9 +16,12 @@ export default function AuthInitializer() {
   const { data: user, isSuccess, isError } = useQuery({
     queryKey: ['me'],
     queryFn: getCurrentUser,
-    // 세션이 있을 때만 조회 (또는 필요에 따라 항상 조회하여 세션 유효성 검증)
+    // 1) 기본적으로 재시도 안 함
     retry: false,
-    staleTime: 1000 * 60 * 5, // 5분간 fresh 유지
+    // 2) 5분간 데이터 유지
+    staleTime: 1000 * 60 * 5,
+    // 3) 에러 발생 시(401, 403 등) 해당 쿼리를 자동으로 다시 실행하지 않도록 설정
+    gcTime: 0,
   });
 
   // 2. 조회 성공 시 Zustand 스토어 업데이트
