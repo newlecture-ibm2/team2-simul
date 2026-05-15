@@ -22,6 +22,11 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, UUID> {
     );
 
     /**
+     * 탈퇴 여부와 상관없이 소셜 로그인 정보로 사용자 조회
+     */
+    Optional<UserJpaEntity> findByProviderAndProviderId(String provider, String providerId);
+
+    /**
      * ID로 활성 사용자 조회 (Soft Delete 필터)
      */
     Optional<UserJpaEntity> findByUserIdAndDeletedAtIsNull(UUID userId);
@@ -35,4 +40,9 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, UUID> {
      * 전체 활성 사용자 페이징 조회
      */
     org.springframework.data.domain.Page<UserJpaEntity> findAllByDeletedAtIsNull(org.springframework.data.domain.Pageable pageable);
+
+    /**
+     * 인증되지 않은 오래된 가계정 삭제 (배치용)
+     */
+    int deleteByIsActiveFalseAndCreatedAtBefore(java.time.LocalDateTime cutoffDate);
 }

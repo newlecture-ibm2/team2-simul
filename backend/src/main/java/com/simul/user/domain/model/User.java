@@ -53,8 +53,23 @@ public class User {
     }
 
     /**
-     * 회원 탈퇴 (소프트 딜리트 플래그)
-     * 실제 deletedAt 처리는 Persistence Adapter에서 수행
+     * 계정 탈퇴 (Soft Delete)
+     */
+    public void withdraw() {
+        this.isActive = false;
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 계정 복구
+     */
+    public void restore() {
+        this.isActive = true;
+        this.deletedAt = null;
+    }
+
+    /**
+     * 계정 비활성화 (기존 코드 호환용)
      */
     public void deactivate() {
         this.isActive = false;

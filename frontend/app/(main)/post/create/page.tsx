@@ -1,19 +1,80 @@
 'use client';
 
-import { useState, useRef, MouseEvent, useEffect } from 'react';
+import { useState, useRef, MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  arrayMove,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
 import Button from './_components/Button';
 import { createPost } from '@/lib/api/feedAPI';
 import { analyzeTags } from '@/lib/api/tagAPI';
 import { toast } from '@/lib/utils/toast';
 import styles from './page.module.css';
 
+function SortableImageFrame({ url, index, onRemove }: { url: string; index: number; onRemove: (index: number) => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: url });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 0,
+    opacity: isDragging ? 0.9 : 1,
+    scale: isDragging ? '1.02' : '1',
+    boxShadow: isDragging ? '0 10px 20px rgba(0,0,0,0.15)' : 'none',
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className={styles.imageFrame}>
+      <img src={url} alt={`Upload ${index + 1}`} style={{ pointerEvents: 'none' }} />
+      <div className={styles.dragHandle} {...attributes} {...listeners}>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="white">
+          <path d="M8 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm0 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm0 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm8-12a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm0 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm0 6a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
+        </svg>
+      </div>
+      <button
+        type="button"
+        className={styles.removeImageBtn}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove(index);
+        }}
+        aria-label="이미지 삭제"
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
+
 export default function PostCreatePage() {
   const router = useRouter();
 
   const [images, setImages] = useState<File[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [tags, setTags] = useState<string[]>([]);
+  
+  // Tag States
+  const [manualTags, setManualTags] = useState<string[]>([]);
+  const [imageTagsMap, setImageTagsMap] = useState<Record<string, string[]>>({});
+  
+  // Derived Tags (combines all unique tags)
+  const tags = Array.from(new Set([...Object.values(imageTagsMap).flat(), ...manualTags]));
   const [caption, setCaption] = useState('');
   const [isPublic, setIsPublic] = useState(false);
   const [customTag, setCustomTag] = useState('');
@@ -29,6 +90,32 @@ export default function PostCreatePage() {
   const [hasDragged, setHasDragged] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor)
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = imageUrls.indexOf(active.id as string);
+      const newIndex = imageUrls.indexOf(over.id as string);
+
+      setImageUrls((items) => arrayMove(items, oldIndex, newIndex));
+      setImages((items) => arrayMove(items, oldIndex, newIndex));
+    }
+  };
 
   const handleMouseDown = (e: MouseEvent<HTMLDivElement>) => {
     if (!scrollRef.current) return;
@@ -77,17 +164,17 @@ export default function PostCreatePage() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
+      const tempUrl = URL.createObjectURL(file);
 
       setIsAnalyzing(true);
       try {
         const result = await analyzeTags(file);
         const extractedTags = result?.recommended_tags;
         if (extractedTags && Array.isArray(extractedTags)) {
-          setTags(prev => {
-            const newTags = extractedTags.filter((tag: string) => !prev.includes(tag));
-            const combined = [...prev, ...newTags];
-            return combined;
-          });
+          setImageTagsMap(prev => ({
+            ...prev,
+            [tempUrl]: extractedTags
+          }));
         }
       } catch (err: unknown) {
         console.error('태그 분석 실패:', err);
@@ -98,18 +185,40 @@ export default function PostCreatePage() {
         setIsAnalyzing(false);
       }
 
-      setImages([...images, file]);
-      setImageUrls([...imageUrls, URL.createObjectURL(file)]);
+      setImages(prev => [...prev, file]);
+      setImageUrls(prev => [...prev, tempUrl]);
     }
   };
 
   const handleRemoveImage = (index: number) => {
+    const urlToRemove = imageUrls[index];
     setImages(images.filter((_, i) => i !== index));
     setImageUrls(imageUrls.filter((_, i) => i !== index));
+    
+    // Remove tags associated with this image
+    setImageTagsMap(prev => {
+      const newMap = { ...prev };
+      delete newMap[urlToRemove];
+      return newMap;
+    });
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
+    // Remove from manual tags
+    setManualTags(prev => prev.filter(tag => tag !== tagToRemove));
+    
+    // Remove from all image tags maps
+    setImageTagsMap(prev => {
+      const newMap = { ...prev };
+      let isChanged = false;
+      for (const key in newMap) {
+        if (newMap[key].includes(tagToRemove)) {
+          newMap[key] = newMap[key].filter(tag => tag !== tagToRemove);
+          isChanged = true;
+        }
+      }
+      return isChanged ? newMap : prev;
+    });
   };
 
   const handleAddCustomTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -121,7 +230,7 @@ export default function PostCreatePage() {
       if (tags.includes(newTag)) {
         return;
       }
-      setTags([...tags, newTag]);
+      setManualTags([...manualTags, newTag]);
       setCustomTag('');
     }
   };
@@ -141,7 +250,15 @@ export default function PostCreatePage() {
     images.forEach(img => formData.append('images', img));
     formData.append('caption', caption);
     formData.append('isPublic', isPublic ? 'true' : 'false');
-    tags.forEach(tag => formData.append('tags', tag));
+    
+    const newImageTagsMapToSend: Record<number, string[]> = {};
+    imageUrls.forEach((url, idx) => {
+      if (imageTagsMap[url] && imageTagsMap[url].length > 0) {
+        newImageTagsMapToSend[idx] = imageTagsMap[url];
+      }
+    });
+    formData.append('newImageTagsMapJson', JSON.stringify(newImageTagsMapToSend));
+    manualTags.forEach(tag => formData.append('manualTags', tag));
 
     try {
       await createPost(formData);
@@ -161,40 +278,39 @@ export default function PostCreatePage() {
 
       {/* Image Carousel */}
       <div className={styles.carouselContainer}>
-        <div
-          className={`${styles.imageScrollArea} ${isDragging ? styles.dragging : ''}`}
-          ref={scrollRef}
-          onMouseDown={handleMouseDown}
-          onMouseLeave={handleMouseLeave}
-          onMouseUp={handleMouseUp}
-          onMouseMove={handleMouseMove}
-          onClickCapture={handleCaptureClick}
-        >
-          {imageUrls.map((url, index) => (
-            <div key={index} className={styles.imageFrame}>
-              <img src={url} alt={`Upload ${index + 1}`} />
-              <button
-                className={styles.removeImageBtn}
-                onClick={() => handleRemoveImage(index)}
-                aria-label="이미지 삭제"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-          {images.length < 5 && (
-            <div className={styles.addFrame} onClick={handleAddImageClick}>
-              <span className={styles.plusIcon}>+</span>
-              <input
-                type="file"
-                ref={fileInputRef}
-                hidden
-                accept="image/jpeg, image/png, image/webp"
-                onChange={handleFileChange}
-              />
-            </div>
-          )}
-        </div>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <div
+            className={`${styles.imageScrollArea} ${isDragging ? styles.dragging : ''}`}
+            ref={scrollRef}
+            onMouseDown={handleMouseDown}
+            onMouseLeave={handleMouseLeave}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+            onClickCapture={handleCaptureClick}
+          >
+            <SortableContext items={imageUrls} strategy={horizontalListSortingStrategy}>
+              {imageUrls.map((url, index) => (
+                <SortableImageFrame key={url} url={url} index={index} onRemove={handleRemoveImage} />
+              ))}
+            </SortableContext>
+            
+            {images.length < 5 && (
+              <div className={styles.addFrame} onClick={handleAddImageClick}>
+                <span className={styles.plusIcon}>+</span>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  hidden
+                  accept="image/jpeg, image/png, image/webp"
+                  onChange={handleFileChange}
+                />
+              </div>
+            )}
+          </div>
+        </DndContext>
+        {images.length > 1 && (
+          <p className={styles.helperText}>드래그 아이콘(⋮⋮)을 잡아 순서를 변경해보세요.</p>
+        )}
       </div>
 
       {/* Tags */}
