@@ -1,7 +1,7 @@
 .createPage {
   max-width: 450px;
   margin: 0 auto;
-  padding: 8px var(--space-page-x) 100px var(--space-page-x);
+  padding: 8px var(--space-page-x) var(--space-page-y) var(--space-page-x);
 }
 
 /* Header */
@@ -117,6 +117,40 @@
 .removeImageBtn:hover {
   background: rgba(0, 0, 0, 0.65);
   transform: scale(1.1);
+}
+
+.dragHandle {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-circle);
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  z-index: 5;
+  transition: background var(--transition-fast);
+}
+
+.dragHandle:hover {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.helperText {
+  font-size: 12px;
+  color: var(--color-text-disabled);
+  text-align: center;
+  margin-top: 8px;
+  font-family: var(--font-family-korean);
 }
 
 /* ── Tag Section ── */
@@ -380,5 +414,5 @@
 .submitRow {
   display: flex;
   gap: 10px;
-  margin-bottom: 100px;
+  margin-bottom: 16px;
 }

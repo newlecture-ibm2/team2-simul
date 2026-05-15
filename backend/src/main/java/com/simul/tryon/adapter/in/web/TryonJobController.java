@@ -34,4 +34,3 @@ public class TryonJobController {
         return ResponseEntity.ok(response);
     }
 }
-

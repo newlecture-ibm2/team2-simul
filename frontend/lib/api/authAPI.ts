@@ -3,23 +3,31 @@ import { User } from '@/lib/stores/useAuthStore';
 
 /** 소셜 로그인 */
 export async function socialLogin(provider: string, code: string, redirectUri: string) {
-  return apiClient<{ user: User; isNewUser: boolean; success: boolean }>('/auth/social', {
+  return apiClient<{ accessToken: string; refreshToken: string; isNewUser: boolean; success: boolean }>('/auth/social', {
     method: 'POST',
     body: JSON.stringify({ provider, code, redirectUri }),
   });
 }
 
 export async function emailSignup(data: Record<string, unknown>) {
-  return apiClient<{ user: User; isNewUser: boolean; success: boolean }>('/auth/email', {
+  return apiClient<{ accessToken: string; refreshToken: string; isNewUser: boolean; success: boolean }>('/auth/signup', {
     method: 'POST',
-    body: JSON.stringify({ ...data, type: 'signup' }),
+    body: JSON.stringify(data),
   });
 }
 
 export async function emailLogin(data: Record<string, unknown>) {
-  return apiClient<{ user: User; isNewUser: boolean; success: boolean }>('/auth/email', {
+  return apiClient<{ accessToken: string; refreshToken: string; isNewUser: boolean; success: boolean }>('/auth/login/email', {
     method: 'POST',
-    body: JSON.stringify({ ...data, type: 'login' }),
+    body: JSON.stringify(data),
+  });
+}
+
+/** 계정 복구 */
+export async function restoreAccount(provider: string, providerId: string) {
+  return apiClient<{ accessToken: string; refreshToken: string; isNewUser: boolean; success: boolean }>('/auth/restore', {
+    method: 'POST',
+    body: JSON.stringify({ provider, providerId }),
   });
 }
 

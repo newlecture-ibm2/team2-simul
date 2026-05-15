@@ -249,6 +249,12 @@ public class GenerateTryonService implements GenerateTryonUseCase {
                 - Preserve the person's original pose and body position. Do not alter limb placement or stance.
                 - Do not alter facial features, expression, age, or identity in any way.
 
+                ### Person Positioning
+                - Place the person at the horizontal and vertical center of the image.
+                - The person should be fully visible and not cropped at the edges.
+                - Maintain natural proportions — do not stretch, shrink, or distort the person to fit the frame.
+                - Adjust the background to fill the remaining canvas space naturally if repositioning is needed.
+
                 ### Clothing Rendering
                 - Realistically drape and fit each clothing item onto the person's body, respecting gravity, body shape, and natural fabric behavior (wrinkles, folds, shadows).
                 - Match the clothing's color, texture, pattern, and material exactly as shown in the clothing images. Do not alter colors or prints.
@@ -257,13 +263,14 @@ public class GenerateTryonService implements GenerateTryonUseCase {
 
                 ### Background & Lighting
                 - Preserve the original background from Image 1 exactly. Do not change, blur, or replace it.
+                - If the background must be extended to accommodate centering, extend it naturally to match the original background style and color.
                 - Match lighting and shadows on the clothing to the lighting conditions in Image 1.
                 - Do not add any text, watermarks, logos, or UI elements to the output image.
 
                 ### Output
                 - Return one final composited image only.
                 - The image should look like a natural, professional photograph — not a collage or montage.
-                                """;
+                """;
         return switch (clothingCount) {
             case 1 -> base + "\nOrder: 2nd image = clothing item.\n";
             case 2 -> base + "\nOrder: 2nd image = top, 3rd image = bottom.\n";

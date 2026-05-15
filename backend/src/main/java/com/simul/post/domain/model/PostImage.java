@@ -39,4 +39,8 @@ public class PostImage extends BaseJpaEntity {
         this.imageUrl = imageUrl;
         this.sortOrder = sortOrder != null ? sortOrder : 0;
     }
+
+    public void updateSortOrder(int sortOrder) {
+        this.sortOrder = sortOrder;
+    }
 }

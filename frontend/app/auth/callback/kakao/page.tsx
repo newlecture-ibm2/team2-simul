@@ -1,43 +1,31 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
+import React, { useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { socialLogin } from '@/lib/api/authAPI';
-import { useAuthStore } from '@/lib/stores/useAuthStore';
+import { useAuth } from '@/app/login/_components/useAuth';
+import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
 
 function CallbackHandler() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const setUser = useAuthStore((state) => state.setUser);
+  const { 
+    socialCallback, 
+    handleRestore, 
+    isRestoreModalOpen, 
+    setIsRestoreModalOpen,
+    restoreMessage,
+    authMode
+  } = useAuth();
+
+  const hasCalled = useRef(false);
 
   useEffect(() => {
     const code = searchParams.get('code');
-
-    if (code) {
-      console.log('카카오 인가 코드를 수신했습니다. BFF로 로그인을 요청합니다...');
-
-      const redirectUri = `${window.location.origin}/auth/callback/kakao`;
-      socialLogin('kakao', code, redirectUri)
-        .then((res) => {
-          console.log('로그인 성공!', res);
-          
-          if (res.user) {
-            setUser(res.user);
-          }
-
-          if (res.isNewUser) {
-            router.push('/profile/edit');
-          } else {
-            router.push('/');
-          }
-        })
-        .catch((err) => {
-          console.error('로그인 중 오류 발생:', err);
-          alert('로그인에 실패했습니다. 다시 시도해주세요.');
-          router.push('/login');
-        });
+    if (code && !hasCalled.current) {
+      hasCalled.current = true;
+      socialCallback('kakao', code, `${window.location.origin}/auth/callback/kakao`);
     }
-  }, [searchParams, router, setUser]);
+  }, [searchParams, socialCallback]);
 
   return (
     <div style={{ 
@@ -51,6 +39,19 @@ function CallbackHandler() {
       <div className="loading-spinner"></div>
       <p style={{ fontSize: '18px', fontWeight: 'bold' }}>카카오 로그인 처리 중...</p>
       <p style={{ color: '#666' }}>잠시만 기다려주세요.</p>
+
+      <ConfirmModal
+        isOpen={isRestoreModalOpen}
+        title={authMode === 'login' ? '계정 복구 안내' : '가입 안내'}
+        description={restoreMessage}
+        confirmText={authMode === 'login' ? '복구하기' : '확인'}
+        cancelText={authMode === 'login' ? '아니오' : ''}
+        onConfirm={authMode === 'login' ? handleRestore : () => setIsRestoreModalOpen(false)}
+        onCancel={() => {
+          setIsRestoreModalOpen(false);
+          router.push('/');
+        }}
+      />
     </div>
   );
 }

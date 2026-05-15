@@ -13,7 +13,15 @@ public interface PostJpaRepository extends JpaRepository<Post, UUID> {
     Page<Post> findAllByUserIdInAndIsPublicTrueAndIsBlindedFalse(List<UUID> userIds, Pageable pageable);
     
     long countByUserId(UUID userId);
+
+    @Query("SELECT COUNT(p) FROM Post p WHERE p.userId = :userId AND p.deletedAt IS NULL AND (p.baseImageId IS NULL OR p.isPublic = true)")
+    long countProfilePostsByUserId(UUID userId);
+
     Page<Post> findAllByUserId(UUID userId, Pageable pageable);
+
+    @Query("SELECT p FROM Post p WHERE p.userId = :userId AND p.deletedAt IS NULL AND (p.baseImageId IS NULL OR p.isPublic = true)")
+    Page<Post> findProfilePostsByUserId(UUID userId, Pageable pageable);
+
     Page<Post> findAllByUserIdAndIsPublicTrue(UUID userId, Pageable pageable);
 
     @Query("SELECT p FROM Post p JOIN PostLike l ON l.postId = p.postId WHERE l.userId = :userId AND p.deletedAt IS NULL")
