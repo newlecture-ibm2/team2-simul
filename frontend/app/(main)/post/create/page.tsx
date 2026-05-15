@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, MouseEvent, useEffect, useSearchParams } from 'react';
+import { useState, useRef, MouseEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   DndContext,
@@ -65,8 +65,7 @@ function SortableImageFrame({ url, index, onRemove }: { url: string; index: numb
 
 export default function PostCreatePage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const sourceImageUrl = searchParams.get('source_image_url');
+  const [sourceImageUrl, setSourceImageUrl] = useState('');
 
   const [images, setImages] = useState<File[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
@@ -103,6 +102,11 @@ export default function PostCreatePage() {
   const displayImageUrls = imageUrls.length > 0
     ? imageUrls
     : (previewSourceImageUrl ? [previewSourceImageUrl] : []);
+
+  useEffect(() => {
+    const queryImageUrl = new URLSearchParams(window.location.search).get('source_image_url');
+    setSourceImageUrl(queryImageUrl ?? '');
+  }, []);
 
   useEffect(() => {
     const queryImageUrl = new URLSearchParams(window.location.search).get('source_image_url');
