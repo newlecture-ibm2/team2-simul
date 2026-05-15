@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Button from '@/components/Button';
-import { getTryonJob } from '@/lib/api/tryonAPI';
+import { getTryonJob, publishTryonJob } from '@/lib/api/tryonAPI';
+import { toast } from '@/lib/utils/toast';
 import styles from '../page.module.css';
 
 type Props = {
@@ -16,6 +17,9 @@ export default function ResultClient({ className, jobId, resultImageUrl }: Props
   const [viewMode, setViewMode] = useState<'result' | 'original'>('result');
   const [originalImg, setOriginalImg] = useState<string | null>(null);
   const [resultImgResolved, setResultImgResolved] = useState<string | null>(resultImageUrl ?? null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [isPublished, setIsPublished] = useState(false);
 
   useEffect(() => {
     if (!jobId) return;
@@ -44,6 +48,51 @@ export default function ResultClient({ className, jobId, resultImageUrl }: Props
     viewMode === 'result'
       ? (canShowResult ? resultImg : '')
       : (canShowOriginal ? (originalImg as string) : '');
+
+  const resolveImageUrl = (url: string) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return new URL(url, window.location.origin).toString();
+  };
+
+  const handleDownload = async () => {
+    if (!resultImg || isDownloading) return;
+
+    setIsDownloading(true);
+    try {
+      const response = await fetch(resolveImageUrl(resultImg));
+      if (!response.ok) throw new Error('download failed');
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = `simul-tryon-${jobId ?? Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectUrl);
+      toast.success('이미지를 저장했습니다.');
+    } catch {
+      toast.error('이미지 저장에 실패했습니다.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!jobId || !canShowResult || isPublishing || isPublished) return;
+
+    setIsPublishing(true);
+    try {
+      await publishTryonJob(jobId);
+      setIsPublished(true);
+      toast.success('피드에 공유했습니다.');
+    } catch {
+      toast.error('피드 공유에 실패했습니다.');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
 
   return (
     <div className={className}>
@@ -83,11 +132,16 @@ export default function ResultClient({ className, jobId, resultImageUrl }: Props
 
       <div className={styles.actions}>
         <div className={styles.actionRow}>
-          <Button variant="large-dark" fullWidth>
-            저장하기
+          <Button variant="large-dark" fullWidth onClick={handleDownload} disabled={!canShowResult || isDownloading}>
+            {isDownloading ? '저장 중...' : '저장하기'}
           </Button>
-          <Button variant="large-dark" fullWidth>
-            피드에 공유
+          <Button
+            variant="large-dark"
+            fullWidth
+            onClick={handlePublish}
+            disabled={!jobId || !canShowResult || isPublishing || isPublished}
+          >
+            {isPublished ? '공유 완료' : isPublishing ? '공유 중...' : '피드에 공유'}
           </Button>
         </div>
         <Link href="/tryon/studio">

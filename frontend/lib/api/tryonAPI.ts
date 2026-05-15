@@ -43,6 +43,11 @@ export async function getTryonJob(jobId: string): Promise<TryonJobResponse> {
   return apiClient(`/tryon/jobs/${jobId}`);
 }
 
+/** 시착 결과 피드 공개 전환 (PATCH /tryon/jobs/{jobId}/publish) */
+export async function publishTryonJob(jobId: string): Promise<void> {
+  return apiClient(`/tryon/jobs/${jobId}/publish`, { method: 'PATCH' });
+}
+
 /** 베이스 이미지 업로드 (POST /tryon/base-images) */
 export async function uploadBaseImage(file: File): Promise<BaseImageUploadResponse> {
   const form = new FormData();
