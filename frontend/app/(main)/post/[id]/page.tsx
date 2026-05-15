@@ -261,7 +261,10 @@ export default function PostDetailPage() {
     if (!post) return;
     const url = window.location.href;
     
-    if (navigator.share) {
+    // 모바일 환경 판별 (데스크톱에서는 클립보드 복사로 폴백하기 위함)
+    const isMobile = typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    
+    if (isMobile && navigator.share) {
       try {
         await navigator.share({
           title: `[SIMUL] ${post.nickname}님의 스타일`,
@@ -272,6 +275,7 @@ export default function PostDetailPage() {
         console.log('공유가 취소되었거나 실패했습니다.', err);
       }
     } else {
+      // 웹(데스크톱) 환경에서는 즉시 클립보드에 복사
       try {
         await navigator.clipboard.writeText(url);
         toast.success('링크가 복사되었습니다.');
