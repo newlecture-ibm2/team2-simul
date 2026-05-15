@@ -233,6 +233,9 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
                 .sorted(Comparator.comparing(PostImage::getSortOrder))
                 .map(PostImage::getImageUrl)
                 .toList();
+        if (imageUrls.isEmpty() && post.getImageUrl() != null) {
+            imageUrls = List.of(post.getImageUrl());
+        }
 
         // 6. 태그 조회 (상세)
         com.simul.tag.application.dto.PostTagsResponse tagsResponse = loadTagsUseCase.loadDetailedTagsByPostId(postId);
@@ -465,8 +468,8 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
         if (targetUserId.equals(currentUserId)) {
-            // 본인 프로필: 공개 + 비공개 모두 조회
-            postsPage = postRepositoryPort.findByUserId(targetUserId, sortedPageable);
+            // 본인 프로필: 직접 작성한 공개 + 비공개 게시물 조회
+            postsPage = postRepositoryPort.findProfilePostsByUserId(targetUserId, sortedPageable);
         } else {
             // 타인 프로필: 공개 게시물만 조회
             postsPage = postRepositoryPort.findPublicPostsByUserId(targetUserId, sortedPageable);
@@ -509,7 +512,7 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
     @Override
     @Transactional(readOnly = true)
     public long countUserPosts(UUID userId) {
-        return postRepositoryPort.countByUserId(userId);
+        return postRepositoryPort.countProfilePostsByUserId(userId);
     }
 
     @Override
