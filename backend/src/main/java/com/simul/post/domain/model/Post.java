@@ -62,6 +62,7 @@ public class Post extends BaseJpaEntity {
     private Integer commentCount = 0;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC")
     private List<PostImage> images = new ArrayList<>();
 
     @Builder
