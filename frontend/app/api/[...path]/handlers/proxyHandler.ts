@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { sessionOptions, SessionData } from '@/lib/session';
 
+import { cookies } from 'next/headers';
+
 /**
  * BFF 프록시 핸들러
  * 브라우저 → /api/... → Spring Boot 백엔드로 프록시
@@ -34,10 +36,13 @@ export async function proxyHandler(req: NextRequest, path: string[]) {
     };
 
     // iron-session을 통해 세션의 JWT 추출 후 Authorization 헤더 주입
-    // NextResponse를 넘겨야 쿠키 파싱/저장이 안정적으로 동작합니다.
-    const session = await getIronSession<SessionData>(req, NextResponse.next(), sessionOptions);
+    const session = await getIronSession<SessionData>(await cookies(), sessionOptions);
+    
     if (session.user?.token) {
+      console.log(`[BFF Proxy] Token found for user: ${session.user.id}. Forwarding to ${targetUrl}`);
       headers.set('Authorization', `Bearer ${session.user.token}`);
+    } else {
+      console.warn(`[BFF Proxy] No token found in session for request to ${targetUrl}`);
     }
 
     if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) {
@@ -49,6 +54,14 @@ export async function proxyHandler(req: NextRequest, path: string[]) {
 
     const resHeaders = new Headers(response.headers);
     resHeaders.delete('content-encoding');
+
+    // SSE(text/event-stream)인 경우 버퍼링 방지 헤더 추가
+    const contentType = resHeaders.get('content-type');
+    if (contentType && contentType.includes('text/event-stream')) {
+      resHeaders.set('X-Accel-Buffering', 'no');
+      resHeaders.set('Cache-Control', 'no-cache, no-transform');
+      resHeaders.set('Connection', 'keep-alive');
+    }
 
     return new Response(response.body, {
       status: response.status,

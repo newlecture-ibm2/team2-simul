@@ -33,11 +33,9 @@ export default function ConfirmModal({
         {description && <p className={styles.description}>{description}</p>}
 
         <div className={styles.actions}>
-          {cancelText && (
-            <button className={`${styles.btn} ${styles.cancelBtn}`} onClick={onCancel}>
-              {cancelText}
-            </button>
-          )}
+          <button className={`${styles.btn} ${styles.cancelBtn}`} onClick={onCancel}>
+            {cancelText}
+          </button>
           <button
             className={`${styles.btn} ${isDestructive ? styles.destructiveBtn : styles.confirmBtn}`}
             onClick={onConfirm}
