@@ -4,3 +4,38 @@
   flex-direction: column;
   flex: 1;
 }
+
+.headerControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 0 24px 0;
+  padding: 12px 16px 0;
+  position: sticky;
+  top: 65px;
+  z-index: 90;
+}
+
+.sortToggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  padding: 6px 12px;
+  border-radius: var(--radius-button, 99px);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sortToggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.sortIcon {
+  font-size: 11px;
+}

@@ -53,6 +53,7 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
     private final LoadUserUseCase loadUserUseCase;
     private final LoadTagsUseCase loadTagsUseCase;
     private final ApplicationEventPublisher eventPublisher;
+    private final com.simul.user.application.port.in.LoadFollowUseCase loadFollowUseCase;
 
     // ... existing createPost method ...
     @Override
@@ -148,18 +149,24 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         
         // 정렬 기준 설정
         Sort sortObj = Sort.by(Sort.Direction.DESC, "createdAt");
+        java.time.LocalDateTime since = null;
+
         if ("popular".equalsIgnoreCase(sort)) {
             sortObj = Sort.by(Sort.Direction.DESC, "likeCount").and(Sort.by(Sort.Direction.DESC, "createdAt"));
+            since = java.time.LocalDateTime.now().minusDays(7); // 주간 인기글 (7일)
         }
         
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sortObj);
         
         Page<Post> postsPage;
         if ("following".equalsIgnoreCase(tab)) {
-            // TODO: 팔로우 기능 구현 후 연동 필요
-            postsPage = postRepositoryPort.findFollowingPosts(Collections.emptyList(), sortedPageable);
+            if (currentUserId == null) {
+                return Page.empty(pageable);
+            }
+            List<UUID> followingIds = loadFollowUseCase.getFollowingIds(currentUserId);
+            postsPage = postRepositoryPort.findFollowingPosts(followingIds, since, sortedPageable);
         } else {
-            postsPage = postRepositoryPort.findAllPublicPosts(sortedPageable);
+            postsPage = postRepositoryPort.findAllPublicPosts(since, sortedPageable);
         }
 
         if (postsPage.isEmpty()) {

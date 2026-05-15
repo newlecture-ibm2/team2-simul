@@ -1,14 +1,6 @@
 .toggleContainer {
   display: flex;
   justify-content: center;
-  width: 100%;
-  margin: 0 0 24px 0;
-  
-  /* 스크롤 시 헤더 바로 밑에 고정 */
-  position: sticky;
-  top: 65px;
-  z-index: 90;
-  padding-top: 12px;
 }
 
 .toggleTrack {
