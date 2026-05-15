@@ -7,7 +7,7 @@ import styles from './BottomNav.module.css';
 
 const TABS = [
   { href: '/', iconName: 'home', authRequired: false },
-  { href: '/community', iconName: 'rectangle.portrait.on.rectangle.portrait.angled', authRequired: false },
+  { href: '/community', iconName: 'rectangle.on.rectangle.angled', authRequired: false },
   { href: '/post/create', iconName: 'create', authRequired: true },
   { href: '/tryon', iconName: 'tryon', authRequired: true },
   { href: '/closet', iconName: 'closet', authRequired: true },

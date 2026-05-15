@@ -49,6 +49,12 @@ public class UserPersistenceAdapter implements UserPersistencePort {
     }
 
     @Override
+    public Optional<User> findByProviderAndProviderIdIncludingDeleted(String provider, String providerId) {
+        return userJpaRepository.findByProviderAndProviderId(provider, providerId)
+                .map(userPersistenceMapper::mapToDomainEntity);
+    }
+
+    @Override
     public List<User> findByIds(List<UUID> userIds) {
         if (userIds == null || userIds.isEmpty()) {
             return List.of();

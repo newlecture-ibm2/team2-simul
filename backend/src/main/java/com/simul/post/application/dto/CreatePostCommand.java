@@ -14,7 +14,8 @@ public class CreatePostCommand {
     private List<MultipartFile> images;
     private String caption;
     private Boolean isPublic;
-    private List<String> tags;
+    private java.util.Map<Integer, java.util.List<String>> newImageTagsMap;
+    private List<String> manualTags;
     private UUID baseImageId; // Optional, if from TryOn
     private UUID itemId; // Optional
 }

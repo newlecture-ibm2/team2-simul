@@ -41,23 +41,34 @@ axiosInstance.interceptors.response.use(
       }
     }
 
-    // 공통 에러 메시지 추출
+    // 공통 에러 데이터 추출
     let errorMessage = error.message;
+    let errorCode = 'ERR-000';
+    
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (error.response?.data && (error.response.data as any).message) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      errorMessage = (error.response.data as any).message;
+    const errorData = error.response?.data as any;
+    if (errorData) {
+      errorMessage = errorData.detail || errorData.message || error.message;
+      errorCode = errorData.error_code || 'ERR-000';
     }
 
-    // 자동으로 에러 토스트 띄우기 (401 갱신 실패 및 내 정보 조회 에러 등은 제외)
+    // 자동으로 에러 토스트 띄우기 (401 갱신 실패 및 특정 비즈니스 에러 제외)
     if (
       error.response?.status !== 401 && 
-      originalRequest?.url !== '/users/me'
+      originalRequest?.url !== '/users/me' &&
+      errorCode !== 'ERR-006'
     ) {
       toast.error(errorMessage);
     }
 
-    return Promise.reject(new Error(errorMessage));
+    // 에러 객체에 코드 정보를 포함하여 전달
+    const businessError = new Error(errorMessage);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (businessError as any).code = errorCode;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (businessError as any).status = error.response?.status;
+    
+    return Promise.reject(businessError);
   }
 );
 

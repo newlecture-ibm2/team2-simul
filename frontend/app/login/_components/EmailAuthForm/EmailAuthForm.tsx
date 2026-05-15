@@ -1,15 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './EmailAuthForm.module.css';
 import { useAuth } from '../useAuth';
+import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
 
 interface EmailAuthFormProps {
   type: 'login' | 'signup';
 }
 
 export default function EmailAuthForm({ type }: EmailAuthFormProps) {
-  const { loginWithEmail, signupWithEmail, isLoading } = useAuth();
+  const router = useRouter();
+  const { 
+    loginWithEmail, 
+    signupWithEmail, 
+    handleRestore,
+    isLoading,
+    isRestoreModalOpen,
+    setIsRestoreModalOpen,
+    restoreMessage,
+    authMode
+  } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -116,6 +128,25 @@ export default function EmailAuthForm({ type }: EmailAuthFormProps) {
       {type === 'login' && (
         <a href="#" className={styles.forgotPassword}>비밀번호를 잊으셨나요?</a>
       )}
+
+      <ConfirmModal
+        isOpen={isRestoreModalOpen}
+        title={authMode === 'login' ? '계정 복구 안내' : '가입 안내'}
+        description={restoreMessage}
+        confirmText={authMode === 'login' ? '복구하기' : '확인'}
+        cancelText={authMode === 'login' ? '아니오' : ''}
+        onConfirm={authMode === 'login' ? handleRestore : () => {
+          setIsRestoreModalOpen(false);
+          router.push('/');
+        }}
+        onCancel={() => {
+          setIsRestoreModalOpen(false);
+          // 로그인 복구 모달일 때만 '아니오'나 닫기를 누르면 메인으로 이동
+          if (authMode === 'login') {
+            router.push('/');
+          }
+        }}
+      />
     </form>
   );
 }
