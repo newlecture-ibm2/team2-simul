@@ -25,9 +25,12 @@ function VerifyContent() {
         await axios.get(`/api/auth/verify-email?token=${token}`);
         setStatus('success');
         setMessage('이메일 인증이 완료되었습니다! 이제 로그인하여 서비스를 이용하실 수 있습니다.');
-      } catch (error: any) {
+      } catch (error) {
         setStatus('error');
-        const errorMsg = error.response?.data?.message || '인증에 실패했습니다. 만료된 링크일 수 있습니다.';
+        let errorMsg = '인증에 실패했습니다. 만료된 링크일 수 있습니다.';
+        if (axios.isAxiosError(error)) {
+          errorMsg = error.response?.data?.message || errorMsg;
+        }
         setMessage(errorMsg);
       }
     };

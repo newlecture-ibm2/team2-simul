@@ -7,6 +7,12 @@ import { cookies } from 'next/headers';
  * 인증 관련 요청 핸들러 (BFF)
  * 백엔드에서 받은 JWT를 iron-session 쿠키에 저장
  */
+interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  isNewUser?: boolean;
+}
+
 export async function authHandler(req: NextRequest, path: string[]) {
   const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080';
   const targetUrl = BACKEND_URL + '/' + path.join('/') + req.nextUrl.search;
@@ -40,7 +46,7 @@ export async function authHandler(req: NextRequest, path: string[]) {
 
     // 응답 본문이 있는지 확인 후 파싱
     const contentType = response.headers.get('content-type');
-    let data: any = {};
+    let data: AuthResponse = {} as AuthResponse;
     if (contentType && contentType.includes('application/json')) {
       data = await response.json();
     } else {
@@ -83,7 +89,7 @@ export async function authHandler(req: NextRequest, path: string[]) {
       
       session.user = {
         id: profileData.userId || userId,
-        role: (profileData.role as any) || 'USER',
+        role: (profileData.role as 'USER' | 'ADMIN') || 'USER',
         token: accessToken,
         refreshToken: refreshToken,
       };

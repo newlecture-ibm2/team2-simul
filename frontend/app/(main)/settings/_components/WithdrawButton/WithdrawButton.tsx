@@ -23,9 +23,10 @@ export default function WithdrawButton() {
       // Zustand 상태 초기화 및 홈으로 이동
       logout();
       router.push('/login');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Withdraw failed:', error);
-      toast.error(error.message || '탈퇴 처리 중 오류가 발생했습니다.');
+      const err = error as { message?: string };
+      toast.error(err.message || '탈퇴 처리 중 오류가 발생했습니다.');
     } finally {
       setIsPending(false);
       setIsModalOpen(false);

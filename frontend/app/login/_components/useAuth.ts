@@ -17,7 +17,7 @@ export function useAuth() {
   const router = useRouter();
   const setUser = useAuthStore((state) => state.setUser);
 
-  const handleLoginSuccess = async (res: any) => {
+  const handleLoginSuccess = async (res: { accessToken: string; isNewUser?: boolean }) => {
     if (res.accessToken) {
       const { getCurrentUser } = await import('../../../lib/api/authAPI');
       const user = await getCurrentUser();
@@ -28,11 +28,12 @@ export function useAuth() {
     return false;
   };
 
-  const handleError = (error: any, provider: string, providerId: string, mode: 'login' | 'signup' = 'login') => {
-    if (error.code === 'ERR-006') {
+  const handleError = (error: unknown, provider: string, providerId: string, mode: 'login' | 'signup' = 'login') => {
+    const err = error as { code?: string; message?: string };
+    if (err.code === 'ERR-006') {
       // 탈퇴 유예 기간인 경우 모달 띄우기
       // 메시지에 ID가 포함되어 있는지 확인 (소셜 로그인의 경우)
-      const parts = (error.message || '').split('|ID:');
+      const parts = (err.message || '').split('|ID:');
       const displayMessage = parts[0];
       const extractedId = parts[1] || providerId;
 
@@ -43,15 +44,15 @@ export function useAuth() {
       return;
     }
 
-    if (error.code === 'ERR-007') {
+    if (err.code === 'ERR-007') {
       // 이메일 인증이 필요한 경우
-      setRestoreMessage(error.message || '이메일 인증이 완료되지 않았습니다. 메일함을 확인해 주세요.');
+      setRestoreMessage(err.message || '이메일 인증이 완료되지 않았습니다. 메일함을 확인해 주세요.');
       setAuthMode('signup'); // 가입 안내 모드로 활용
       setIsRestoreModalOpen(true);
       return;
     }
 
-    alert(error.message || '요청에 실패했습니다.');
+    alert(err.message || '요청에 실패했습니다.');
   };
 
   const login = async (provider: 'kakao' | 'naver' | 'google') => {
@@ -92,7 +93,7 @@ export function useAuth() {
       const { socialLogin } = await import('../../../lib/api/authAPI');
       const res = await socialLogin(provider, code, redirectUri);
       await handleLoginSuccess(res);
-    } catch (error: any) {
+    } catch (error) {
       // 소셜 로그인의 경우 providerId는 백엔드 에러 메시지에 포함되거나, 
       // 백엔드가 세션에 임시 저장할 수도 있으나, 여기서는 일단 provider만 넘김
       handleError(error, provider, '', 'login'); 
@@ -106,7 +107,7 @@ export function useAuth() {
     try {
       const res = await emailLogin(data);
       await handleLoginSuccess(res);
-    } catch (error: any) {
+    } catch (error) {
       handleError(error, 'email', data.email as string, 'login');
     } finally {
       setIsLoading(false);
@@ -125,7 +126,7 @@ export function useAuth() {
         return;
       }
       await handleLoginSuccess(res);
-    } catch (error: any) {
+    } catch (error) {
       handleError(error, 'email', data.email as string, 'signup');
     } finally {
       setIsLoading(false);
@@ -141,8 +142,9 @@ export function useAuth() {
         toast.success('계정이 성공적으로 복구되었습니다.');
         setIsRestoreModalOpen(false);
       }
-    } catch (error: any) {
-      alert(error.message || '복구에 실패했습니다.');
+    } catch (error) {
+      const err = error as { message?: string };
+      alert(err.message || '복구에 실패했습니다.');
     } finally {
       setIsLoading(false);
     }

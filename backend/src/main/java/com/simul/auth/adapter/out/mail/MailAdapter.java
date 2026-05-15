@@ -19,7 +19,7 @@ public class MailAdapter implements MailPort {
 
     private final JavaMailSender mailSender;
 
-    @Value("${frontend-url}")
+    @Value("${app.frontend-url}")
     private String frontendUrl;
 
     @Override
