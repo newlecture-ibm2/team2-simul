@@ -103,6 +103,16 @@ export default function SwipeDeck() {
     // 실제 게시물(UUID 문자열)에 대해서만 API 호출
     if (typeof currentPost.id === 'string' && !currentPost.isLiked) {
       toggleLike(currentPost.id).catch(err => console.error('좋아요 토글 실패:', err));
+      
+      // 로컬 상태 즉시 업데이트 (연속 탭/스와이프 시 중복 방지)
+      setPosts(prev => {
+        const newPosts = [...prev];
+        const index = newPosts.findIndex(p => p.id === currentPost.id);
+        if (index !== -1) {
+          newPosts[index] = { ...newPosts[index], isLiked: true };
+        }
+        return newPosts;
+      });
     }
     return true;
   }, [isAuthenticated, getCurrentPost]);
@@ -325,10 +335,15 @@ export default function SwipeDeck() {
            </div>
         )}
 
-        {/* Pass Indicator Overlay (좌측 드래그 시) 🥲 */}
+        {/* Pass Indicator Overlay (좌측 드래그 시) */}
         {dragOffset.x < -SWIPE_THRESHOLD && (
            <div className={styles.passIndicator}>
-             <div className={styles.passIcon}>🥲</div>
+             <div className={styles.passIcon}>
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0px 4px 8px rgba(0,0,0,0.4))' }}>
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+             </div>
            </div>
         )}
 
