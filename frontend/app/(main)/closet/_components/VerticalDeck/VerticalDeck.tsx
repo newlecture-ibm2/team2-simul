@@ -156,7 +156,7 @@ export default function VerticalDeck({ items, onItemClick }: VerticalDeckProps) 
         className={styles.scrollSpacer}
         style={{ height: `${totalVirtualItems * scrollSensitivity}px` }}
       >
-        <div className={styles.viewport} ref={viewportRef} style={{ height: viewportHeight || 'calc(100vh - 150px)' }}>
+        <div className={styles.viewport} ref={viewportRef} style={{ height: viewportHeight || 'calc(100dvh - 150px)' }}>
           {/* Timeline Scrubber */}
           <div className={styles.scrubberContainer}>
             <div 

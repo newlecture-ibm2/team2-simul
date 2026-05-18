@@ -44,6 +44,7 @@ export default function SwipeDeck() {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [exitDirection, setExitDirection] = useState<'left' | 'right' | 'up' | 'down' | null>(null);
   const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
+  const [isTutorialActive, setIsTutorialActive] = useState(false); // 하이드레이션 오류 방지를 위해 기본값은 false
 
   const cardRef = useRef<HTMLDivElement>(null);
   const lastTapRef = useRef<number>(0);
@@ -76,6 +77,24 @@ export default function SwipeDeck() {
     }
     loadAndShufflePosts();
   }, []);
+
+  // 최초 진입 시 튜토리얼 노출 이력 확인 (유저당/기기당 1회 노출)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hasShown = localStorage.getItem('simul_swipe_tutorial_shown');
+      if (!hasShown) {
+        setIsTutorialActive(true);
+      }
+    }
+  }, []);
+
+  // 튜토리얼 닫기 및 노출 이력 저장
+  const handleCloseTutorial = () => {
+    setIsTutorialActive(false);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('simul_swipe_tutorial_shown', 'true');
+    }
+  };
 
   // Constants for swipe logic
   const SWIPE_THRESHOLD = 80;
@@ -248,13 +267,13 @@ export default function SwipeDeck() {
       const offsetIndex = index - currentIndex;
       const absOffset = Math.abs(offsetIndex);
       
-      const yOffset = offsetIndex > 0 ? absOffset * 100 : -(absOffset * 100);
+      const multiplier = offsetIndex > 0 ? absOffset : -absOffset;
       const scale = 1 - (absOffset * 0.15); // 1->0.85, 2->0.7
       const zIndex = 10 - absOffset;
       const opacity = 1; // Fully opaque
 
       return {
-        transform: `translate3d(0, ${yOffset}px, 0) scale(${scale})`,
+        transform: `translate3d(0, calc(${multiplier} * var(--card-gap, 50px)), 0) scale(${scale})`,
         transition: 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease',
         zIndex,
         opacity,
@@ -267,9 +286,31 @@ export default function SwipeDeck() {
 
   return (
     <div className={styles.deckContainer}>
-      <div className={styles.header}>
-        <h2 className={styles.title}>지금 내게 딱 맞는 룩은? 가볍게 넘겨보세요.</h2>
-        <p className={styles.subtitle}>마음에 드는 룩은 오른쪽으로 스와이프 하세요! ❤️</p>
+      <div 
+        className={`${styles.tutorialOverlay} ${!isTutorialActive ? styles.hidden : ''}`}
+        onClick={handleCloseTutorial}
+      >
+        <div className={styles.tutorialHeader}>
+          <h2 className={styles.tutorialTitle}>지금 내게 딱 맞는 룩은?</h2>
+          <p className={styles.tutorialSubtitle}>가볍게 넘겨보세요!</p>
+        </div>
+
+        <div className={styles.tutorialSteps}>
+          <div className={styles.tutorialStep}>
+            <img src="/icons/gesture-icon-1.svg" alt="위아래 제스처" className={styles.gestureIcon} />
+            <p className={styles.stepText}>
+              1. 위아래로 카드를 넘기며<br />
+                 &nbsp;&nbsp;&nbsp;인기 게시물을 확인해보세요!
+            </p>
+          </div>
+          <div className={styles.tutorialStep}>
+            <img src="/icons/gesture-icon-2.svg" alt="오른쪽 제스처" className={styles.gestureIcon} />
+            <p className={styles.stepText}>
+              2. 마음에 드는 룩은 오른쪽으로<br />
+                 &nbsp;&nbsp;&nbsp;스와이프하며 좋아요! ❤️
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className={styles.deckWrapper}>

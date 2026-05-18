@@ -1,7 +1,3 @@
-.homePage {
-  padding: 0px 0 var(--space-page-y) 0;
-}
-
 .toolbar {
   display: flex;
   align-items: center;
