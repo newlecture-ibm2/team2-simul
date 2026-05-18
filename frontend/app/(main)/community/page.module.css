@@ -112,7 +112,7 @@
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.4);
-    z-index: 99;
+    z-index: 101; /* BottomNav(100)보다 높게 설정 */
     animation: fadeIn 0.3s ease;
   }
 
@@ -124,7 +124,7 @@
     right: 0;
     margin: 0;
     border-radius: 20px 20px 0 0;
-    padding: 16px 20px 40px;
+    padding: 16px 20px calc(30px + env(safe-area-inset-bottom));
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(40px);
     -webkit-backdrop-filter: blur(40px);
@@ -132,6 +132,7 @@
     border-top: 1px solid rgba(255, 255, 255, 0.5);
     min-width: 100%;
     animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    z-index: 102; /* Overlay(101)보다 높게 설정 */
   }
 
   .sortMenuItem {
