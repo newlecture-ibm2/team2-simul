@@ -1,20 +1,19 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { getFeedPosts, FeedPost, toggleLike } from '../../../../lib/api/feedAPI';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../../../../lib/stores/useAuthStore';
 import { toast } from '@/lib/utils/toast';
 import styles from './SwipeDeck.module.css';
 
-// Dummy data using the specified images
-const DUMMY_POSTS = [
-  { id: 101, imageUrl: '/hero-1.jpg', authorName: '지수', authorAvatar: '/dummy.jpg' },
-  { id: 102, imageUrl: '/hero-2.jpg', authorName: '태형', authorAvatar: '/recent.jpg' },
-  { id: 103, imageUrl: '/hero-3.jpg', authorName: '민지', authorAvatar: '/temp.jpg' },
-  { id: 104, imageUrl: '/hero-4.jpg', authorName: '정국', authorAvatar: '/dummy.jpg' },
-  { id: 105, imageUrl: '/hero-5.jpg', authorName: '사나', authorAvatar: '/recent.jpg' },
+/* ── 폴백 전용 더미 데이터 (실제 게시물이 0개일 때만 렌더링) ── */
+const FALLBACK_POSTS: SwipePost[] = [
+  { id: 101, imageUrl: '/hero-1.jpg', authorName: '지수', authorAvatar: '/dummy.jpg', isLiked: false },
+  { id: 102, imageUrl: '/hero-2.jpg', authorName: '태형', authorAvatar: '/recent.jpg', isLiked: false },
+  { id: 103, imageUrl: '/hero-3.jpg', authorName: '민지', authorAvatar: '/temp.jpg', isLiked: false },
+  { id: 104, imageUrl: '/hero-4.jpg', authorName: '정국', authorAvatar: '/dummy.jpg', isLiked: false },
+  { id: 105, imageUrl: '/hero-5.jpg', authorName: '사나', authorAvatar: '/recent.jpg', isLiked: false },
 ];
 
 interface SwipePost {
@@ -25,42 +24,84 @@ interface SwipePost {
   isLiked?: boolean;
 }
 
+/** Fisher-Yates 셔플 알고리즘 */
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 export default function SwipeDeck() {
-  const [posts, setPosts] = useState<SwipePost[]>(DUMMY_POSTS);
+  const [posts, setPosts] = useState<SwipePost[]>(FALLBACK_POSTS);
+  const [isFallbackMode, setIsFallbackMode] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [exitDirection, setExitDirection] = useState<'left' | 'right' | 'up' | 'down' | null>(null);
+  const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
 
   const cardRef = useRef<HTMLDivElement>(null);
+  const lastTapRef = useRef<number>(0);
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
 
+  // 최초 진입 시 게시물 50개를 불러온 뒤 셔플 (무한 랜덤 스와이프)
   useEffect(() => {
-    async function loadPopularPosts() {
+    async function loadAndShufflePosts() {
       try {
-        const res = await getFeedPosts({ sort: 'popular', size: 10 });
+        const res = await getFeedPosts({ sort: 'recent', size: 50 });
         if (res && res.content && res.content.length > 0) {
-          const mappedPosts = res.content.map(p => ({
+          const mappedPosts: SwipePost[] = res.content.map(p => ({
             id: p.postId,
             imageUrl: p.imageUrl || '/dummy.jpg',
             authorName: p.nickname || '알 수 없음',
             authorAvatar: p.profileImageUrl || '/dummy.jpg',
-            isLiked: p.isLiked
+            isLiked: p.isLiked,
           }));
-          // 백엔드 데이터가 적을 수 있으므로, 기존의 예시 이미지(DUMMY_POSTS)를 뒤에 합쳐서 양을 늘립니다.
-          setPosts([...mappedPosts, ...DUMMY_POSTS]);
+          // 실제 데이터가 있으면 셔플 후 세팅 (폴백 모드 해제)
+          setPosts(shuffleArray(mappedPosts));
+          setIsFallbackMode(false);
         }
+        // 데이터가 0개이면 기존 FALLBACK_POSTS가 유지됨
       } catch (err) {
-        console.error('인기 게시물 불러오기 실패:', err);
+        console.error('게시물 불러오기 실패:', err);
+        // API 에러 시에도 폴백 데이터가 유지됨
       }
     }
-    loadPopularPosts();
+    loadAndShufflePosts();
   }, []);
 
   // Constants for swipe logic
   const SWIPE_THRESHOLD = 80;
+  const DOUBLE_TAP_DELAY = 300; // ms
+
+  /** 현재 보고 있는 카드의 게시물을 가져오는 헬퍼 */
+  const getCurrentPost = useCallback(() => {
+    if (posts.length === 0) return null;
+    const dataIndex = ((currentIndex % posts.length) + posts.length) % posts.length;
+    return posts[dataIndex];
+  }, [posts, currentIndex]);
+
+  /** 좋아요 처리 공통 함수 (우측 스와이프 & 더블 탭 공용) */
+  const handleLike = useCallback(() => {
+    if (!isAuthenticated) {
+      toast.error('좋아요를 누르려면 로그인이 필요합니다.');
+      return false;
+    }
+
+    const currentPost = getCurrentPost();
+    if (!currentPost) return false;
+
+    // 실제 게시물(UUID 문자열)에 대해서만 API 호출
+    if (typeof currentPost.id === 'string' && !currentPost.isLiked) {
+      toggleLike(currentPost.id).catch(err => console.error('좋아요 토글 실패:', err));
+    }
+    return true;
+  }, [isAuthenticated, getCurrentPost]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (exitDirection) return; // Prevent interaction during animation
@@ -77,7 +118,7 @@ export default function SwipeDeck() {
     });
   };
 
-  const handlePointerUp = (e: React.PointerEvent) => {
+  const handlePointerUp = () => {
     if (!isDragging) return;
     setIsDragging(false);
 
@@ -86,22 +127,16 @@ export default function SwipeDeck() {
 
     // Determine swipe direction based on dominant axis
     if (absX > absY && absX > SWIPE_THRESHOLD && dragOffset.x > 0) {
-      // Swiped right (Like)
-      if (!isAuthenticated) {
-        toast.error('좋아요를 누르려면 로그인이 필요합니다.');
-        setDragOffset({ x: 0, y: 0 }); // Spring back
+      // Swiped right (Like) ❤️
+      if (!handleLike()) {
+        setDragOffset({ x: 0, y: 0 }); // Spring back on auth failure
         return;
       }
-      
-      const currentPost = posts[((currentIndex % posts.length) + posts.length) % posts.length];
-      if (typeof currentPost.id === 'string' && !currentPost.id.startsWith('dummy')) {
-        // 이미 좋아요를 누른 상태라면 API 호출 생략 (No-op)
-        if (!currentPost.isLiked) {
-          toggleLike(currentPost.id).catch(err => console.error('좋아요 토글 실패:', err));
-        }
-      }
-
       setExitDirection('right');
+      triggerTransition(1);
+    } else if (absX > absY && absX > SWIPE_THRESHOLD && dragOffset.x < 0) {
+      // Swiped left (Pass) 🥲
+      setExitDirection('left');
       triggerTransition(1);
     } else if (absY > absX && absY > SWIPE_THRESHOLD) {
       if (dragOffset.y < 0) {
@@ -128,6 +163,33 @@ export default function SwipeDeck() {
     }, 300); // 300ms matches the CSS transition duration
   };
 
+  /** 더블 탭 좋아요 핸들러 */
+  const handleCardTap = () => {
+    const now = Date.now();
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      // 더블 탭 감지! → 좋아요 처리 + 하트 애니메이션
+      if (handleLike()) {
+        setShowDoubleTapHeart(true);
+        setTimeout(() => setShowDoubleTapHeart(false), 600);
+      }
+      lastTapRef.current = 0; // 리셋
+    } else {
+      lastTapRef.current = now;
+    }
+  };
+
+  /** 단일 클릭 → 상세 페이지 이동 (드래그 아닌 경우에만) */
+  const handleCardClick = () => {
+    // 더블 탭 판별 시간을 대기한 후 단일 클릭 처리
+    setTimeout(() => {
+      if (Date.now() - lastTapRef.current > DOUBLE_TAP_DELAY) return; // 이미 더블탭으로 처리됨
+      const currentPost = getCurrentPost();
+      if (currentPost && typeof currentPost.id === 'string') {
+        router.push(`/post/${currentPost.id}`);
+      }
+    }, DOUBLE_TAP_DELAY + 50);
+  };
+
   const getCardStyle = (index: number) => {
     const isTopCard = index === currentIndex;
     
@@ -142,6 +204,10 @@ export default function SwipeDeck() {
         if (exitDirection === 'right') {
           x = window.innerWidth;
           rotation = 15;
+          opacity = 0;
+        } else if (exitDirection === 'left') {
+          x = -window.innerWidth;
+          rotation = -15;
           opacity = 0;
         } else if (exitDirection === 'up') {
           y = -window.innerHeight;
@@ -184,8 +250,6 @@ export default function SwipeDeck() {
   // Prevent default image drag behavior
   const handleDragStart = (e: React.DragEvent) => e.preventDefault();
 
-
-
   return (
     <div className={styles.deckContainer}>
       <div className={styles.header}>
@@ -211,14 +275,11 @@ export default function SwipeDeck() {
               onPointerMove={isTopCard ? handlePointerMove : undefined}
               onPointerUp={isTopCard ? handlePointerUp : undefined}
               onDragStart={handleDragStart}
-              onClick={(e) => {
-                 // 드래그 중이 아닐 때만 상세 페이지 이동 (단일 클릭)
-                 if (isTopCard && !isDragging && Math.abs(dragOffset.x) < 5 && Math.abs(dragOffset.y) < 5) {
-                    if (typeof post.id === 'string') {
-                       router.push(`/post/${post.id}`);
-                    }
-                 }
-              }}
+              onClick={isTopCard ? () => {
+                if (!isDragging && Math.abs(dragOffset.x) < 5 && Math.abs(dragOffset.y) < 5) {
+                  handleCardTap();
+                }
+              } : undefined}
             >
               <div className={styles.imageWrapper} style={{ cursor: 'pointer' }}>
                 <img src={post.imageUrl} alt="게시물 이미지" className={styles.image} />
@@ -228,15 +289,32 @@ export default function SwipeDeck() {
                   <span className={styles.authorName}>{post.authorName}</span>
                 </div>
 
-
+                {/* 폴백 모드일 때 샘플 배지 표시 */}
+                {isFallbackMode && (
+                  <div className={styles.sampleBadge}>샘플</div>
+                )}
               </div>
             </div>
           );
         })}
 
-        {/* Like Indicator Overlay - Centered on Deck */}
+        {/* Like Indicator Overlay (우측 드래그 시) ❤️ */}
         {dragOffset.x > SWIPE_THRESHOLD && (
            <div className={styles.likeIndicator}>
+             <div className={styles.heartIcon}>❤️</div>
+           </div>
+        )}
+
+        {/* Pass Indicator Overlay (좌측 드래그 시) 🥲 */}
+        {dragOffset.x < -SWIPE_THRESHOLD && (
+           <div className={styles.passIndicator}>
+             <div className={styles.passIcon}>🥲</div>
+           </div>
+        )}
+
+        {/* Double Tap Like Indicator ❤️ (더블 탭 시 동일한 하트 재사용) */}
+        {showDoubleTapHeart && (
+           <div className={styles.doubleTapHeart}>
              <div className={styles.heartIcon}>❤️</div>
            </div>
         )}
