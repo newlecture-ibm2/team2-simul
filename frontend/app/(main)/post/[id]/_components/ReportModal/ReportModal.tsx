@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './ReportModal.module.css';
 
 interface ReportModalProps {
@@ -21,8 +22,13 @@ const REPORT_REASONS = [
 export default function ReportModal({ isOpen, onClose, onSubmit, isSubmitting }: ReportModalProps) {
   const [selectedReasonId, setSelectedReasonId] = useState<string>('');
   const [otherReason, setOtherReason] = useState('');
+  const [mounted, setMounted] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   const handleSubmit = () => {
     if (selectedReasonId === 'OTHER') {
@@ -38,7 +44,7 @@ export default function ReportModal({ isOpen, onClose, onSubmit, isSubmitting }:
     (selectedReasonId === 'OTHER' && !otherReason.trim()) || 
     isSubmitting;
 
-  return (
+  return createPortal(
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <h3 className={styles.title}>게시물 신고하기</h3>
@@ -85,6 +91,7 @@ export default function ReportModal({ isOpen, onClose, onSubmit, isSubmitting }:
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getPostLikes, LikeUser } from '@/lib/api/feedAPI';
 import Link from 'next/link';
@@ -17,9 +18,15 @@ export default function LikeListModal({ isOpen, onClose, postId }: Props) {
     enabled: isOpen,
   });
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
 
-  return (
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
+
+  return createPortal(
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
         <div className={styles.header}>
@@ -54,6 +61,7 @@ export default function LikeListModal({ isOpen, onClose, postId }: Props) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
