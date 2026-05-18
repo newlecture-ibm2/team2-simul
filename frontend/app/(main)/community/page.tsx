@@ -26,7 +26,6 @@ export default function CommunityPage() {
           >
             최신순
           </button>
-          <span className={styles.divider}>|</span>
           <button 
             className={`${styles.sortBtn} ${sort === 'popular' ? styles.active : ''}`} 
             onClick={() => setSort('popular')}

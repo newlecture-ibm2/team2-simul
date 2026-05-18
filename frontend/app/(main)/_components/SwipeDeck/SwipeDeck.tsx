@@ -339,10 +339,7 @@ export default function SwipeDeck() {
         {dragOffset.x < -SWIPE_THRESHOLD && (
            <div className={styles.passIndicator}>
              <div className={styles.passIcon}>
-                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0px 4px 8px rgba(0,0,0,0.4))' }}>
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                PASS
              </div>
            </div>
         )}

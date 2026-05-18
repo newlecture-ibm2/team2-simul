@@ -19,27 +19,26 @@
 .sortToggleGroup {
   display: flex;
   align-items: center;
-  gap: 8px;
+  background: var(--color-surface-fog);
+  border-radius: var(--radius-button);
+  padding: 3px;
 }
 
 .sortBtn {
   background: transparent;
   border: none;
-  padding: 4px;
+  padding: 6px 14px;
   color: var(--color-text-secondary);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  border-radius: var(--radius-button);
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .sortBtn.active {
+  background: var(--color-surface-white);
   color: var(--color-text-primary);
-  font-weight: 700;
-}
-
-.divider {
-  color: var(--color-border-default);
-  font-size: 12px;
-  user-select: none;
+  font-weight: 600;
+  box-shadow: var(--shadow-subtle);
 }
