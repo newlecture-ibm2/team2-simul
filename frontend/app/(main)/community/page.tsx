@@ -54,18 +54,34 @@ export default function CommunityPage() {
               
               <div className={styles.sortMenu}>
                 <div className={styles.mobileDragHandle} />
-                <button 
-                  className={`${styles.sortMenuItem} ${sort === 'recent' ? styles.active : ''}`}
-                  onClick={() => { setSort('recent'); setIsSortOpen(false); }}
-                >
-                  최신순
-                </button>
-                <button 
-                  className={`${styles.sortMenuItem} ${sort === 'popular' ? styles.active : ''}`}
-                  onClick={() => { setSort('popular'); setIsSortOpen(false); }}
-                >
-                  인기순
-                </button>
+                
+                {/* 풀 바텀시트 체험을 위한 임시 헤더와 설명 */}
+                <div className={styles.fullSheetHeader}>
+                  <h3>정렬 방식 선택</h3>
+                  <p>이것이 화면을 덮는 '풀 바텀시트'의 느낌입니다.<br/>보통 상세 내용이나 스크롤이 긴 목록에 쓰입니다.</p>
+                </div>
+
+                <div className={styles.fullSheetContent}>
+                  <button 
+                    className={`${styles.sortMenuItem} ${sort === 'recent' ? styles.active : ''}`}
+                    onClick={() => { setSort('recent'); setIsSortOpen(false); }}
+                  >
+                    ✨ 최신순
+                  </button>
+                  <button 
+                    className={`${styles.sortMenuItem} ${sort === 'popular' ? styles.active : ''}`}
+                    onClick={() => { setSort('popular'); setIsSortOpen(false); }}
+                  >
+                    🔥 인기순
+                  </button>
+                  
+                  {/* 스크롤 체감을 위한 더미 데이터 */}
+                  <div className={styles.dummyScrollArea}>
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <div key={i} className={styles.dummyItem}>추가 옵션 {i} (예시)</div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </>
           )}
