@@ -13,8 +13,8 @@ public interface PostRepositoryPort {
     Optional<Post> findById(UUID postId);
     void deleteById(UUID postId);
     
-    Page<Post> findAllPublicPosts(Pageable pageable);
-    Page<Post> findFollowingPosts(List<UUID> userIds, Pageable pageable);
+    Page<Post> findAllPublicPosts(java.time.LocalDateTime since, Pageable pageable);
+    Page<Post> findFollowingPosts(List<UUID> userIds, java.time.LocalDateTime since, Pageable pageable);
     
     long countByUserId(UUID userId);
     long countProfilePostsByUserId(UUID userId);

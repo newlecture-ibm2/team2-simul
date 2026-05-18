@@ -4,3 +4,42 @@
   flex-direction: column;
   flex: 1;
 }
+
+.headerControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 0 24px 0;
+  padding: 12px 16px 0;
+  position: sticky;
+  top: 65px;
+  z-index: 90;
+}
+
+.sortToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-surface-white);
+  border: 1px solid var(--color-border-disabled);
+  padding: 6px 14px;
+  border-radius: var(--radius-button);
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-subtle);
+}
+
+.sortToggle:hover {
+  background: var(--color-surface-fog);
+  border-color: var(--color-border-default);
+}
+
+.sortIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+}

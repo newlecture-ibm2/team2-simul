@@ -36,13 +36,20 @@ public class PostPersistenceAdapter implements PostRepositoryPort {
     }
 
     @Override
-    public Page<Post> findAllPublicPosts(Pageable pageable) {
+    public Page<Post> findAllPublicPosts(java.time.LocalDateTime since, Pageable pageable) {
+        if (since != null) {
+            return postJpaRepository.findAllByIsPublicTrueAndIsBlindedFalseAndCreatedAtAfter(since, pageable);
+        }
         return postJpaRepository.findAllByIsPublicTrueAndIsBlindedFalse(pageable);
     }
 
     @Override
-    public Page<Post> findFollowingPosts(List<UUID> userIds, Pageable pageable) {
+    public Page<Post> findFollowingPosts(List<UUID> userIds, java.time.LocalDateTime since, Pageable pageable) {
         if (userIds == null || userIds.isEmpty()) return Page.empty(pageable);
+        
+        if (since != null) {
+            return postJpaRepository.findAllByUserIdInAndIsPublicTrueAndIsBlindedFalseAndCreatedAtAfter(userIds, since, pageable);
+        }
         return postJpaRepository.findAllByUserIdInAndIsPublicTrueAndIsBlindedFalse(userIds, pageable);
     }
 
