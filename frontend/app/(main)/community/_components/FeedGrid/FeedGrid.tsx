@@ -139,6 +139,7 @@ export default function FeedGrid({ tab = 'all', sort = 'recent' }: FeedGridProps
               imageUrl={post.imageUrl}
               authorName={post.nickname}
               authorAvatar={post.profileImageUrl}
+              authorId={post.userId}
               tags={post.tags}
               likeCount={post.likeCount}
               isLiked={post.isLiked}
@@ -154,6 +155,7 @@ export default function FeedGrid({ tab = 'all', sort = 'recent' }: FeedGridProps
               imageUrl={post.imageUrl}
               authorName={post.nickname}
               authorAvatar={post.profileImageUrl}
+              authorId={post.userId}
               tags={post.tags}
               likeCount={post.likeCount}
               isLiked={post.isLiked}

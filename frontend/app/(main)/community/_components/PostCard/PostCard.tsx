@@ -12,6 +12,7 @@ interface PostCardProps {
   imageUrl?: string | null;
   authorName: string;
   authorAvatar?: string | null;
+  authorId?: string;
   tags?: string[];
   likeCount?: number;
   isLiked?: boolean;
@@ -23,6 +24,7 @@ export default function PostCard({
   imageUrl, 
   authorName, 
   authorAvatar, 
+  authorId,
   tags = [],
   likeCount = 0,
   isLiked: initialLiked = false,
@@ -31,7 +33,7 @@ export default function PostCard({
   const router = useRouter();
   const [isLiked, setIsLiked] = useState(initialLiked);
   const [currentLikeCount, setCurrentLikeCount] = useState(likeCount);
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const displayImage = imageUrl || '/dummy.jpg';
 
   const handleCardClick = () => {
@@ -42,7 +44,9 @@ export default function PostCard({
     e.stopPropagation();
 
     if (!isAuthenticated) {
-      alert('좋아요를 누르려면 로그인이 필요합니다.');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('simul_auth_modal_event', { detail: { isOpen: true } }));
+      }
       return;
     }
 
@@ -74,7 +78,19 @@ export default function PostCard({
         
         <div className={styles.overlay} />
 
-        <div className={styles.authorInfo}>
+        <div 
+          className={styles.authorInfo}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!authorId) return;
+            if (isAuthenticated && user && (user.userId === authorId || user.id === authorId)) {
+              router.push('/profile');
+            } else {
+              router.push(`/profile/${authorId}`);
+            }
+          }}
+          style={{ cursor: 'pointer' }}
+        >
           {authorAvatar ? (
             <img src={authorAvatar} alt={authorName} className={styles.authorAvatar} />
           ) : (

@@ -237,7 +237,9 @@
 }
 
 .passIcon {
-  /* 이모지 자체 스타일링 (passIndicator가 위치/크기 담당) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ── Double Tap Heart (더블 탭 좋아요) ── */

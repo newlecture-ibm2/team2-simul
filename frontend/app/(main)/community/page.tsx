@@ -1,26 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from './page.module.css';
 import MainToggle from './_components/MainToggle';
 import FeedGrid from './_components/FeedGrid';
 
-const RecentIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <polyline points="12 6 12 12 15 15" />
-  </svg>
-);
 
-const PopularIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
-  </svg>
-);
 
 export default function CommunityPage() {
   const [tab, setTab] = useState('all');
-  const [sort, setSort] = useState('recent'); // 'recent' | 'popular'
+  const [sort, setSort] = useState('recent');
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  // 외부 클릭 시 정렬 메뉴 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
+        setIsSortOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const toggleSort = () => {
     setSort(prev => prev === 'recent' ? 'popular' : 'recent');
@@ -28,14 +30,45 @@ export default function CommunityPage() {
 
   return (
     <div className={styles.pageContainer}>
-      <div className={styles.headerControls}>
+      <div className={`${styles.headerControls} ${isSortOpen ? styles.sortOpen : ''}`}>
         <MainToggle onTabChange={setTab} />
-        <button className={styles.sortToggle} onClick={toggleSort}>
-          <span className={styles.sortIcon}>
-            {sort === 'recent' ? <RecentIcon /> : <PopularIcon />}
-          </span>
-          {sort === 'recent' ? '최신순' : '인기순'}
-        </button>
+        <div className={styles.sortDropdownContainer} ref={sortRef}>
+          <button 
+            className={styles.sortButton} 
+            onClick={() => setIsSortOpen(!isSortOpen)}
+          >
+            {sort === 'recent' ? '최신순' : '인기순'}
+            <svg 
+              className={`${styles.sortArrow} ${isSortOpen ? styles.sortArrowOpen : ''}`} 
+              width="14" height="14" viewBox="0 0 24 24" fill="none" 
+              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+
+          {isSortOpen && (
+            <>
+              {/* Invisible overlay for catching outside clicks to close the popover */}
+              <div className={styles.mobileOverlay} onClick={() => setIsSortOpen(false)} />
+              
+              <div className={styles.sortMenu}>
+                <button 
+                  className={`${styles.sortMenuItem} ${sort === 'recent' ? styles.active : ''}`}
+                  onClick={() => { setSort('recent'); setIsSortOpen(false); }}
+                >
+                  최신순
+                </button>
+                <button 
+                  className={`${styles.sortMenuItem} ${sort === 'popular' ? styles.active : ''}`}
+                  onClick={() => { setSort('popular'); setIsSortOpen(false); }}
+                >
+                  인기순
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
       <FeedGrid tab={tab} sort={sort} />
     </div>

@@ -9,11 +9,11 @@ import styles from './SwipeDeck.module.css';
 
 /* ── 폴백 전용 더미 데이터 (실제 게시물이 0개일 때만 렌더링) ── */
 const FALLBACK_POSTS: SwipePost[] = [
-  { id: 101, imageUrl: '/hero-1.jpg', authorName: '지수', authorAvatar: '/dummy.jpg', isLiked: false },
-  { id: 102, imageUrl: '/hero-2.jpg', authorName: '태형', authorAvatar: '/recent.jpg', isLiked: false },
-  { id: 103, imageUrl: '/hero-3.jpg', authorName: '민지', authorAvatar: '/temp.jpg', isLiked: false },
-  { id: 104, imageUrl: '/hero-4.jpg', authorName: '정국', authorAvatar: '/dummy.jpg', isLiked: false },
-  { id: 105, imageUrl: '/hero-5.jpg', authorName: '사나', authorAvatar: '/recent.jpg', isLiked: false },
+  { id: 101, imageUrl: '/hero-1.jpg', authorName: '지수', authorAvatar: '/dummy.jpg', isLiked: false, authorId: 'dummy-1' },
+  { id: 102, imageUrl: '/hero-2.jpg', authorName: '태형', authorAvatar: '/recent.jpg', isLiked: false, authorId: 'dummy-2' },
+  { id: 103, imageUrl: '/hero-3.jpg', authorName: '민지', authorAvatar: '/temp.jpg', isLiked: false, authorId: 'dummy-3' },
+  { id: 104, imageUrl: '/hero-4.jpg', authorName: '정국', authorAvatar: '/dummy.jpg', isLiked: false, authorId: 'dummy-4' },
+  { id: 105, imageUrl: '/hero-5.jpg', authorName: '사나', authorAvatar: '/recent.jpg', isLiked: false, authorId: 'dummy-5' },
 ];
 
 interface SwipePost {
@@ -22,6 +22,7 @@ interface SwipePost {
   authorName: string;
   authorAvatar: string;
   isLiked?: boolean;
+  authorId?: string;
 }
 
 /** Fisher-Yates 셔플 알고리즘 */
@@ -47,7 +48,7 @@ export default function SwipeDeck() {
   const cardRef = useRef<HTMLDivElement>(null);
   const lastTapRef = useRef<number>(0);
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
 
   // 최초 진입 시 게시물 50개를 불러온 뒤 셔플 (무한 랜덤 스와이프)
   useEffect(() => {
@@ -61,6 +62,7 @@ export default function SwipeDeck() {
             authorName: p.nickname || '알 수 없음',
             authorAvatar: p.profileImageUrl || '/dummy.jpg',
             isLiked: p.isLiked,
+            authorId: p.userId,
           }));
           // 실제 데이터가 있으면 셔플 후 세팅 (폴백 모드 해제)
           setPosts(shuffleArray(mappedPosts));
@@ -89,7 +91,9 @@ export default function SwipeDeck() {
   /** 좋아요 처리 공통 함수 (우측 스와이프 & 더블 탭 공용) */
   const handleLike = useCallback(() => {
     if (!isAuthenticated) {
-      toast.error('좋아요를 누르려면 로그인이 필요합니다.');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('simul_auth_modal_event', { detail: { isOpen: true } }));
+      }
       return false;
     }
 
@@ -99,6 +103,16 @@ export default function SwipeDeck() {
     // 실제 게시물(UUID 문자열)에 대해서만 API 호출
     if (typeof currentPost.id === 'string' && !currentPost.isLiked) {
       toggleLike(currentPost.id).catch(err => console.error('좋아요 토글 실패:', err));
+      
+      // 로컬 상태 즉시 업데이트 (연속 탭/스와이프 시 중복 방지)
+      setPosts(prev => {
+        const newPosts = [...prev];
+        const index = newPosts.findIndex(p => p.id === currentPost.id);
+        if (index !== -1) {
+          newPosts[index] = { ...newPosts[index], isLiked: true };
+        }
+        return newPosts;
+      });
     }
     return true;
   }, [isAuthenticated, getCurrentPost]);
@@ -163,11 +177,14 @@ export default function SwipeDeck() {
     }, 300); // 300ms matches the CSS transition duration
   };
 
-  /** 더블 탭 좋아요 핸들러 */
+  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  /** 더블 탭 & 단일 탭 분기 핸들러 */
   const handleCardTap = () => {
     const now = Date.now();
     if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
-      // 더블 탭 감지! → 좋아요 처리 + 하트 애니메이션
+      // 더블 탭 감지!
+      if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
       if (handleLike()) {
         setShowDoubleTapHeart(true);
         setTimeout(() => setShowDoubleTapHeart(false), 600);
@@ -175,19 +192,17 @@ export default function SwipeDeck() {
       lastTapRef.current = 0; // 리셋
     } else {
       lastTapRef.current = now;
+      clickTimeoutRef.current = setTimeout(() => {
+        if (lastTapRef.current !== 0) {
+          // 단일 클릭 처리 → 상세 페이지 이동
+          const currentPost = getCurrentPost();
+          if (currentPost && typeof currentPost.id === 'string') {
+            router.push(`/post/${currentPost.id}`);
+          }
+          lastTapRef.current = 0;
+        }
+      }, DOUBLE_TAP_DELAY);
     }
-  };
-
-  /** 단일 클릭 → 상세 페이지 이동 (드래그 아닌 경우에만) */
-  const handleCardClick = () => {
-    // 더블 탭 판별 시간을 대기한 후 단일 클릭 처리
-    setTimeout(() => {
-      if (Date.now() - lastTapRef.current > DOUBLE_TAP_DELAY) return; // 이미 더블탭으로 처리됨
-      const currentPost = getCurrentPost();
-      if (currentPost && typeof currentPost.id === 'string') {
-        router.push(`/post/${currentPost.id}`);
-      }
-    }, DOUBLE_TAP_DELAY + 50);
   };
 
   const getCardStyle = (index: number) => {
@@ -284,7 +299,22 @@ export default function SwipeDeck() {
               <div className={styles.imageWrapper} style={{ cursor: 'pointer' }}>
                 <img src={post.imageUrl} alt="게시물 이미지" className={styles.image} />
 
-                <div className={styles.authorInfo}>
+                <div 
+                  className={styles.authorInfo}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!post.authorId) return;
+                    
+                    if (isAuthenticated && user && (user.userId === post.authorId || user.id === post.authorId)) {
+                      // 로그인 사용자가 본인의 게시물을 클릭한 경우
+                      router.push('/profile');
+                    } else {
+                      // 비로그인 사용자 또는 타인의 게시물을 클릭한 경우
+                      router.push(`/profile/${post.authorId}`);
+                    }
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
                   <img src={post.authorAvatar} alt="프로필" className={styles.authorAvatar} />
                   <span className={styles.authorName}>{post.authorName}</span>
                 </div>
@@ -305,10 +335,15 @@ export default function SwipeDeck() {
            </div>
         )}
 
-        {/* Pass Indicator Overlay (좌측 드래그 시) 🥲 */}
+        {/* Pass Indicator Overlay (좌측 드래그 시) */}
         {dragOffset.x < -SWIPE_THRESHOLD && (
            <div className={styles.passIndicator}>
-             <div className={styles.passIcon}>🥲</div>
+             <div className={styles.passIcon}>
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#FF5C5C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0px 4px 8px rgba(0,0,0,0.3))' }}>
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                  <path d="M12 21.23L14 14l-3-2 2-7"></path>
+                </svg>
+             </div>
            </div>
         )}
 
