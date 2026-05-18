@@ -4,25 +4,36 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease-out;
 }
 
 .modal {
-  background: #fff;
+  /* Web: Centered Popover Modal (Glassmorphism) */
+  position: relative;
   width: 90%;
   max-width: 400px;
   max-height: 80vh;
-  border-radius: var(--radius-comfortable, 20px);
+  border-radius: var(--radius-section, 20px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  animation: slideUp 0.3s ease-out;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 28px 14px rgba(255, 255, 255, 0.8);
+  animation: scaleUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .header {
@@ -30,13 +41,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .header h3 {
   margin: 0;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--color-text-primary);
 }
 
 .closeBtn {
@@ -44,7 +56,16 @@
   border: none;
   font-size: 20px;
   cursor: pointer;
-  color: #999;
+  color: var(--color-text-secondary);
+  transition: opacity 0.2s;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeBtn:hover {
+  opacity: 0.6;
 }
 
 .content {
@@ -56,7 +77,7 @@
 .loading, .error, .empty {
   padding: 40px;
   text-align: center;
-  color: #888;
+  color: var(--color-text-secondary);
   font-size: 14px;
 }
 
@@ -76,19 +97,20 @@
 }
 
 .userRow:hover {
-  background: #f9f9f9;
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .avatar {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #eee;
+  background: rgba(255, 255, 255, 0.6);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
 .avatar img {
@@ -105,9 +127,61 @@
 .nickname {
   font-weight: 600;
   font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Mobile: Full Bottom Sheet */
+@media (max-width: 768px) {
+  .overlay {
+    align-items: flex-end; /* 하단 정렬 */
+    padding: 0;
+  }
+
+  .modal {
+    width: 100%;
+    max-width: 100%;
+    height: 85vh; /* 화면의 85%를 덮는 풀 바텀시트 */
+    max-height: 100%;
+    border-radius: 24px 24px 0 0;
+    margin: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    animation: slideUp 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    
+    /* Mobile Glassmorphism tweaks */
+    background: rgba(255, 255, 255, 0.85);
+    border-bottom: none;
+    border-left: none;
+    border-right: none;
+  }
+  
+  .modal::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 2px;
+    margin: 12px auto 0;
+  }
+  
+  .header {
+    border-bottom: none;
+    padding-top: 12px;
+  }
 }
