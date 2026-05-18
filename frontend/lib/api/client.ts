@@ -1,5 +1,6 @@
 import axios, { AxiosRequestConfig, AxiosError } from 'axios';
 import { toast } from '@/lib/utils/toast';
+import { getTryonErrorMessage } from '@/lib/errors/tryonError';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api';
 
@@ -51,6 +52,15 @@ axiosInstance.interceptors.response.use(
       errorMessage = errorData.detail || errorData.message || error.message;
       errorCode = errorData.error_code || 'ERR-000';
     }
+    const statusCode = error.response?.status;
+    const isTryonRequest = originalRequest?.url?.startsWith('/tryon');
+    if (isTryonRequest) {
+      errorMessage = getTryonErrorMessage({
+        code: errorCode,
+        status: statusCode,
+        fallbackMessage: errorMessage,
+      });
+    }
 
     // 자동으로 에러 토스트 띄우기 (401 갱신 실패 및 특정 비즈니스 에러 제외)
     if (
@@ -66,7 +76,7 @@ axiosInstance.interceptors.response.use(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (businessError as any).code = errorCode;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (businessError as any).status = error.response?.status;
+    (businessError as any).status = statusCode;
     
     return Promise.reject(businessError);
   }
