@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Button from '@/components/Button';
+import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
 import { getTryonCredits } from '@/lib/api/tryonAPI';
 import { getCurrentUser } from '@/lib/api/authAPI';
 import { getUserPosts, FeedPost } from '@/lib/api/feedAPI';
@@ -18,6 +19,7 @@ type Props = {
 export default function TryonHomeClient({ styles }: Props) {
   const [credits, setCredits] = useState<{ remaining: number; total_daily: number } | null>(null);
   const [recent, setRecent] = useState<FeedPost[]>([]);
+  const [isCreditInfoOpen, setIsCreditInfoOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -70,7 +72,9 @@ export default function TryonHomeClient({ styles }: Props) {
     <div className={styles.tryonHome}>
       <div className={styles.headerRow}>
         <h1 className={styles.title}>가상시착</h1>
-        <div className={styles.creditBadge}>{creditText}</div>
+        <button type="button" className={styles.creditBadge} onClick={() => setIsCreditInfoOpen(true)}>
+          {creditText}
+        </button>
       </div>
 
       <div className={styles.heroSection}>
@@ -125,7 +129,16 @@ export default function TryonHomeClient({ styles }: Props) {
           )}
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isCreditInfoOpen}
+        title="크레딧 안내"
+        description={'무료 시착 크레딧은\n매일 24시(KST)에 초기화됩니다.'}
+        confirmText="확인"
+        cancelText=""
+        onConfirm={() => setIsCreditInfoOpen(false)}
+        onCancel={() => setIsCreditInfoOpen(false)}
+      />
     </div>
   );
 }
-

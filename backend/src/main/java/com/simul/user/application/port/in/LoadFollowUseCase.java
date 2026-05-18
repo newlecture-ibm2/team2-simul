@@ -42,4 +42,11 @@ public interface LoadFollowUseCase {
      * @return 팔로워 UUID 목록
      */
     java.util.List<UUID> getFollowerIds(UUID userId);
+
+    /**
+     * 특정 사용자의 팔로잉 ID 목록만 조회 (피드 조회용)
+     * @param userId 대상 사용자 ID
+     * @return 팔로잉 UUID 목록
+     */
+    java.util.List<UUID> getFollowingIds(UUID userId);
 }

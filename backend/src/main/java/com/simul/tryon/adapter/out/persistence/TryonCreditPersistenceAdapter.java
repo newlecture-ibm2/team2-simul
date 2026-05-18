@@ -32,4 +32,9 @@ public class TryonCreditPersistenceAdapter implements TryonCreditPersistencePort
     public void deleteByUserIdAndUsedAtBetween(UUID userId, LocalDateTime startInclusive, LocalDateTime endExclusive) {
         tryonCreditJpaRepository.deleteByUserIdAndUsedAtBetween(userId, startInclusive, endExclusive);
     }
+
+    @Override
+    public int deleteByUsedAtBefore(LocalDateTime cutoffExclusive) {
+        return tryonCreditJpaRepository.deleteByUsedAtBefore(cutoffExclusive);
+    }
 }
