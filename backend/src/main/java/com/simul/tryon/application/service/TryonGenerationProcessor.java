@@ -14,6 +14,7 @@ import com.simul.tryon.application.port.in.DeductTryonCreditUseCase;
 import com.simul.tryon.application.port.out.BaseImagePersistencePort;
 import com.simul.tryon.application.port.out.SafeSearchPort;
 import com.simul.tryon.application.port.out.TryonAiGenerationPort;
+import com.simul.tryon.application.port.out.TryonResultQualityPort;
 import com.simul.tryon.domain.model.BaseImage;
 import java.time.Duration;
 import java.util.List;
@@ -33,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class TryonGenerationProcessor {
 
     private static final Duration AI_TIMEOUT = Duration.ofSeconds(30);
+    private static final int MAX_AI_ATTEMPTS = 3;
 
     private final PostRepositoryPort postRepositoryPort;
     private final BaseImagePersistencePort baseImagePersistencePort;
@@ -42,6 +44,7 @@ public class TryonGenerationProcessor {
     private final BinaryImageStoragePort binaryImageStoragePort;
     private final DeductTryonCreditUseCase deductTryonCreditUseCase;
     private final SafeSearchPort safeSearchPort;
+    private final TryonResultQualityPort tryonResultQualityPort;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -107,7 +110,7 @@ public class TryonGenerationProcessor {
                 clothingParts,
                 prompt);
 
-        TryonAiGenerationPort.TryonAiGenerationResult result = generateWithTimeout(aiCommand);
+        TryonAiGenerationPort.TryonAiGenerationResult result = generateWithValidationRetry(aiCommand);
 
         String resultImageUrl = binaryImageStoragePort.upload(result.resultImageBytes(), result.resultImageMimeType(),
                 "tryon");
@@ -154,6 +157,37 @@ public class TryonGenerationProcessor {
             }
             throw ce;
         }
+    }
+
+    private TryonAiGenerationPort.TryonAiGenerationResult generateWithValidationRetry(
+            TryonAiGenerationPort.TryonAiGenerationCommand command
+    ) {
+        String previousFailureReason = null;
+        for (int attempt = 1; attempt <= MAX_AI_ATTEMPTS; attempt++) {
+            String prompt = command.prompt();
+            if (previousFailureReason != null) {
+                prompt = prompt + "\n\nRETRY FIX INSTRUCTION:\n"
+                        + "- Previous output failed because: " + previousFailureReason + "\n"
+                        + "- Ensure the full person is visible and centered before returning final image.\n";
+            }
+
+            TryonAiGenerationPort.TryonAiGenerationCommand retryCommand = new TryonAiGenerationPort.TryonAiGenerationCommand(
+                    command.userImageBytes(),
+                    command.userImageMimeType(),
+                    command.clothingImages(),
+                    prompt
+            );
+            TryonAiGenerationPort.TryonAiGenerationResult result = generateWithTimeout(retryCommand);
+            TryonResultQualityPort.TryonResultQualityResult quality = tryonResultQualityPort.validate(result.resultImageBytes());
+            if (quality.valid()) {
+                return result;
+            }
+
+            previousFailureReason = quality.reason();
+            log.warn("Try-on quality validation failed: attempt={}, reason={}", attempt, previousFailureReason);
+        }
+
+        throw new BusinessException(ErrorCode.AI_GENERATION_FAILED, "Try-on result failed quality validation after retries");
     }
 
     private String buildPromptForOrderedItems(int clothingCount) {
