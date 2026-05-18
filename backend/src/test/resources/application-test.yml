@@ -19,3 +19,10 @@ jwt:
   secret: c2ltdWwtc2VjcmV0LWtleS1zaW11bC1zZWNyZXQta2V5LXNpbXVsLXNlY3JldC1rZXktc2ltdWwtc2VjcmV0LWtleQ==
   access-token-validity-in-seconds: 3600
   refresh-token-validity-in-seconds: 1209600
+
+app:
+  frontend-url: http://localhost:3000
+
+spring.mail:
+  username: test-user
+  password: test-password

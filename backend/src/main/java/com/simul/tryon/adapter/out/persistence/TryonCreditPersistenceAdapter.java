@@ -27,4 +27,14 @@ public class TryonCreditPersistenceAdapter implements TryonCreditPersistencePort
     public boolean existsByJobId(UUID jobId) {
         return tryonCreditJpaRepository.existsByJobId(jobId);
     }
+
+    @Override
+    public void deleteByUserIdAndUsedAtBetween(UUID userId, LocalDateTime startInclusive, LocalDateTime endExclusive) {
+        tryonCreditJpaRepository.deleteByUserIdAndUsedAtBetween(userId, startInclusive, endExclusive);
+    }
+
+    @Override
+    public int deleteByUsedAtBefore(LocalDateTime cutoffExclusive) {
+        return tryonCreditJpaRepository.deleteByUsedAtBefore(cutoffExclusive);
+    }
 }

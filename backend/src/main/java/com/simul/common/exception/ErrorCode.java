@@ -52,7 +52,9 @@ public enum ErrorCode {
     DUPLICATE_REPORT("ERR-401-A", HttpStatus.UNPROCESSABLE_ENTITY, "이미 신고한 게시물입니다"),
 
     // 인증/비밀번호
-    WRONG_PASSWORD("ERR-005", HttpStatus.BAD_REQUEST, "현재 비밀번호가 일치하지 않습니다");
+    WRONG_PASSWORD("ERR-005", HttpStatus.BAD_REQUEST, "현재 비밀번호가 일치하지 않습니다"),
+    USER_IN_GRACE_PERIOD("ERR-006", HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다. 기존 계정을 복구하시려면 로그인 화면에서 기존 비밀번호로 로그인해 주세요."),
+    EMAIL_NOT_VERIFIED("ERR-007", HttpStatus.FORBIDDEN, "이메일 인증이 완료되지 않았습니다. 메일함을 확인해 주세요.");
 
     private final String code;
     private final HttpStatus httpStatus;

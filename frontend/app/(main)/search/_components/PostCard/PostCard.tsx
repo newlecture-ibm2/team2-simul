@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toggleLike } from '../../../../../lib/api/feedAPI';
 import { useAuthStore } from '../../../../../lib/stores/useAuthStore';
-import ConfirmModal from '../../../../../components/ConfirmModal';
 import styles from './PostCard.module.css';
 
 interface PostCardProps {
@@ -35,13 +34,11 @@ export default function PostCard({
   const router = useRouter();
   const displayImage = imageUrl || '/dummy.jpg';
 
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
 
     if (!isAuthenticated) {
-      setIsLoginModalOpen(true);
+      window.dispatchEvent(new CustomEvent('simul_auth_modal_event', { detail: { isOpen: true } }));
       return;
     }
 
@@ -82,9 +79,18 @@ export default function PostCard({
           {tags.length > 0 && (
             <div className={styles.tagList}>
               {tags.slice(0, 3).map((tag) => (
-                <Link key={tag} href={`/search?q=%23${tag}&type=tag`} style={{ textDecoration: 'none' }}>
-                  <span className={styles.tagChip}>#{tag}</span>
-                </Link>
+                <span 
+                  key={tag} 
+                  className={styles.tagChip}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    router.push(`/search?q=%23${tag}&type=tag`);
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
+                  #{tag}
+                </span>
               ))}
             </div>
           )}
@@ -103,16 +109,6 @@ export default function PostCard({
           </button>
         </div>
       </Link>
-
-      <ConfirmModal
-        isOpen={isLoginModalOpen}
-        title="로그인이 필요합니다"
-        description="좋아요를 누르시려면 먼저 로그인해 주세요."
-        confirmText="로그인하기"
-        cancelText="닫기"
-        onConfirm={() => router.push('/login')}
-        onCancel={() => setIsLoginModalOpen(false)}
-      />
     </>
   );
 }

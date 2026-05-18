@@ -2,6 +2,7 @@
 
 import styles from './page.module.css';
 import LogoutButton from './_components/LogoutButton';
+import WithdrawButton from './_components/WithdrawButton';
 import { useAuthStore } from '@/lib/stores/useAuthStore';
 
 
@@ -82,8 +83,7 @@ export default function SettingsPage() {
 
       <div className={styles.dangerSection}>
         <LogoutButton />
-        <br />
-        <button className={styles.dangerBtn}>계정 삭제</button>
+        <WithdrawButton />
       </div>
     </div>
   );

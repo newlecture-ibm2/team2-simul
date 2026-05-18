@@ -4,9 +4,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/Button';
+import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
 import Toggle from './_components/Toggle/Toggle';
 import styles from './page.module.css';
-import { deleteBaseImage, generateTryon, getMyBaseImages, uploadBaseImage } from '@/lib/api/tryonAPI';
+import { deleteBaseImage, generateTryon, getMyBaseImages, getTryonCredits, uploadBaseImage } from '@/lib/api/tryonAPI';
 import { addClosetItem, deleteClosetItem, getClosetItems } from '@/lib/api/closetAPI';
 
 type ClosetItemSummary = {
@@ -32,6 +33,8 @@ export default function StudioPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingBaseImage, setIsUploadingBaseImage] = useState(false);
   const [isUploadingClothes, setIsUploadingClothes] = useState(false);
+  const [remainingCredits, setRemainingCredits] = useState<number | null>(null);
+  const [isCreditExhaustedModalOpen, setIsCreditExhaustedModalOpen] = useState(false);
   const baseImageInputRef = useRef<HTMLInputElement | null>(null);
   const clothesImageInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -49,7 +52,7 @@ export default function StudioPage() {
 
   const selectedPersonImageUrl = useMemo(() => {
     const picked = baseImages.find(b => b.base_image_id === selectedBaseImageId);
-    return picked?.image_url || '/dummy.jpg';
+    return picked?.image_url ?? '';
   }, [baseImages, selectedBaseImageId]);
 
   const refreshBaseImages = async () => {
@@ -122,6 +125,22 @@ export default function StudioPage() {
     };
   }, [clothesCategory]);
 
+  useEffect(() => {
+    let canceled = false;
+    (async () => {
+      try {
+        const res = await getTryonCredits();
+        if (canceled) return;
+        setRemainingCredits(res.remaining);
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      canceled = true;
+    };
+  }, []);
+
   const handleToggleCloth = (cloth: ClosetItemSummary) => {
     const category = toBackendCategory(clothesCategory);
     setSelectedClothesByCategory((prev) => {
@@ -181,6 +200,11 @@ export default function StudioPage() {
   };
 
   const handleTryon = async () => {
+    if (remainingCredits === 0) {
+      setIsCreditExhaustedModalOpen(true);
+      return;
+    }
+
     if (!selectedBaseImageId.trim()) {
       alert('베이스 이미지를 선택해주세요.');
       return;
@@ -203,6 +227,12 @@ export default function StudioPage() {
       });
 
       router.push(`/tryon/processing?job_id=${encodeURIComponent(res.job_id)}`);
+    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const code = (error as any)?.code;
+      if (code === 'ERR-103-A') {
+        setIsCreditExhaustedModalOpen(true);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -213,7 +243,11 @@ export default function StudioPage() {
       {/* Main Preview Area (Background Layer) */}
       <div className={styles.previewContainer}>
         <div className={styles.mainImageWrapper}>
-          <img src={selectedPersonImageUrl} alt="Selected Base Model" className={styles.mainImage} />
+          {selectedPersonImageUrl ? (
+            <img src={selectedPersonImageUrl} alt="Selected Base Model" className={styles.mainImage} />
+          ) : (
+            <div className={styles.mainImage} />
+          )}
           
           {/* Floating Selected Clothes Badges */}
           {(['TOP', 'BOTTOM', 'ACCESSORY'] as const).map((cat, index) => {
@@ -403,6 +437,16 @@ export default function StudioPage() {
           </Button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isCreditExhaustedModalOpen}
+        title="오늘의 무료 시착 크레딧을 모두 사용했어요"
+        description="크레딧은 매일 24시(KST)에 자동으로 초기화됩니다."
+        confirmText="확인"
+        cancelText=""
+        onConfirm={() => setIsCreditExhaustedModalOpen(false)}
+        onCancel={() => setIsCreditExhaustedModalOpen(false)}
+      />
     </div>
   );
 }

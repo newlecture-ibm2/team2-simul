@@ -12,4 +12,16 @@
 
 .main {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.adminContainer {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0 auto;
+  background-color: var(--color-surface-fog);
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }

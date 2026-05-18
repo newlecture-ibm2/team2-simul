@@ -53,7 +53,6 @@ export default function PostDetailPage() {
   const [isReporting, setIsReporting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLikeListModalOpen, setIsLikeListModalOpen] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -106,7 +105,7 @@ export default function PostDetailPage() {
 
   const handleFollowToggle = () => {
     if (!isAuthenticated) {
-      setIsLoginModalOpen(true);
+      window.dispatchEvent(new CustomEvent('simul_auth_modal_event', { detail: { isOpen: true } }));
       return;
     }
     if (isFollowingAuthor) {
@@ -194,7 +193,7 @@ export default function PostDetailPage() {
 
   const handleLike = async () => {
     if (!isAuthenticated) {
-      setIsLoginModalOpen(true);
+      window.dispatchEvent(new CustomEvent('simul_auth_modal_event', { detail: { isOpen: true } }));
       return;
     }
 
@@ -253,6 +252,39 @@ export default function PostDetailPage() {
     }
   };
 
+  const handleShare = async () => {
+    if (!isAuthenticated) {
+      window.dispatchEvent(new CustomEvent('simul_auth_modal_event', { detail: { isOpen: true } }));
+      return;
+    }
+    if (!post) return;
+    const url = window.location.href;
+    
+    // 모바일 환경 판별 (데스크톱에서는 클립보드 복사로 폴백하기 위함)
+    const isMobile = typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    
+    if (isMobile && navigator.share) {
+      try {
+        await navigator.share({
+          title: `[SIMUL] ${post.nickname}님의 스타일`,
+          text: post.caption ? (post.caption.length > 50 ? `${post.caption.slice(0, 50)}...` : post.caption) : '이 코디 어때요?',
+          url: url,
+        });
+      } catch (err) {
+        console.log('공유가 취소되었거나 실패했습니다.', err);
+      }
+    } else {
+      // 웹(데스크톱) 환경에서는 즉시 클립보드에 복사
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success('링크가 복사되었습니다.');
+      } catch (err) {
+        console.error('클립보드 복사 실패:', err);
+        toast.error('링크 복사를 지원하지 않는 브라우저입니다.');
+      }
+    }
+  };
+
   if (isLoading) return <div className={styles.container}><div style={{padding: '20px', textAlign: 'center'}}>로딩 중...</div></div>;
   if (error) return <div className={styles.container}><div style={{padding: '20px', textAlign: 'center', color: 'red'}}>{error}</div></div>;
   if (!post) return null;
@@ -267,7 +299,7 @@ export default function PostDetailPage() {
           <img src="/icons/arrow-left.png" alt="Back" className={styles.icon} />
         </button>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <button className={styles.iconBtn} aria-label="공유하기">
+          <button className={styles.iconBtn} aria-label="공유하기" onClick={handleShare}>
             <img src="/icons/square.and.arrow.up.png" alt="Share" className={styles.icon} />
           </button>
           <div className={styles.menuWrapper} ref={menuRef}>
@@ -304,7 +336,7 @@ export default function PostDetailPage() {
                     onClick={() => { 
                       setShowMenu(false); 
                       if (!isAuthenticated) {
-                        setIsLoginModalOpen(true);
+                        window.dispatchEvent(new CustomEvent('simul_auth_modal_event', { detail: { isOpen: true } }));
                       } else {
                         setIsReportModalOpen(true); 
                       }
@@ -339,24 +371,59 @@ export default function PostDetailPage() {
             {post.images && post.images.length > 0 ? (
               post.images.map((url: string, idx: number) => (
                 <div key={idx} className={styles.imageSlide}>
-                  <img src={url} alt={`게시물 이미지 ${idx + 1}`} className={styles.image} />
+                  <img src={url} alt={`게시물 이미지 ${idx + 1}`} className={styles.image} draggable={false} />
                 </div>
               ))
             ) : (
               <div className={styles.imageSlide}>
-                <img src="/dummy.jpg" alt="기본 이미지" className={styles.image} />
+                <img src="/dummy.jpg" alt="기본 이미지" className={styles.image} draggable={false} />
               </div>
             )}
           </div>
+
           {post.images && post.images.length > 1 && (
-            <div className={styles.carouselIndicators}>
-              {post.images.map((_: string, idx: number) => (
-                <div 
-                  key={idx} 
-                  className={`${styles.indicator} ${currentImgIndex === idx ? styles.indicatorActive : ''}`} 
-                />
-              ))}
-            </div>
+            <>
+              {currentImgIndex > 0 && (
+                <button 
+                  className={`${styles.navButton} ${styles.navLeft}`} 
+                  onClick={() => {
+                    if (scrollRef.current) {
+                      const width = scrollRef.current.clientWidth;
+                      scrollRef.current.scrollBy({ left: -width, behavior: 'smooth' });
+                    }
+                  }}
+                  aria-label="이전 이미지"
+                >
+                  <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                </button>
+              )}
+              {currentImgIndex < post.images.length - 1 && (
+                <button 
+                  className={`${styles.navButton} ${styles.navRight}`} 
+                  onClick={() => {
+                    if (scrollRef.current) {
+                      const width = scrollRef.current.clientWidth;
+                      scrollRef.current.scrollBy({ left: width, behavior: 'smooth' });
+                    }
+                  }}
+                  aria-label="다음 이미지"
+                >
+                  <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
+              )}
+              <div className={styles.carouselIndicators}>
+                {post.images.map((_: string, idx: number) => (
+                  <div 
+                    key={idx} 
+                    className={`${styles.indicator} ${currentImgIndex === idx ? styles.indicatorActive : ''}`} 
+                  />
+                ))}
+              </div>
+            </>
           )}
         </div>
 
@@ -414,12 +481,14 @@ export default function PostDetailPage() {
           )}
 
           <div className={styles.stats}>
-            <button className={`${styles.statItem} ${isLiked ? styles.liked : ''}`} onClick={handleLike}>
-              <img 
-                src={isLiked ? "/icons/heart-filled.png" : "/icons/heart.png"} 
-                alt="Like" 
-                className={styles.statIcon} 
-              />
+            <button 
+              className={`${styles.statItem} ${isLiked ? styles.liked : ''}`} 
+              onClick={handleLike}
+              aria-label="좋아요"
+            >
+              <svg viewBox="0 0 24 24" className={`${styles.statIcon} ${styles.heartIcon}`}>
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
             </button>
             <span 
               className={styles.clickableCount} 
@@ -440,7 +509,7 @@ export default function PostDetailPage() {
           
           <CommentSection 
             postId={postId as string} 
-            onLoginRequired={() => setIsLoginModalOpen(true)}
+            onLoginRequired={() => window.dispatchEvent(new CustomEvent('simul_auth_modal_event', { detail: { isOpen: true } }))}
           />
         </div>
       </div>
@@ -476,15 +545,6 @@ export default function PostDetailPage() {
         postId={postId as string}
       />
 
-      <ConfirmModal
-        isOpen={isLoginModalOpen}
-        title="로그인이 필요한 서비스입니다"
-        description="로그인하고 Simul의 AI 가상시착과 다양한 기능을 자유롭게 이용해 보세요."
-        confirmText="로그인하러 가기"
-        cancelText="다음에 하기"
-        onConfirm={() => router.push('/login')}
-        onCancel={() => setIsLoginModalOpen(false)}
-      />
     </div>
   );
 }

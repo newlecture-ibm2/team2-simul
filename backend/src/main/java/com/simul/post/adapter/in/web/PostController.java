@@ -16,6 +16,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.HashMap;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 @RestController
 @RequestMapping("/posts")
@@ -38,7 +41,8 @@ public class PostController {
             @RequestPart("images") List<MultipartFile> images,
             @RequestParam(value = "caption", required = false, defaultValue = "") String caption,
             @RequestParam(value = "isPublic", required = false, defaultValue = "false") Boolean isPublic,
-            @RequestParam(value = "tags", required = false) List<String> tags,
+            @RequestParam(value = "newImageTagsMapJson", required = false) String newImageTagsMapJson,
+            @RequestParam(value = "manualTags", required = false) List<String> manualTags,
             @RequestParam(value = "baseImageId", required = false) UUID baseImageId,
             @RequestParam(value = "itemId", required = false) UUID itemId
     ) {
@@ -50,12 +54,22 @@ public class PostController {
             ));
         }
 
+        Map<Integer, List<String>> newImageTagsMap = null;
+        if (newImageTagsMapJson != null && !newImageTagsMapJson.isEmpty()) {
+            try {
+                newImageTagsMap = new ObjectMapper().readValue(newImageTagsMapJson, new TypeReference<Map<Integer, List<String>>>() {});
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
         CreatePostCommand command = CreatePostCommand.builder()
                 .userId(userId)
                 .images(images)
                 .caption(caption)
                 .isPublic(isPublic)
-                .tags(tags)
+                .newImageTagsMap(newImageTagsMap)
+                .manualTags(manualTags)
                 .baseImageId(baseImageId)
                 .itemId(itemId)
                 .build();
@@ -208,9 +222,12 @@ public class PostController {
             @PathVariable UUID postId,
             @RequestParam(value = "caption", required = false, defaultValue = "") String caption,
             @RequestParam(value = "isPublic", required = false, defaultValue = "false") Boolean isPublic,
-            @RequestParam(value = "tags", required = false) List<String> tags,
+            @RequestParam(value = "existingImageTagsMapJson", required = false) String existingImageTagsMapJson,
+            @RequestParam(value = "newImageTagsMapJson", required = false) String newImageTagsMapJson,
+            @RequestParam(value = "manualTags", required = false) List<String> manualTags,
             @RequestParam(value = "existingImageUrls", required = false) List<String> existingImageUrls,
-            @RequestParam(value = "newImages", required = false) List<org.springframework.web.multipart.MultipartFile> newImages
+            @RequestParam(value = "newImages", required = false) List<org.springframework.web.multipart.MultipartFile> newImages,
+            @RequestParam(value = "imageOrderJson", required = false) String imageOrderJson
     ) {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
@@ -222,18 +239,36 @@ public class PostController {
         try {
             System.out.println("[POST UPDATE] postId=" + postId + ", userId=" + userId);
             System.out.println("[POST UPDATE] caption=" + caption + ", isPublic=" + isPublic);
-            System.out.println("[POST UPDATE] tags=" + tags);
+            System.out.println("[POST UPDATE] manualTags=" + manualTags);
             System.out.println("[POST UPDATE] existingImageUrls=" + existingImageUrls);
             System.out.println("[POST UPDATE] newImages count=" + (newImages != null ? newImages.size() : "null"));
+
+            Map<String, List<String>> existingImageTagsMap = null;
+            Map<Integer, List<String>> newImageTagsMap = null;
+            ObjectMapper mapper = new ObjectMapper();
+            if (existingImageTagsMapJson != null && !existingImageTagsMapJson.isEmpty()) {
+                existingImageTagsMap = mapper.readValue(existingImageTagsMapJson, new TypeReference<Map<String, List<String>>>() {});
+            }
+            if (newImageTagsMapJson != null && !newImageTagsMapJson.isEmpty()) {
+                newImageTagsMap = mapper.readValue(newImageTagsMapJson, new TypeReference<Map<Integer, List<String>>>() {});
+            }
+            
+            List<String> imageOrder = null;
+            if (imageOrderJson != null && !imageOrderJson.isEmpty()) {
+                imageOrder = mapper.readValue(imageOrderJson, new TypeReference<List<String>>() {});
+            }
 
             UpdatePostCommand command = UpdatePostCommand.builder()
                     .postId(postId)
                     .userId(userId)
                     .caption(caption)
                     .isPublic(isPublic)
-                    .tags(tags)
+                    .existingImageTagsMap(existingImageTagsMap)
+                    .newImageTagsMap(newImageTagsMap)
+                    .manualTags(manualTags)
                     .existingImageUrls(existingImageUrls)
                     .newImages(newImages)
+                    .imageOrder(imageOrder)
                     .build();
             updatePostUseCase.updatePost(command);
             return ResponseEntity.ok().build();

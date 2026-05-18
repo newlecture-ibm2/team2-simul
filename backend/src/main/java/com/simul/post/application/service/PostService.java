@@ -53,6 +53,7 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
     private final LoadUserUseCase loadUserUseCase;
     private final LoadTagsUseCase loadTagsUseCase;
     private final ApplicationEventPublisher eventPublisher;
+    private final com.simul.user.application.port.in.LoadFollowUseCase loadFollowUseCase;
 
     // ... existing createPost method ...
     @Override
@@ -69,8 +70,14 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         }
 
         // 2. 태그 유효성 검사
-        List<String> tags = command.getTags();
-        if (tags != null && tags.size() > 10) {
+        int totalTags = 0;
+        if (command.getNewImageTagsMap() != null) {
+            totalTags += command.getNewImageTagsMap().values().stream().mapToInt(List::size).sum();
+        }
+        if (command.getManualTags() != null) {
+            totalTags += command.getManualTags().size();
+        }
+        if (totalTags > 10) {
             throw new IllegalArgumentException("ERR-307-A: 태그는 최대 10개까지 등록 가능합니다.");
         }
 
@@ -106,8 +113,26 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         Post savedPost = postRepositoryPort.save(post);
 
         // 5. 태그 매핑 (N:M)
-        if (tags != null && !tags.isEmpty()) {
-            attachTagsToPostUseCase.attachTags(savedPost.getPostId(), tags);
+        Set<String> processedTags = new HashSet<>();
+
+        if (command.getNewImageTagsMap() != null) {
+            for (Map.Entry<Integer, List<String>> entry : command.getNewImageTagsMap().entrySet()) {
+                if (entry.getKey() >= 0 && entry.getKey() < post.getImages().size()) {
+                    String imgUrl = post.getImages().get(entry.getKey()).getImageUrl();
+                    List<String> uniqueTags = entry.getValue().stream()
+                            .map(tag -> tag.trim().toLowerCase())
+                            .filter(t -> !t.isEmpty() && processedTags.add(t))
+                            .toList();
+                    attachTagsToPostUseCase.attachTagsWithSource(savedPost.getPostId(), uniqueTags, imgUrl);
+                }
+            }
+        }
+        if (command.getManualTags() != null && !command.getManualTags().isEmpty()) {
+            List<String> uniqueTags = command.getManualTags().stream()
+                    .map(tag -> tag.trim().toLowerCase())
+                    .filter(t -> !t.isEmpty() && processedTags.add(t))
+                    .toList();
+            attachTagsToPostUseCase.attachTagsWithSource(savedPost.getPostId(), uniqueTags, null);
         }
 
         // 6. 공개 게시물인 경우 팔로워들에게 알림 이벤트 발행
@@ -124,18 +149,24 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         
         // 정렬 기준 설정
         Sort sortObj = Sort.by(Sort.Direction.DESC, "createdAt");
+        java.time.LocalDateTime since = null;
+
         if ("popular".equalsIgnoreCase(sort)) {
             sortObj = Sort.by(Sort.Direction.DESC, "likeCount").and(Sort.by(Sort.Direction.DESC, "createdAt"));
+            since = java.time.LocalDateTime.now().minusDays(7); // 주간 인기글 (7일)
         }
         
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sortObj);
         
         Page<Post> postsPage;
         if ("following".equalsIgnoreCase(tab)) {
-            // TODO: 팔로우 기능 구현 후 연동 필요
-            postsPage = postRepositoryPort.findFollowingPosts(Collections.emptyList(), sortedPageable);
+            if (currentUserId == null) {
+                return Page.empty(pageable);
+            }
+            List<UUID> followingIds = loadFollowUseCase.getFollowingIds(currentUserId);
+            postsPage = postRepositoryPort.findFollowingPosts(followingIds, since, sortedPageable);
         } else {
-            postsPage = postRepositoryPort.findAllPublicPosts(sortedPageable);
+            postsPage = postRepositoryPort.findAllPublicPosts(since, sortedPageable);
         }
 
         if (postsPage.isEmpty()) {
@@ -154,8 +185,7 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         return postsPage.map(post -> {
             UserResponse user = userMap.get(post.getUserId());
             List<String> postTags = tagMap.getOrDefault(post.getPostId(), Collections.emptyList());
-            
-            String imageUrl = post.getImages().isEmpty() ? null : post.getImages().get(0).getImageUrl();
+            String imageUrl = post.getImageUrl();
             
             return new FeedPostResponse(
                     post.getPostId(),
@@ -210,10 +240,12 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
                 .sorted(Comparator.comparing(PostImage::getSortOrder))
                 .map(PostImage::getImageUrl)
                 .toList();
+        if (imageUrls.isEmpty() && post.getImageUrl() != null) {
+            imageUrls = List.of(post.getImageUrl());
+        }
 
-        // 6. 태그 조회
-        List<String> tags = loadTagsUseCase.loadTagsByPostIds(List.of(postId))
-                .getOrDefault(postId, Collections.emptyList());
+        // 6. 태그 조회 (상세)
+        com.simul.tag.application.dto.PostTagsResponse tagsResponse = loadTagsUseCase.loadDetailedTagsByPostId(postId);
 
         // 7. 좋아요 여부 확인
         boolean isLiked = false;
@@ -227,7 +259,9 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
                 nickname,
                 profileImageUrl,
                 imageUrls,
-                tags,
+                tagsResponse.tags(),
+                tagsResponse.imageTagsMap(),
+                tagsResponse.manualTags(),
                 post.getCaption(),
                 post.getLikeCount(),
                 post.getViewCount(),
@@ -265,7 +299,18 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
             throw new IllegalArgumentException("ERR-002: 본인의 게시물만 수정할 수 있습니다.");
         }
 
-        if (command.getTags() != null && command.getTags().size() > 10) {
+        int totalTags = 0;
+        if (command.getExistingImageTagsMap() != null) {
+            totalTags += command.getExistingImageTagsMap().values().stream().mapToInt(List::size).sum();
+        }
+        if (command.getNewImageTagsMap() != null) {
+            totalTags += command.getNewImageTagsMap().values().stream().mapToInt(List::size).sum();
+        }
+        if (command.getManualTags() != null) {
+            totalTags += command.getManualTags().size();
+        }
+
+        if (totalTags > 10) {
             throw new IllegalArgumentException("ERR-307-A: 태그는 최대 10개까지 등록 가능합니다.");
         }
 
@@ -287,16 +332,47 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
 
         post.getImages().removeIf(img -> !normalizedExistingUrls.contains(img.getImageUrl()));
 
-        // 새 이미지 추가
+        // 새 이미지 저장 및 임시 리스트 보관
+        List<com.simul.post.domain.model.PostImage> newlyCreatedImages = new ArrayList<>();
         if (!newFiles.isEmpty()) {
-            int maxOrder = post.getImages().stream().mapToInt(com.simul.post.domain.model.PostImage::getSortOrder).max().orElse(-1);
-            for (int i = 0; i < newFiles.size(); i++) {
-                String imageUrl = fileStorageService.store(newFiles.get(i));
+            for (MultipartFile file : newFiles) {
+                String imageUrl = fileStorageService.store(file);
                 com.simul.post.domain.model.PostImage postImage = com.simul.post.domain.model.PostImage.builder()
                         .imageUrl(imageUrl)
-                        .sortOrder(maxOrder + 1 + i)
+                        .sortOrder(999) // 임시 값
                         .build();
-                post.addImage(postImage);
+                newlyCreatedImages.add(postImage);
+            }
+        }
+
+        // imageOrder를 기반으로 sortOrder 설정 및 post.addImage 호출
+        if (command.getImageOrder() != null && !command.getImageOrder().isEmpty()) {
+            List<String> imageOrder = command.getImageOrder();
+            for (int i = 0; i < imageOrder.size(); i++) {
+                String orderItem = imageOrder.get(i);
+                if (orderItem.startsWith("new:")) {
+                    int index = Integer.parseInt(orderItem.split(":")[1]);
+                    if (index >= 0 && index < newlyCreatedImages.size()) {
+                        com.simul.post.domain.model.PostImage newImg = newlyCreatedImages.get(index);
+                        newImg.updateSortOrder(i);
+                        post.addImage(newImg);
+                    }
+                } else {
+                    String url = orderItem.contains("/uploads/images/") ? orderItem.substring(orderItem.indexOf("/uploads/images/")) : orderItem;
+                    int finalI = i;
+                    post.getImages().stream()
+                            .filter(img -> img.getImageUrl().equals(url) || img.getImageUrl().endsWith(url))
+                            .findFirst()
+                            .ifPresent(img -> img.updateSortOrder(finalI));
+                }
+            }
+        } else {
+            // fallback (imageOrder가 없는 경우)
+            int maxOrder = post.getImages().stream().mapToInt(com.simul.post.domain.model.PostImage::getSortOrder).max().orElse(-1);
+            for (int i = 0; i < newlyCreatedImages.size(); i++) {
+                com.simul.post.domain.model.PostImage newImg = newlyCreatedImages.get(i);
+                newImg.updateSortOrder(maxOrder + 1 + i);
+                post.addImage(newImg);
             }
         }
 
@@ -317,8 +393,37 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         postRepositoryPort.save(post);
 
         // 태그 업데이트
-        if (command.getTags() != null) {
-            attachTagsToPostUseCase.updateTags(command.getPostId(), command.getTags());
+        attachTagsToPostUseCase.clearTags(post.getPostId());
+        
+        Set<String> processedTags = new HashSet<>();
+
+        if (command.getExistingImageTagsMap() != null) {
+            command.getExistingImageTagsMap().forEach((url, tagsList) -> {
+                List<String> uniqueTags = tagsList.stream()
+                        .map(tag -> tag.trim().toLowerCase())
+                        .filter(t -> !t.isEmpty() && processedTags.add(t))
+                        .toList();
+                attachTagsToPostUseCase.attachTagsWithSource(post.getPostId(), uniqueTags, url);
+            });
+        }
+        if (command.getNewImageTagsMap() != null) {
+            command.getNewImageTagsMap().forEach((index, tagsList) -> {
+                if (index >= 0 && index < newlyCreatedImages.size()) {
+                    String newUrl = newlyCreatedImages.get(index).getImageUrl();
+                    List<String> uniqueTags = tagsList.stream()
+                            .map(tag -> tag.trim().toLowerCase())
+                            .filter(t -> !t.isEmpty() && processedTags.add(t))
+                            .toList();
+                    attachTagsToPostUseCase.attachTagsWithSource(post.getPostId(), uniqueTags, newUrl);
+                }
+            });
+        }
+        if (command.getManualTags() != null) {
+            List<String> uniqueTags = command.getManualTags().stream()
+                    .map(tag -> tag.trim().toLowerCase())
+                    .filter(t -> !t.isEmpty() && processedTags.add(t))
+                    .toList();
+            attachTagsToPostUseCase.attachTagsWithSource(post.getPostId(), uniqueTags, null);
         }
     }
 
@@ -370,8 +475,8 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
         if (targetUserId.equals(currentUserId)) {
-            // 본인 프로필: 공개 + 비공개 모두 조회
-            postsPage = postRepositoryPort.findByUserId(targetUserId, sortedPageable);
+            // 본인 프로필: 직접 작성한 공개 + 비공개 게시물 조회
+            postsPage = postRepositoryPort.findProfilePostsByUserId(targetUserId, sortedPageable);
         } else {
             // 타인 프로필: 공개 게시물만 조회
             postsPage = postRepositoryPort.findPublicPostsByUserId(targetUserId, sortedPageable);
@@ -394,7 +499,7 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
 
         return postsPage.map(post -> {
             List<String> postTags = tagMap.getOrDefault(post.getPostId(), Collections.emptyList());
-            String imageUrl = post.getImages().isEmpty() ? null : post.getImages().get(0).getImageUrl();
+            String imageUrl = post.getImageUrl();
             
             return new FeedPostResponse(
                     post.getPostId(),
@@ -414,7 +519,7 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
     @Override
     @Transactional(readOnly = true)
     public long countUserPosts(UUID userId) {
-        return postRepositoryPort.countByUserId(userId);
+        return postRepositoryPort.countProfilePostsByUserId(userId);
     }
 
     @Override
@@ -436,7 +541,7 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         return postsPage.map(post -> {
             UserResponse author = userMap.get(post.getUserId());
             List<String> postTags = tagMap.getOrDefault(post.getPostId(), Collections.emptyList());
-            String imageUrl = post.getImages().isEmpty() ? null : post.getImages().get(0).getImageUrl();
+            String imageUrl = post.getImageUrl();
             
             return new FeedPostResponse(
                     post.getPostId(),
@@ -512,7 +617,7 @@ public class PostService implements CreatePostUseCase, GetFeedPostsUseCase, GetP
         return postsPage.map(post -> {
             UserResponse user = userMap.get(post.getUserId());
             List<String> postTags = tagMap.getOrDefault(post.getPostId(), Collections.emptyList());
-            String imageUrl = post.getImages().isEmpty() ? null : post.getImages().get(0).getImageUrl();
+            String imageUrl = post.getImageUrl();
 
             return new FeedPostResponse(
                     post.getPostId(),

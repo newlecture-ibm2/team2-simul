@@ -70,13 +70,31 @@ public class GeminiTryonAiAdapter implements TryonAiGenerationPort {
             Map<String, Object> content = (Map<String, Object>) candidates.getFirst().get("content");
             List<Map<String, Object>> responseParts = (List<Map<String, Object>>) content.get("parts");
 
+            // Gemini API 응답은 환경/버전에 따라 `inlineData`(camelCase) 또는 `inline_data`(snake_case)로 내려올 수 있습니다.
+            // 여러 개의 inline image가 섞여 내려오는 경우가 있어 마지막 inline image를 결과로 사용합니다.
+            TryonAiGenerationResult lastInlineImage = null;
             for (Map<String, Object> part : responseParts) {
-                if (part.containsKey("inline_data")) {
-                    Map<String, Object> inlineData = (Map<String, Object>) part.get("inline_data");
-                    String mimeType = (String) inlineData.get("mime_type");
-                    String data = (String) inlineData.get("data");
-                    return new TryonAiGenerationResult(Base64.getDecoder().decode(data), mimeType);
+                Map<String, Object> inlineData = null;
+                if (part.containsKey("inlineData")) {
+                    inlineData = (Map<String, Object>) part.get("inlineData");
+                } else if (part.containsKey("inline_data")) {
+                    inlineData = (Map<String, Object>) part.get("inline_data");
                 }
+                if (inlineData == null) {
+                    continue;
+                }
+
+                String mimeType = (String) (inlineData.get("mimeType") != null ? inlineData.get("mimeType") : inlineData.get("mime_type"));
+                String data = (String) inlineData.get("data");
+                if (mimeType == null || data == null || data.isBlank()) {
+                    continue;
+                }
+
+                lastInlineImage = new TryonAiGenerationResult(Base64.getDecoder().decode(data), mimeType);
+            }
+
+            if (lastInlineImage != null) {
+                return lastInlineImage;
             }
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.AI_GENERATION_FAILED, "Gemini response parse failed: " + e.getMessage());

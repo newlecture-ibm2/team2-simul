@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getTryonErrorMessage } from '@/lib/errors/tryonError';
 import type stylesType from '../page.module.css';
 
 type CssModule = typeof stylesType;
@@ -27,6 +28,7 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
   const [status, setStatus] = useState<TryonStatusEventResponse['status']>('processing');
   const [estimatedLeft, setEstimatedLeft] = useState<number | null>(null);
   const [estimatedTotal, setEstimatedTotal] = useState<number | null>(null);
+  const [zeroLeftTick, setZeroLeftTick] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [reconnectTick, setReconnectTick] = useState(0);
 
@@ -40,10 +42,11 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
 
   const progressPercent = useMemo(() => {
     if (estimatedLeft == null) return null;
+    if (status === 'processing' && estimatedLeft === 0) return 95;
     const total = estimatedTotal ?? Math.max(estimatedLeft, 20);
     const clampedLeft = Math.min(total, Math.max(0, estimatedLeft));
     return Math.round(((total - clampedLeft) / total) * 100);
-  }, [estimatedLeft, estimatedTotal]);
+  }, [estimatedLeft, estimatedTotal, status]);
 
   useEffect(() => {
     if (!sseUrl) return;
@@ -62,6 +65,12 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
         if (left != null && estimatedTotal == null) {
           setEstimatedTotal(Math.max(1, left));
         }
+        if (payload.status === 'processing') {
+          if (left === 0) setZeroLeftTick((v) => v + 1);
+          else setZeroLeftTick(0);
+        } else {
+          setZeroLeftTick(0);
+        }
 
         if (payload.status === 'completed') {
           es.close();
@@ -74,7 +83,7 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
 
         if (payload.status === 'failed') {
           es.close();
-          setErrorMessage('시착 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
+          setErrorMessage(getTryonErrorMessage({ code: 'ERR-103-B' }));
         }
       } catch {
         // ignore parse errors
@@ -84,10 +93,14 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
     const onErrorEvent = (e: MessageEvent) => {
       try {
         // backend sends { error_code, message } as data
-        const payload = JSON.parse(e.data) as { message?: string };
-        setErrorMessage(payload.message ?? '시착 상태 스트림 연결에 실패했습니다.');
+        const payload = JSON.parse(e.data) as { message?: string; error_code?: string; status?: number };
+        setErrorMessage(getTryonErrorMessage({
+          code: payload.error_code,
+          status: payload.status,
+          fallbackMessage: payload.message,
+        }));
       } catch {
-        setErrorMessage('시착 상태 스트림 연결에 실패했습니다.');
+        setErrorMessage(getTryonErrorMessage({ fallbackMessage: '시착 상태 스트림 연결에 실패했습니다.' }));
       } finally {
         es.close();
       }
@@ -99,7 +112,7 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
     es.addEventListener('error', onErrorEvent as EventListener);
 
     es.onerror = () => {
-      setErrorMessage('시착 상태 스트림 연결이 끊어졌습니다.');
+      setErrorMessage(getTryonErrorMessage({ fallbackMessage: '시착 상태 스트림 연결이 끊어졌습니다.' }));
       es.close();
     };
 
@@ -132,7 +145,11 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
             <>
               결과 생성중... 잠시만 기다려 주세요.
               <br />
-              {estimatedLeft != null ? `예상 ${estimatedLeft}초 남음` : '보통 10~30초 정도 소요됩니다.'}
+              {estimatedLeft == null
+                ? '보통 10~30초 정도 소요됩니다.'
+                : estimatedLeft === 0
+                  ? '마무리 중입니다… 잠시만 더 기다려주세요.'
+                  : `예상 ${estimatedLeft}초 남음`}
             </>
           ) : (
             <>
@@ -142,6 +159,12 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
             </>
           )}
         </span>
+
+        {!errorMessage && jobId && estimatedLeft === 0 && zeroLeftTick >= 10 && (
+          <div className={styles.subtitle} style={{ marginTop: 12 }}>
+            예상보다 오래 걸리고 있어요. 잠시 후에도 계속되면 아래 버튼으로 다시 연결해보세요.
+          </div>
+        )}
 
         {errorMessage && (
           <>

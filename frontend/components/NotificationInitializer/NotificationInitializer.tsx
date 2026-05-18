@@ -18,7 +18,8 @@ export function NotificationInitializer() {
     // 로그인 상태가 아닐 때는 구독하지 않음
     if (!isAuthenticated) return;
 
-    // BFF를 통해 SSE 구독 (URL에 직접 접근 시 403을 방지하기 위해 BFF 프록시 활용)
+    // BFF를 통해 SSE 구독
+    // 프록시 버퍼링 문제를 피하기 위해 Next.js의 streaming response를 기대하며 호출
     const eventSource = new EventSource('/api/notifications/subscribe');
 
     // 연결 성공 시

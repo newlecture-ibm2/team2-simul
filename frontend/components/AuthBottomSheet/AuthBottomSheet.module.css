@@ -1,0 +1,24 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 8px 0;
+}
+
+.message {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  text-align: center;
+  margin: 0;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.buttonGroup > * {
+  flex: 1;
+}
