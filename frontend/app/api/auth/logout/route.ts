@@ -40,5 +40,15 @@ export async function POST(request: NextRequest) {
   // 3. iron-session 세션 파괴 (브라우저의 암호화 쿠키도 자동 삭제)
   session.destroy();
 
+  // 4. 명시적 쿠키 삭제 보장 — 배포 환경(HTTPS/프록시)에서 destroy()만으로는
+  //    Set-Cookie 헤더가 누락될 수 있으므로, 직접 만료된 쿠키를 설정합니다.
+  const isProduction = process.env.NODE_ENV === 'production';
+  response.headers.append(
+    'Set-Cookie',
+    `${sessionOptions.cookieName}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${isProduction ? '; Secure' : ''}`
+  );
+
+  console.log('[Logout] Session destroyed and cookie cleared');
   return response;
 }
+

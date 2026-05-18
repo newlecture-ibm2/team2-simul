@@ -126,7 +126,13 @@ export default function EmailAuthForm({ type }: EmailAuthFormProps) {
       </button>
 
       {type === 'login' && (
-        <a href="#" className={styles.forgotPassword}>비밀번호를 잊으셨나요?</a>
+        <button 
+          type="button" 
+          className={styles.forgotPassword} 
+          onClick={() => router.push('/login/find-password')}
+        >
+          비밀번호를 잊으셨나요?
+        </button>
       )}
 
       <ConfirmModal

@@ -105,6 +105,7 @@ public class KakaoOAuth2Adapter implements OAuth2ProviderPort {
         }
 
         // 카카오는 실명이 안 올 수 있으므로 닉네임을 이름으로 함께 사용
-        return new OAuth2UserInfo(providerId, nickname, nickname, gender, profileImage);
+        // 사용자의 요청에 따라 카카오 로그인 이메일 정보는 의도적으로 수집하지 않고 null을 넘겨 빈 상태로 유지합니다.
+        return new OAuth2UserInfo(providerId, nickname, nickname, gender, profileImage, null);
     }
 }

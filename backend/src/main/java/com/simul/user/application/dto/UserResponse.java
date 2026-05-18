@@ -17,12 +17,17 @@ public record UserResponse(
     String bannerImageUrl,
     boolean isPublic,
     String role,
-    String provider
+    String provider,
+    String email
 ) {
     /**
      * User 엔티티 → UserResponse 변환
      */
     public static UserResponse from(User user) {
+        String userEmail = user.getEmail();
+        if (userEmail == null && "email".equals(user.getProvider())) {
+            userEmail = user.getProviderId();
+        }
         return new UserResponse(
             user.getUserId(),
             user.getNickname(),
@@ -33,7 +38,8 @@ public record UserResponse(
             user.getBannerImageUrl(),
             user.isPublic(),
             user.getRole().name(),
-            user.getProvider()
+            user.getProvider(),
+            userEmail
         );
     }
 }

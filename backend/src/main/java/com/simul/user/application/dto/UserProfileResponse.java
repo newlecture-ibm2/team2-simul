@@ -21,12 +21,17 @@ public record UserProfileResponse(
     long followingCount,
     long postCount,
     boolean isFollowing,
-    String provider
+    String provider,
+    String email
 ) {
     /**
      * User 엔티티 + 팔로우 정보 + 게시물 수 → UserProfileResponse 변환
      */
     public static UserProfileResponse from(User user, long followerCount, long followingCount, long postCount, boolean isFollowing) {
+        String userEmail = user.getEmail();
+        if (userEmail == null && "email".equals(user.getProvider())) {
+            userEmail = user.getProviderId();
+        }
         return new UserProfileResponse(
             user.getUserId(),
             user.getNickname(),
@@ -41,7 +46,8 @@ public record UserProfileResponse(
             followingCount,
             postCount,
             isFollowing,
-            user.getProvider()
+            user.getProvider(),
+            userEmail
         );
     }
 }

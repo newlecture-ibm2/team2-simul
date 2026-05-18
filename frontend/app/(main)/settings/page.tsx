@@ -2,7 +2,6 @@
 
 import styles from './page.module.css';
 import LogoutButton from './_components/LogoutButton';
-import WithdrawButton from './_components/WithdrawButton';
 import { useAuthStore } from '@/lib/stores/useAuthStore';
 
 
@@ -48,21 +47,15 @@ export default function SettingsPage() {
 
       <div className={styles.section}>
         <h2 className={styles.sectionTitle}>계정</h2>
-        {user?.provider === 'email' ? (
-          <>
-            <a href="/settings/password" className={styles.linkItem}>
-              <span className={styles.settingName}>비밀번호 변경</span>
-              <span className={styles.linkArrow}>→</span>
-            </a>
-          </>
-        ) : (
-          <div className={styles.linkItem}>
-            <span className={styles.settingName}>연결된 계정</span>
-            <span className={`${styles.providerTag} ${user?.provider ? styles['provider' + (user.provider.charAt(0).toUpperCase() + user.provider.slice(1))] : ''}`}>
-              {user?.provider}
+        <a href="/settings/account" className={styles.linkItem}>
+          <div className={styles.settingLabel}>
+            <span className={styles.settingName}>계정 정보</span>
+            <span className={styles.settingDesc}>
+              {user?.provider === 'email' ? user?.email : `${user?.provider} 계정 연동됨`}
             </span>
           </div>
-        )}
+          <span className={styles.linkArrow}>→</span>
+        </a>
       </div>
 
       <div className={styles.section}>
@@ -83,7 +76,6 @@ export default function SettingsPage() {
 
       <div className={styles.dangerSection}>
         <LogoutButton />
-        <WithdrawButton />
       </div>
     </div>
   );

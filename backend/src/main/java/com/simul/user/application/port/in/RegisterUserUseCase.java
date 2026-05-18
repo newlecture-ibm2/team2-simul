@@ -11,7 +11,7 @@ public interface RegisterUserUseCase {
     /**
      * 소셜 로그인 정보로 신규 사용자 등록
      */
-    User registerSocialUser(String provider, String providerId, String nickname, String name, Gender gender);
+    User registerSocialUser(String provider, String providerId, String nickname, String name, Gender gender, String email);
 
     /**
      * 이메일 회원가입으로 신규 사용자 등록

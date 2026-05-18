@@ -13,13 +13,17 @@ export default function LogoutButton() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch('/api/auth/logout', { 
+        method: 'POST',
+        credentials: 'include', // 배포 환경에서 세션 쿠키 전송 보장
+      });
       logout();
-      router.push('/login');
+      router.replace('/login');
     } catch (error) {
       console.error('로그아웃 실패:', error);
+      // 서버 호출 실패해도 클라이언트 측 세션은 정리
       logout();
-      router.push('/login');
+      router.replace('/login');
     }
   };
 

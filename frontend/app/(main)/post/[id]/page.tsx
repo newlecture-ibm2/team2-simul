@@ -462,7 +462,7 @@ export default function PostDetailPage() {
                   marginLeft: 'auto'
                 }}
               >
-                {isFollowingAuthor ? '언팔로우' : '팔로우'}
+                {isFollowingAuthor ? '팔로잉 ✓' : '팔로우'}
               </button>
             )}
           </div>

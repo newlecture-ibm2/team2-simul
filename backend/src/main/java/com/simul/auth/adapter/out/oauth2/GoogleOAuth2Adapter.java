@@ -84,9 +84,10 @@ public class GoogleOAuth2Adapter implements OAuth2ProviderPort {
         String providerId = (String) response.get("id");
         String name = (String) response.get("name");
         String profileImage = (String) response.get("picture");
+        String email = (String) response.get("email");
 
         // 구글은 기본적으로 성별을 주지 않으므로 UNKNOWN 처리
         // 닉네임 필드가 따로 없으므로 이름을 닉네임으로 사용
-        return new OAuth2UserInfo(providerId, name, name, Gender.UNKNOWN, profileImage);
+        return new OAuth2UserInfo(providerId, name, name, Gender.UNKNOWN, profileImage, email);
     }
 }

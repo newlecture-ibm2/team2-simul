@@ -1,0 +1,193 @@
+.accountPage {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--space-page-y) var(--space-page-x);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-surface-sand);
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--color-text-primary);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition-fast);
+}
+
+.backBtn:hover {
+  color: var(--color-primary);
+}
+
+.headerTitle {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+/* Profile Card */
+.profileCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-comfortable);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-circle);
+  object-fit: cover;
+  border: 2px solid var(--color-primary);
+}
+
+.profileInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nickname {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.email {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+/* Sections */
+.section {
+  display: flex;
+  flex-direction: column;
+}
+
+.sectionTitle {
+  font-size: var(--font-caption-bold);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.settingItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--color-surface-sand);
+}
+
+.settingLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settingName {
+  font-size: var(--font-body);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+}
+
+.settingDesc {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+.linkItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--color-surface-sand);
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--color-text-primary);
+  transition: all var(--transition-fast);
+}
+
+.linkItem:hover {
+  color: var(--color-primary);
+  padding-left: 4px;
+}
+
+.linkArrow {
+  color: var(--color-text-disabled);
+  font-size: 14px;
+  transition: transform var(--transition-fast);
+}
+
+.linkItem:hover .linkArrow {
+  transform: translateX(4px);
+  color: var(--color-primary);
+}
+
+/* Provider Tags */
+.providerTag {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #000;
+  background: var(--color-surface-sand);
+}
+
+.providerKakao {
+  background: #fee500;
+  color: #3c1e1e;
+}
+
+.providerNaver {
+  background: #03c75a;
+  color: #fff;
+}
+
+.providerGoogle {
+  background: #fff;
+  color: #000;
+  border: 1px solid #ddd;
+}
+
+/* Withdraw Row */
+.withdrawRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--color-surface-sand);
+}
+
+.withdrawText {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}

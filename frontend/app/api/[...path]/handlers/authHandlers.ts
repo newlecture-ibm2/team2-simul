@@ -70,6 +70,12 @@ export async function authHandler(req: NextRequest, path: string[]) {
       const res = NextResponse.json({ success: true });
       const session = await getIronSession<SessionData>(req, res, sessionOptions);
       session.destroy();
+      // 명시적 쿠키 삭제 보장
+      const isProduction = process.env.NODE_ENV === 'production';
+      res.headers.append(
+        'Set-Cookie',
+        `${sessionOptions.cookieName}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${isProduction ? '; Secure' : ''}`
+      );
       console.log('[BFF Auth] Logout success, session destroyed');
       return res;
     }

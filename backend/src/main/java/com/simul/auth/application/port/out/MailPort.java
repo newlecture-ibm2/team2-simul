@@ -10,4 +10,11 @@ public interface MailPort {
      * @param verificationLink 인증 링크
      */
     void sendVerificationEmail(String to, String verificationLink);
+
+    /**
+     * 비밀번호 재설정 인증코드 메일을 발송합니다.
+     * @param to 수신자 이메일
+     * @param code 6자리 인증코드
+     */
+    void sendPasswordResetCode(String to, String code);
 }

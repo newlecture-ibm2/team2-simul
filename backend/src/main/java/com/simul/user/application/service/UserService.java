@@ -74,10 +74,11 @@ public class UserService implements LoadAllUsersUseCase, LoadUserUseCase, Regist
      * - Auth 도메인에서 호출
      */
     @Override
-    public User registerSocialUser(String provider, String providerId, String nickname, String name, Gender gender) {
+    public User registerSocialUser(String provider, String providerId, String nickname, String name, Gender gender, String email) {
         User newUser = User.builder()
                 .provider(provider)
                 .providerId(providerId)
+                .email(email)
                 .nickname(nickname)
                 .name(name)
                 .gender((gender != null) ? gender : Gender.UNKNOWN)
@@ -98,6 +99,7 @@ public class UserService implements LoadAllUsersUseCase, LoadUserUseCase, Regist
         User newUser = User.builder()
                 .provider("email")
                 .providerId(email)
+                .email(email)
                 .password(password)
                 .nickname(nickname)
                 .name(name)
