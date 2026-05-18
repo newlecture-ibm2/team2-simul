@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getTryonErrorMessage } from '@/lib/errors/tryonError';
 import type stylesType from '../page.module.css';
 
 type CssModule = typeof stylesType;
@@ -82,7 +83,7 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
 
         if (payload.status === 'failed') {
           es.close();
-          setErrorMessage('시착 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
+          setErrorMessage(getTryonErrorMessage({ code: 'ERR-103-B' }));
         }
       } catch {
         // ignore parse errors
@@ -92,10 +93,14 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
     const onErrorEvent = (e: MessageEvent) => {
       try {
         // backend sends { error_code, message } as data
-        const payload = JSON.parse(e.data) as { message?: string };
-        setErrorMessage(payload.message ?? '시착 상태 스트림 연결에 실패했습니다.');
+        const payload = JSON.parse(e.data) as { message?: string; error_code?: string; status?: number };
+        setErrorMessage(getTryonErrorMessage({
+          code: payload.error_code,
+          status: payload.status,
+          fallbackMessage: payload.message,
+        }));
       } catch {
-        setErrorMessage('시착 상태 스트림 연결에 실패했습니다.');
+        setErrorMessage(getTryonErrorMessage({ fallbackMessage: '시착 상태 스트림 연결에 실패했습니다.' }));
       } finally {
         es.close();
       }
@@ -107,7 +112,7 @@ export default function ProcessingClient({ className, styles, jobId }: Props) {
     es.addEventListener('error', onErrorEvent as EventListener);
 
     es.onerror = () => {
-      setErrorMessage('시착 상태 스트림 연결이 끊어졌습니다.');
+      setErrorMessage(getTryonErrorMessage({ fallbackMessage: '시착 상태 스트림 연결이 끊어졌습니다.' }));
       es.close();
     };
 

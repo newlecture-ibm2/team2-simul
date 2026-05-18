@@ -227,6 +227,12 @@ export default function StudioPage() {
       });
 
       router.push(`/tryon/processing?job_id=${encodeURIComponent(res.job_id)}`);
+    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const code = (error as any)?.code;
+      if (code === 'ERR-103-A') {
+        setIsCreditExhaustedModalOpen(true);
+      }
     } finally {
       setIsSubmitting(false);
     }
