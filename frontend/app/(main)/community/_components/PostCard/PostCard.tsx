@@ -42,7 +42,9 @@ export default function PostCard({
     e.stopPropagation();
 
     if (!isAuthenticated) {
-      alert('좋아요를 누르려면 로그인이 필요합니다.');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('simul_auth_modal_event', { detail: { isOpen: true } }));
+      }
       return;
     }
 
