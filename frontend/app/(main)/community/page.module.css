@@ -16,42 +16,146 @@
   z-index: 90;
 }
 
-.sortSelectWrapper {
+/* Container */
+.sortDropdownContainer {
   position: relative;
+  display: inline-block;
+}
+
+/* Button with Glassmorphism */
+.sortButton {
   display: flex;
   align-items: center;
-
-  /* Glassmorphism 일관성 적용 */
+  gap: 6px;
   background: rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: var(--radius-button);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
-}
-
-.sortSelect {
-  appearance: none;
-  -webkit-appearance: none;
-  background: transparent;
-  border: none;
+  padding: 8px 14px;
   color: var(--color-text-primary);
   font-size: 13px;
   font-weight: 600;
-  padding: 8px 30px 8px 14px;
   cursor: pointer;
-  outline: none;
-  font-family: inherit;
-  z-index: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
 }
 
 .sortArrow {
+  transition: transform 0.3s ease;
+}
+
+.sortArrowOpen {
+  transform: rotate(180deg);
+}
+
+/* Menu Common (Desktop default) */
+.sortMenu {
   position: absolute;
-  right: 10px;
-  pointer-events: none;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.sortMenuItem {
+  background: transparent;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.sortMenuItem:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.sortMenuItem.active {
+  background: var(--color-surface-white);
   color: var(--color-text-primary);
-  z-index: 1;
+  font-weight: 700;
+  box-shadow: var(--shadow-subtle);
+}
+
+.mobileOverlay {
+  display: none;
+}
+
+.mobileDragHandle {
+  display: none;
+}
+
+/* Mobile: Bottom Sheet */
+@media (max-width: 768px) {
+  .mobileOverlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 99;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .sortMenu {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0;
+    border-radius: 20px 20px 0 0;
+    padding: 16px 20px 40px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    min-width: 100%;
+    animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .sortMenuItem {
+    padding: 14px;
+    text-align: center;
+    font-size: 16px;
+  }
+
+  .mobileDragHandle {
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
