@@ -4,7 +4,7 @@
   padding: 16px 16px 0 16px;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .profileFrame {
@@ -21,7 +21,7 @@
   position: relative;
   width: 100%;
   height: 45vh;
-  min-height: 340px;
+  min-height: 250px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;

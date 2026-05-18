@@ -1,5 +1,5 @@
 .deckContainer {
-  height: calc(100vh - 250px); /* +100px taller than before */
+  height: calc(100dvh - 250px); /* +100px taller than before */
   width: 100%;
   overflow-y: scroll;
   scrollbar-width: none; /* Firefox */

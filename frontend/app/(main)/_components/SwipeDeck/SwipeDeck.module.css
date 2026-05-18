@@ -2,11 +2,12 @@
   position: relative;
   width: 100%;
   max-width: 450px;
-  margin: 0 auto 32px auto;
+  margin: 0 auto 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px var(--space-page-x) 150px var(--space-page-x);
+  padding: 24px var(--space-page-x) 110px var(--space-page-x);
+  height: calc(100dvh - 52px);
   background:
     linear-gradient(
       123deg,
@@ -64,37 +65,98 @@
     );
 }
 
-.header {
-  text-align: center;
-  margin-bottom: 24px;
-  z-index: 30; /* Place above the cards */
-  position: relative;
+.tutorialOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 24px 120px 24px; /* added bottom padding to shift content up */
+  opacity: 1;
+  transition: opacity 0.5s ease;
+  cursor: pointer;
+  border-radius: inherit;
+  color: white;
 }
 
-.title {
-  font-size: 20px;
+.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tutorialHeader {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.tutorialTitle {
+  font-size: 18px;
   font-weight: 700;
-  color: var(--color-text-primary);
-  margin: 0 0 8px 0;
+  margin: 0 0 10px 0;
   font-family: var(--font-family-korean);
   line-height: 1.4;
 }
 
-.subtitle {
+.tutorialSubtitle {
   font-size: 14px;
-  color: var(--color-text-secondary);
   font-weight: 500;
   margin: 0;
   font-family: var(--font-family-korean);
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tutorialSteps {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.tutorialStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.gestureIcon {
+  width: 43px;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.stepText {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+  margin: 0;
+  font-family: var(--font-family-korean);
+  text-align: center;
 }
 
 .deckWrapper {
   position: relative;
-  width: 100%;
+  width: min(80%, calc((100dvh - 250px) * 4 / 6));
   aspect-ratio: 4 / 6;
   perspective: 1000px;
-  margin-top: 130px; /* Provides space for the cards that translate upwards by up to 220px */
+  margin: auto;
+  transition: width 0.3s ease;
+  --card-gap: 50px;
+}
+
+@media (min-width: 390px) {
+  .deckWrapper {
+    width: min(96%, calc((100dvh - 200px) * 4 / 6));
+    --card-gap: 70px;
+  }
 }
 
 .card {
