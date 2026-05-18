@@ -30,6 +30,9 @@ public class UserJpaEntity extends BaseJpaEntity {
     @Column(name = "provider_id", nullable = false)
     private String providerId;
 
+    @Column(length = 100)
+    private String email;
+
     @Column(length = 30)
     private String name;
 
@@ -63,12 +66,13 @@ public class UserJpaEntity extends BaseJpaEntity {
     private boolean isActive;
 
     @Builder
-    public UserJpaEntity(UUID userId, String provider, String providerId, String name, String nickname,
+    public UserJpaEntity(UUID userId, String provider, String providerId, String email, String name, String nickname,
                          String password, Gender gender, String bio, String profileImageUrl, String bannerImageUrl,
                          boolean isPublic, Role role, boolean isActive) {
         this.userId = userId;
         this.provider = provider;
         this.providerId = providerId;
+        this.email = email;
         this.name = name;
         this.nickname = nickname;
         this.password = password;

@@ -90,6 +90,7 @@ public class NaverOAuth2Adapter implements OAuth2ProviderPort {
         String name = (String) profile.get("name");
         String profileImage = (String) profile.get("profile_image");
         String genderStr = (String) profile.get("gender");
+        String email = (String) profile.get("email");
 
         Gender gender = Gender.UNKNOWN;
         if ("M".equalsIgnoreCase(genderStr)) {
@@ -98,6 +99,6 @@ public class NaverOAuth2Adapter implements OAuth2ProviderPort {
             gender = Gender.FEMALE;
         }
 
-        return new OAuth2UserInfo(providerId, nickname, name, gender, profileImage);
+        return new OAuth2UserInfo(providerId, nickname, name, gender, profileImage, email);
     }
 }

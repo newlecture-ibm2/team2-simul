@@ -108,7 +108,8 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, Ema
                 userInfo.providerId(),
                 userInfo.nickname(),
                 userInfo.name(),
-                userInfo.gender()
+                userInfo.gender(),
+                userInfo.email()
             );
             isNewUser = true;
         } else if (user.getDeletedAt() != null) {

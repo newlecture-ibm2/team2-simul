@@ -16,6 +16,7 @@ import com.simul.tag.application.port.in.AttachTagsToPostUseCase;
 import com.simul.tag.application.port.in.LoadTagsUseCase;
 import com.simul.user.application.dto.UserResponse;
 import com.simul.user.application.port.in.LoadUserUseCase;
+import com.simul.user.application.port.in.LoadFollowUseCase;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ class PostServiceTest {
         LoadUserUseCase loadUserUseCase = mock(LoadUserUseCase.class);
         LoadTagsUseCase loadTagsUseCase = mock(LoadTagsUseCase.class);
         ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+        LoadFollowUseCase loadFollowUseCase = mock(LoadFollowUseCase.class);
 
         UUID postId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
@@ -59,7 +61,8 @@ class PostServiceTest {
                 null,
                 true,
                 "USER",
-                "test"
+                "test",
+                null
         ));
         when(loadTagsUseCase.loadTagsByPostIds(List.of(postId))).thenReturn(Map.of(postId, Collections.emptyList()));
         when(loadTagsUseCase.loadDetailedTagsByPostId(postId)).thenReturn(
@@ -73,7 +76,8 @@ class PostServiceTest {
                 attachTagsToPostUseCase,
                 loadUserUseCase,
                 loadTagsUseCase,
-                eventPublisher
+                eventPublisher,
+                loadFollowUseCase
         );
 
         var response = service.getPostDetail(postId, userId);
@@ -90,6 +94,7 @@ class PostServiceTest {
         LoadUserUseCase loadUserUseCase = mock(LoadUserUseCase.class);
         LoadTagsUseCase loadTagsUseCase = mock(LoadTagsUseCase.class);
         ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+        LoadFollowUseCase loadFollowUseCase = mock(LoadFollowUseCase.class);
 
         UUID postId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
@@ -113,7 +118,8 @@ class PostServiceTest {
                 null,
                 true,
                 "USER",
-                "test"
+                "test",
+                null
         ));
         when(loadTagsUseCase.loadTagsByPostIds(List.of(postId))).thenReturn(Map.of(postId, Collections.emptyList()));
         when(postLikePersistencePort.findLikedPostIdsByUserIdAndPostIds(userId, List.of(postId)))
@@ -126,7 +132,8 @@ class PostServiceTest {
                 attachTagsToPostUseCase,
                 loadUserUseCase,
                 loadTagsUseCase,
-                eventPublisher
+                eventPublisher,
+                loadFollowUseCase
         );
 
         var response = service.getUserPosts(userId, userId, PageRequest.of(0, 20));
@@ -144,6 +151,7 @@ class PostServiceTest {
         LoadUserUseCase loadUserUseCase = mock(LoadUserUseCase.class);
         LoadTagsUseCase loadTagsUseCase = mock(LoadTagsUseCase.class);
         ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+        LoadFollowUseCase loadFollowUseCase = mock(LoadFollowUseCase.class);
 
         UUID userId = UUID.randomUUID();
         when(postRepositoryPort.countProfilePostsByUserId(userId)).thenReturn(3L);
@@ -155,7 +163,8 @@ class PostServiceTest {
                 attachTagsToPostUseCase,
                 loadUserUseCase,
                 loadTagsUseCase,
-                eventPublisher
+                eventPublisher,
+                loadFollowUseCase
         );
 
         assertThat(service.countUserPosts(userId)).isEqualTo(3L);

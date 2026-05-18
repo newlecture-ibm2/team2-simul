@@ -1,0 +1,23 @@
+.withdrawBtn {
+  padding: 8px 16px;
+  background-color: transparent;
+  color: #ff4d4d;
+  border: 1px solid #ff4d4d;
+  border-radius: var(--radius-button);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.withdrawBtn:hover {
+  background-color: #ff4d4d;
+  color: white;
+}
+
+.withdrawBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

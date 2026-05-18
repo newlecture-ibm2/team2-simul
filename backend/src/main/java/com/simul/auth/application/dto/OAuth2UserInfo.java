@@ -11,5 +11,6 @@ public record OAuth2UserInfo(
     String nickname,
     String name,
     Gender gender,
-    String profileImageUrl
+    String profileImageUrl,
+    String email
 ) {}

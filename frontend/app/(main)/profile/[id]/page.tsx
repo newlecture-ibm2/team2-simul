@@ -147,7 +147,7 @@ export default function UserProfilePage() {
                   flex: 1
                 }}
               >
-                {user?.isFollowing ? '언팔로우' : '팔로우'}
+                {user?.isFollowing ? '팔로잉 ✓' : '팔로우'}
               </button>
             </div>
 

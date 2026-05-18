@@ -126,7 +126,7 @@ export default function FollowListPage({ userId, type }: FollowListPageProps) {
                   onClick={() => handleToggleFollow(u.userId, u.isFollowing)}
                   disabled={followMutation.isPending || unfollowMutation.isPending}
                 >
-                  {u.isFollowing ? '언팔로우' : '팔로우'}
+                  {u.isFollowing ? '팔로잉 ✓' : '팔로우'}
                 </button>
               )}
             </div>

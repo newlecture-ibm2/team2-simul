@@ -16,6 +16,7 @@ public class User {
     private UUID userId;
     private String provider;
     private String providerId;
+    private String email;
     private String name;
     private String nickname;
     private String password;
