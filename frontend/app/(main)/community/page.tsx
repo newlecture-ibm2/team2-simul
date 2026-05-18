@@ -30,7 +30,7 @@ export default function CommunityPage() {
 
   return (
     <div className={styles.pageContainer}>
-      <div className={styles.headerControls}>
+      <div className={`${styles.headerControls} ${isSortOpen ? styles.sortOpen : ''}`}>
         <MainToggle onTabChange={setTab} />
         <div className={styles.sortDropdownContainer} ref={sortRef}>
           <button 

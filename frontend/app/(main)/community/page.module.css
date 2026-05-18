@@ -13,7 +13,12 @@
   padding: 12px 16px 0;
   position: sticky;
   top: 65px;
-  z-index: 90;
+  z-index: 90; /* 평소에는 글로벌 헤더(100) 밑으로 가도록 90 유지 */
+  transition: z-index 0.2s;
+}
+
+.headerControls.sortOpen {
+  z-index: 105; /* 정렬 메뉴가 열렸을 때만 BottomNav(100) 위로 Stacking Context를 격상 */
 }
 
 /* Container */
