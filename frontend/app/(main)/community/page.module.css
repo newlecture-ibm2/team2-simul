@@ -19,23 +19,27 @@
 .sortToggle {
   display: flex;
   align-items: center;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  padding: 6px 12px;
-  border-radius: var(--radius-button, 99px);
-  color: white;
+  gap: 6px;
+  background: var(--color-surface-white);
+  border: 1px solid var(--color-border-disabled);
+  padding: 6px 14px;
+  border-radius: var(--radius-button);
+  color: var(--color-text-primary);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-subtle);
 }
 
 .sortToggle:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--color-surface-fog);
+  border-color: var(--color-border-default);
 }
 
 .sortIcon {
-  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
 }
