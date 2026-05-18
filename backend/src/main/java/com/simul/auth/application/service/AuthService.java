@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
@@ -32,7 +33,9 @@ import java.util.stream.Collectors;
 
 import com.simul.auth.application.port.out.EmailVerificationPort;
 import com.simul.auth.application.port.out.MailPort;
+import com.simul.auth.application.port.out.PasswordResetCodePort;
 import com.simul.auth.domain.model.EmailVerification;
+import com.simul.auth.domain.model.PasswordResetCode;
 
 /**
  * 인증 서비스 (UseCase 구현체)
@@ -40,7 +43,7 @@ import com.simul.auth.domain.model.EmailVerification;
 @Slf4j
 @Service
 @Transactional
-public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, EmailAuthUseCase, LogoutUseCase, RestoreAccountUseCase {
+public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, EmailAuthUseCase, LogoutUseCase, RestoreAccountUseCase, FindPasswordUseCase {
 
     private final Map<String, OAuth2ProviderPort> providerMap;
     private final UserPersistencePort userPersistencePort;
@@ -51,6 +54,7 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, Ema
     private final AccessTokenBlacklistPort accessTokenBlacklistPort;
     private final EmailVerificationPort emailVerificationPort;
     private final MailPort mailPort;
+    private final PasswordResetCodePort passwordResetCodePort;
     private final long refreshTokenValiditySeconds;
     
     @Value("${app.frontend-url}")
@@ -66,6 +70,7 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, Ema
         AccessTokenBlacklistPort accessTokenBlacklistPort,
         EmailVerificationPort emailVerificationPort,
         MailPort mailPort,
+        PasswordResetCodePort passwordResetCodePort,
         @Value("${jwt.refresh-token-validity-in-seconds}") long refreshTokenValiditySeconds
     ) {
         this.providerMap = providers.stream()
@@ -78,6 +83,7 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, Ema
         this.accessTokenBlacklistPort = accessTokenBlacklistPort;
         this.emailVerificationPort = emailVerificationPort;
         this.mailPort = mailPort;
+        this.passwordResetCodePort = passwordResetCodePort;
         this.refreshTokenValiditySeconds = refreshTokenValiditySeconds;
     }
 
@@ -261,6 +267,87 @@ public class AuthService implements SocialLoginUseCase, RefreshTokenUseCase, Ema
         userPersistencePort.save(user);
 
         emailVerificationPort.deleteByEmail(verification.getEmail());
+    }
+
+    // ========== 비밀번호 찾기(FindPasswordUseCase) 구현 ==========
+
+    @Override
+    @Transactional
+    public void requestResetCode(String email) {
+        // 1. 유저 가입 여부 검증
+        User user = userPersistencePort.findByProviderAndProviderIdIncludingDeleted("email", email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND, "가입되지 않은 이메일 주소입니다."));
+
+        if (user.getDeletedAt() != null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND, "탈퇴 대기 중인 사용자입니다.");
+        }
+
+        // 소셜 로그인 가입 사용자인지 체크 (소셜 사용자는 비밀번호 리셋 불가능)
+        if (!"email".equalsIgnoreCase(user.getProvider())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "소셜 로그인 가입 계정은 비밀번호를 찾을 수 없습니다. 소셜 로그인을 이용해 주세요.");
+        }
+
+        // 2. 6자리 난수 인증코드 생성 (100000 ~ 999999)
+        int randomCode = ThreadLocalRandom.current().nextInt(100000, 1000000);
+        String codeStr = String.valueOf(randomCode);
+
+        // 3. 기존 인증 코드 정보 삭제 및 새로 저장
+        passwordResetCodePort.deleteByEmail(email);
+        PasswordResetCode resetCode = PasswordResetCode.create(email, codeStr);
+        passwordResetCodePort.save(resetCode);
+
+        // 4. 메일 발송
+        mailPort.sendPasswordResetCode(email, codeStr);
+
+        log.info("비밀번호 재설정 인증코드 생성 완료 (이메일: {})", email);
+    }
+
+    @Override
+    @Transactional
+    public void verifyResetCode(String email, String code) {
+        // 1. 인증코드 조회
+        PasswordResetCode resetCode = passwordResetCodePort.findByEmailAndCode(email, code)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT, "인증번호가 일치하지 않습니다."));
+
+        // 2. 만료 여부 검증
+        if (resetCode.isExpired()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "만료된 인증번호입니다. 인증번호를 다시 요청해 주세요.");
+        }
+
+        // 3. 인증 완료 상태로 변경 및 저장
+        resetCode.verify();
+        passwordResetCodePort.save(resetCode);
+
+        log.info("비밀번호 재설정 이메일 인증 성공: {}", email);
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(String email, String code, String newPassword) {
+        // 1. 인증 정보 확인
+        PasswordResetCode resetCode = passwordResetCodePort.findByEmailAndCode(email, code)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT, "유효하지 않은 요청입니다. 처음부터 다시 시도해 주세요."));
+
+        // 2. 2단계 검증(is_verified) 통과했는지 확인
+        if (!resetCode.isVerified()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "이메일 인증이 먼저 완료되어야 합니다.");
+        }
+
+        if (resetCode.isExpired()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "인증 유효시간(5분)이 만료되었습니다. 다시 시도해 주세요.");
+        }
+
+        // 3. 유저 정보 조회 및 비밀번호 업데이트
+        User user = userPersistencePort.findByProviderAndProviderIdIncludingDeleted("email", email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 암호화 인코딩 후 저장
+        user.changePassword(passwordEncoder.encode(newPassword));
+        userPersistencePort.save(user);
+
+        // 4. 사용 완료된 인증코드 삭제
+        passwordResetCodePort.deleteByEmail(email);
+        log.info("비밀번호 재설정 최종 성공 (이메일: {})", email);
     }
 
     private TokenResponse issueAndStoreTokens(AuthUser authUser, boolean isNewUser) {

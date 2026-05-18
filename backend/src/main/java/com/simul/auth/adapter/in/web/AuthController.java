@@ -8,6 +8,9 @@ import com.simul.auth.application.port.in.SocialLoginUseCase;
 import com.simul.auth.application.dto.EmailLoginCommand;
 import com.simul.auth.application.dto.EmailSignupCommand;
 import com.simul.auth.application.port.in.EmailAuthUseCase;
+import com.simul.auth.application.port.in.FindPasswordUseCase;
+import com.simul.common.exception.BusinessException;
+import com.simul.common.exception.ErrorCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,19 +33,22 @@ public class AuthController {
     private final EmailAuthUseCase emailAuthUseCase;
     private final LogoutUseCase logoutUseCase;
     private final com.simul.auth.application.port.in.RestoreAccountUseCase restoreAccountUseCase;
+    private final FindPasswordUseCase findPasswordUseCase;
 
     public AuthController(
         SocialLoginUseCase socialLoginUseCase,
         RefreshTokenUseCase refreshTokenUseCase,
         EmailAuthUseCase emailAuthUseCase,
         LogoutUseCase logoutUseCase,
-        com.simul.auth.application.port.in.RestoreAccountUseCase restoreAccountUseCase
+        com.simul.auth.application.port.in.RestoreAccountUseCase restoreAccountUseCase,
+        FindPasswordUseCase findPasswordUseCase
     ) {
         this.socialLoginUseCase = socialLoginUseCase;
         this.refreshTokenUseCase = refreshTokenUseCase;
         this.emailAuthUseCase = emailAuthUseCase;
         this.logoutUseCase = logoutUseCase;
         this.restoreAccountUseCase = restoreAccountUseCase;
+        this.findPasswordUseCase = findPasswordUseCase;
     }
 
     /**
@@ -145,5 +151,61 @@ public class AuthController {
         }
         logoutUseCase.logout(refreshToken, accessToken);
         return ResponseEntity.noContent().build();
+    }
+
+    // ========== 비밀번호 찾기 API ==========
+
+    /**
+     * 1단계: 비밀번호 재설정 인증코드 메일 발송 요청
+     * POST /auth/password/code/request
+     */
+    @PostMapping("/password/code/request")
+    public ResponseEntity<Void> requestResetCode(
+        @RequestBody Map<String, String> request
+    ) {
+        String email = request.get("email");
+        if (email == null || email.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "이메일을 입력해 주세요.");
+        }
+        findPasswordUseCase.requestResetCode(email);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 2단계: 인증코드 입력값 검증 API
+     * POST /auth/password/code/verify
+     */
+    @PostMapping("/password/code/verify")
+    public ResponseEntity<Void> verifyResetCode(
+        @RequestBody Map<String, String> request
+    ) {
+        String email = request.get("email");
+        String code = request.get("code");
+
+        if (email == null || email.isBlank() || code == null || code.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "이메일과 인증번호를 모두 입력해 주세요.");
+        }
+        findPasswordUseCase.verifyResetCode(email, code);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 3단계: 비밀번호 실제 변경
+     * POST /auth/password/code/reset
+     */
+    @PostMapping("/password/code/reset")
+    public ResponseEntity<Void> resetPassword(
+        @RequestBody Map<String, String> request
+    ) {
+        String email = request.get("email");
+        String code = request.get("code");
+        String newPassword = request.get("newPassword");
+
+        if (email == null || email.isBlank() || code == null || code.isBlank() || newPassword == null || newPassword.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "잘못된 요청 파라미터입니다.");
+        }
+
+        findPasswordUseCase.resetPassword(email, code, newPassword);
+        return ResponseEntity.ok().build();
     }
 }

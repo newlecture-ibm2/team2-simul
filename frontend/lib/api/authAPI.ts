@@ -81,3 +81,34 @@ export async function withdraw() {
     method: 'DELETE',
   });
 }
+
+/**
+ * 1단계: 비밀번호 찾기 (이메일로 6자리 인증번호 전송)
+ */
+export async function requestResetCode(email: string): Promise<void> {
+  await apiClient('/auth/password/code/request', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+/**
+ * 2단계: 이메일 인증코드 6자리 검증
+ */
+export async function verifyResetCode(email: string, code: string): Promise<void> {
+  await apiClient('/auth/password/code/verify', {
+    method: 'POST',
+    body: JSON.stringify({ email, code }),
+  });
+}
+
+/**
+ * 3단계: 새 비밀번호 재설정 실행
+ */
+export async function resetPasswordWithCode(email: string, code: string, newPassword: string): Promise<void> {
+  await apiClient('/auth/password/code/reset', {
+    method: 'POST',
+    body: JSON.stringify({ email, code, newPassword }),
+  });
+}
+

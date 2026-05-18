@@ -17,11 +17,25 @@ export function useAuth() {
   const router = useRouter();
   const setUser = useAuthStore((state) => state.setUser);
 
-  const handleLoginSuccess = async (res: { accessToken: string; isNewUser?: boolean }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleLoginSuccess = async (res: { accessToken: string; isNewUser?: boolean; user?: any }) => {
     if (res.accessToken) {
-      const { getCurrentUser } = await import('../../../lib/api/authAPI');
-      const user = await getCurrentUser();
-      setUser(user);
+      // BFF authHandler가 로그인 응답에 user 프로필 데이터를 포함시켜 반환하므로
+      // 별도의 getCurrentUser() 호출 없이 바로 사용합니다.
+      // 이렇게 하면 Set-Cookie가 브라우저에 저장되기 전에 인증이 필요한 API를 호출하는
+      // race condition을 방지합니다. (배포 환경 403 에러의 핵심 원인)
+      if (res.user) {
+        setUser(res.user);
+      } else {
+        // fallback: user 데이터가 없는 경우에만 별도 API 호출
+        try {
+          const { getCurrentUser } = await import('../../../lib/api/authAPI');
+          const user = await getCurrentUser();
+          setUser(user);
+        } catch (e) {
+          console.error('Failed to fetch user after login:', e);
+        }
+      }
       router.push(res.isNewUser ? '/profile/edit' : '/');
       return true;
     }

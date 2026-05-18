@@ -62,6 +62,9 @@ class PostServiceTest {
                 "test"
         ));
         when(loadTagsUseCase.loadTagsByPostIds(List.of(postId))).thenReturn(Map.of(postId, Collections.emptyList()));
+        when(loadTagsUseCase.loadDetailedTagsByPostId(postId)).thenReturn(
+                new com.simul.tag.application.dto.PostTagsResponse(Collections.emptyList(), Collections.emptyMap(), Collections.emptyList())
+        );
 
         PostService service = new PostService(
                 postRepositoryPort,

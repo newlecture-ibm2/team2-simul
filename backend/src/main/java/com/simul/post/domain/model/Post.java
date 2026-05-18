@@ -80,6 +80,7 @@ public class Post extends BaseJpaEntity {
         this.likeCount = likeCount != null ? likeCount : 0;
         this.viewCount = viewCount != null ? viewCount : 0;
         this.commentCount = 0;
+        this.images = new ArrayList<>();
     }
 
     public void addImage(PostImage image) {
