@@ -54,13 +54,13 @@
   transform: rotate(180deg);
 }
 
-/* Menu Common (Desktop default) */
+/* Menu Common (Mobile & Desktop Unified Popover) */
 .sortMenu {
   position: absolute;
   top: 100%;
   right: 0;
   margin-top: 8px;
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(32px);
   -webkit-backdrop-filter: blur(32px);
   border: 1px solid rgba(255, 255, 255, 0.4);
@@ -71,7 +71,7 @@
   gap: 4px;
   min-width: 120px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  z-index: 100;
+  z-index: 102;
   animation: fadeIn 0.2s ease-out;
 }
 
@@ -99,69 +99,18 @@
   box-shadow: var(--shadow-subtle);
 }
 
+/* Invisible overlay to catch outside clicks */
 .mobileOverlay {
-  display: none;
-}
-
-.mobileDragHandle {
-  display: none;
-}
-
-/* Mobile: Bottom Sheet */
-@media (max-width: 768px) {
-  .mobileOverlay {
-    display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 101; /* BottomNav(100)보다 높게 설정 */
-    animation: fadeIn 0.3s ease;
-  }
-
-  .sortMenu {
-    position: fixed;
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin: 0;
-    border-radius: 20px 20px 0 0;
-    padding: 16px 20px calc(30px + env(safe-area-inset-bottom));
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(40px);
-    -webkit-backdrop-filter: blur(40px);
-    border: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.5);
-    min-width: 100%;
-    animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-    z-index: 102; /* Overlay(101)보다 높게 설정 */
-  }
-
-  .sortMenuItem {
-    padding: 14px;
-    text-align: center;
-    font-size: 16px;
-  }
-
-  .mobileDragHandle {
-    display: block;
-    width: 40px;
-    height: 4px;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 2px;
-    margin: 0 auto 16px;
-  }
-}
-
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 101; 
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
 }

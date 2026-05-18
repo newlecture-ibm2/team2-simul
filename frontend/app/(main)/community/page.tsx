@@ -49,11 +49,10 @@ export default function CommunityPage() {
 
           {isSortOpen && (
             <>
-              {/* 모바일 딤(Dim) 배경 */}
+              {/* Invisible overlay for catching outside clicks to close the popover */}
               <div className={styles.mobileOverlay} onClick={() => setIsSortOpen(false)} />
               
               <div className={styles.sortMenu}>
-                <div className={styles.mobileDragHandle} />
                 <button 
                   className={`${styles.sortMenuItem} ${sort === 'recent' ? styles.active : ''}`}
                   onClick={() => { setSort('recent'); setIsSortOpen(false); }}
