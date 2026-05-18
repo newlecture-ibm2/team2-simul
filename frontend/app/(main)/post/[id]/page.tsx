@@ -53,7 +53,6 @@ export default function PostDetailPage() {
   const [isReporting, setIsReporting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLikeListModalOpen, setIsLikeListModalOpen] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -106,7 +105,7 @@ export default function PostDetailPage() {
 
   const handleFollowToggle = () => {
     if (!isAuthenticated) {
-      setIsLoginModalOpen(true);
+      window.dispatchEvent(new CustomEvent('simul_auth_modal_event', { detail: { isOpen: true } }));
       return;
     }
     if (isFollowingAuthor) {
@@ -194,7 +193,7 @@ export default function PostDetailPage() {
 
   const handleLike = async () => {
     if (!isAuthenticated) {
-      setIsLoginModalOpen(true);
+      window.dispatchEvent(new CustomEvent('simul_auth_modal_event', { detail: { isOpen: true } }));
       return;
     }
 
@@ -255,7 +254,7 @@ export default function PostDetailPage() {
 
   const handleShare = async () => {
     if (!isAuthenticated) {
-      setIsLoginModalOpen(true);
+      window.dispatchEvent(new CustomEvent('simul_auth_modal_event', { detail: { isOpen: true } }));
       return;
     }
     if (!post) return;
@@ -337,7 +336,7 @@ export default function PostDetailPage() {
                     onClick={() => { 
                       setShowMenu(false); 
                       if (!isAuthenticated) {
-                        setIsLoginModalOpen(true);
+                        window.dispatchEvent(new CustomEvent('simul_auth_modal_event', { detail: { isOpen: true } }));
                       } else {
                         setIsReportModalOpen(true); 
                       }
@@ -510,7 +509,7 @@ export default function PostDetailPage() {
           
           <CommentSection 
             postId={postId as string} 
-            onLoginRequired={() => setIsLoginModalOpen(true)}
+            onLoginRequired={() => window.dispatchEvent(new CustomEvent('simul_auth_modal_event', { detail: { isOpen: true } }))}
           />
         </div>
       </div>
@@ -546,15 +545,6 @@ export default function PostDetailPage() {
         postId={postId as string}
       />
 
-      <ConfirmModal
-        isOpen={isLoginModalOpen}
-        title="로그인이 필요한 서비스입니다"
-        description="로그인하고 Simul의 AI 가상시착과 다양한 기능을 자유롭게 이용해 보세요."
-        confirmText="로그인하러 가기"
-        cancelText="다음에 하기"
-        onConfirm={() => router.push('/login')}
-        onCancel={() => setIsLoginModalOpen(false)}
-      />
     </div>
   );
 }
