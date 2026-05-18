@@ -19,19 +19,18 @@ export default function CommunityPage() {
     <div className={styles.pageContainer}>
       <div className={styles.headerControls}>
         <MainToggle onTabChange={setTab} />
-        <div className={styles.sortToggleGroup}>
-          <button 
-            className={`${styles.sortBtn} ${sort === 'recent' ? styles.active : ''}`} 
-            onClick={() => setSort('recent')}
+        <div className={styles.sortSelectWrapper}>
+          <select 
+            className={styles.sortSelect} 
+            value={sort} 
+            onChange={(e) => setSort(e.target.value)}
           >
-            최신순
-          </button>
-          <button 
-            className={`${styles.sortBtn} ${sort === 'popular' ? styles.active : ''}`} 
-            onClick={() => setSort('popular')}
-          >
-            인기순
-          </button>
+            <option value="recent">최신순</option>
+            <option value="popular">인기순</option>
+          </select>
+          <svg className={styles.sortArrow} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
         </div>
       </div>
       <FeedGrid tab={tab} sort={sort} />

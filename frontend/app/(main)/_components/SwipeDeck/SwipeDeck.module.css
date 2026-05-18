@@ -237,17 +237,9 @@
 }
 
 .passIcon {
-  font-size: 32px;
-  font-weight: 900;
-  color: white;
-  background: rgba(0, 0, 0, 0.35);
-  padding: 8px 28px;
-  border-radius: 99px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 2px solid rgba(255, 255, 255, 0.6);
-  letter-spacing: 3px;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ── Double Tap Heart (더블 탭 좋아요) ── */

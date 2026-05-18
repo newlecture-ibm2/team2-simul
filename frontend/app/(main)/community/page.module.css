@@ -16,29 +16,29 @@
   z-index: 90;
 }
 
-.sortToggleGroup {
+.sortSelectWrapper {
+  position: relative;
   display: flex;
   align-items: center;
-  background: var(--color-surface-fog);
-  border-radius: var(--radius-button);
-  padding: 3px;
 }
 
-.sortBtn {
+.sortSelect {
+  appearance: none;
+  -webkit-appearance: none;
   background: transparent;
   border: none;
-  padding: 6px 14px;
-  color: var(--color-text-secondary);
-  font-size: 13px;
-  font-weight: 500;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 6px 20px 6px 8px;
   cursor: pointer;
-  border-radius: var(--radius-button);
-  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  outline: none;
+  font-family: inherit;
 }
 
-.sortBtn.active {
-  background: var(--color-surface-white);
+.sortArrow {
+  position: absolute;
+  right: 0;
+  pointer-events: none;
   color: var(--color-text-primary);
-  font-weight: 600;
-  box-shadow: var(--shadow-subtle);
 }
